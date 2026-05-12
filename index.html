@@ -378,7 +378,7 @@
   </div>
   <div class="card" style="margin-bottom:0;">
     <div class="card-header">
-      <span class="card-title">Por origem <span style="font-size:11px;color:var(--muted);font-weight:400;">(top 10)</span></span>
+      <span class="card-title">Por origem <span style="font-size:11px;color:var(--muted);font-weight:400;">(top 15)</span></span>
       <div class="status-checks">
         <label class="check-label open checked" id="lbl2-open" onclick="toggleStatus('open','origin')"><span class="check-dot" style="background:var(--info)"></span>Andamento</label>
         <label class="check-label won checked" id="lbl2-won" onclick="toggleStatus('won','origin')"><span class="check-dot" style="background:var(--success)"></span>Ganhos</label>
@@ -640,7 +640,7 @@ function updateTrendChart() {
   });
 }
 
-function buildHorizontalChart(canvasId, statusRef, deals, keyFn, topN=10) {
+function buildHorizontalChart(canvasId, statusRef, deals, keyFn, topN=15) {
   const filtered = deals.filter(d => {
     const sid = d.dealStatus?.id;
     if (sid===1 && !statusRef.open) return false;
@@ -651,6 +651,7 @@ function buildHorizontalChart(canvasId, statusRef, deals, keyFn, topN=10) {
   const map = {};
   filtered.forEach(d => { const k = keyFn(d)||'Não informado'; map[k]=(map[k]||0)+1; });
   const sorted = Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,topN);
+  const total = filtered.length;
   const labels = sorted.map(e => e[0].length>32 ? e[0].substring(0,30)+'…' : e[0]);
   const counts = sorted.map(e => e[1]);
   const colors = sorted.map((_,i) => COLORS[i%COLORS.length]);
@@ -660,10 +661,34 @@ function buildHorizontalChart(canvasId, statusRef, deals, keyFn, topN=10) {
     data:{ labels, datasets:[{ data:counts, backgroundColor:colors, borderRadius:4, borderSkipped:false }] },
     options:{
       indexAxis:'y', responsive:true, maintainAspectRatio:false,
-      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>' '+ctx.parsed.x+' negócios'}} },
+      layout:{ padding:{ right: 80 } },
+      plugins:{
+        legend:{display:false},
+        tooltip:{callbacks:{label:ctx=>' '+ctx.parsed.x+' negócios'}}
+      },
       scales:{
         x:{ ticks:{font:{size:11,family:'DM Sans'},color:'#6b6a66'}, grid:{color:'rgba(0,0,0,0.04)'}, border:{display:false} },
         y:{ ticks:{font:{size:11,family:'DM Sans'},color:'#1a1a18'}, grid:{display:false}, border:{display:false} }
+      },
+      animation:{
+        onComplete: function() {
+          const chart = this;
+          const ctx = chart.ctx;
+          ctx.save();
+          ctx.font = '11px DM Sans';
+          ctx.fillStyle = '#6b6a66';
+          ctx.textAlign = 'left';
+          ctx.textBaseline = 'middle';
+          chart.data.datasets.forEach((dataset, i) => {
+            const meta = chart.getDatasetMeta(i);
+            meta.data.forEach((bar, index) => {
+              const value = dataset.data[index];
+              const p = total ? Math.round((value/total)*100) : 0;
+              ctx.fillText(value + ' (' + p + '%)', bar.x + 6, bar.y);
+            });
+          });
+          ctx.restore();
+        }
       }
     }
   });
@@ -790,6 +815,14 @@ async function fetchAll() {
 
 initDates();
 fetchAll();
+
+// Auto-refresh a cada 1 hora
+setInterval(() => fetchAll(), 60 * 60 * 1000);
+
+// Keep-alive: ping no proxy a cada 10 minutos para não dormir
+setInterval(() => {
+  fetch(PROXY + '/').catch(() => {});
+}, 10 * 60 * 1000);
 </script>
 </body>
 </html>
