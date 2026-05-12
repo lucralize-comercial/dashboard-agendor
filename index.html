@@ -4,27 +4,28 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Dashboard Agendor</title>
-<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Comfortaa:wght@400;500;600;700&family=Poppins:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
-    --bg: #f5f4f0; --surface: #ffffff; --border: rgba(0,0,0,0.08);
-    --text: #1a1a18; --muted: #6b6a66; --accent: #1a5fb4;
-    --success: #1e7e4a; --danger: #b32d2d; --info: #1a5fb4; --warning: #a05c00;
-    --success-bg: #e8f5ee; --danger-bg: #fceaea; --info-bg: #e8f0fb; --warning-bg: #fef3e2;
+    --bg: #EBF0F3; --surface: #ffffff; --border: rgba(14,20,40,0.1);
+    --text: #0E1428; --muted: #657786; --accent: #0C7488;
+    --success: #0C7488; --danger: #F62642; --info: #0C7488; --warning: #a05c00;
+    --success-bg: #e0f5f7; --danger-bg: #fde8ec; --info-bg: #e0f5f7; --warning-bg: #fef3e2;
+    --teal: #0C7488; --teal-light: #91DBE4; --navy: #0E1428; --red: #F62642;
     --radius: 12px; --radius-sm: 8px;
   }
-  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 2rem; }
-  header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
+  body { font-family: 'Poppins', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 2rem; }
+  header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; background: var(--navy); padding: 1rem 1.5rem; border-radius: var(--radius); }
   .logo { display: flex; align-items: center; gap: 10px; }
-  .logo-dot { width: 32px; height: 32px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
+  .logo-dot { width: 32px; height: 32px; background: var(--navy); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
   .logo-dot svg { width: 18px; height: 18px; fill: none; stroke: white; stroke-width: 2; }
-  .logo-text { font-size: 18px; font-weight: 600; letter-spacing: -0.3px; }
-  .logo-sub { font-size: 13px; color: var(--muted); margin-top: 1px; }
+  .logo-text { font-size: 18px; font-weight: 700; letter-spacing: -0.3px; color: white; font-family: 'Comfortaa', cursive; }
+  .logo-sub { font-size: 13px; color: var(--teal-light); margin-top: 1px; }
   .header-actions { display: flex; gap: 10px; align-items: center; }
-  #lastUpdated { font-size: 12px; color: var(--muted); font-family: 'DM Mono', monospace; }
-  button { display: flex; align-items: center; gap: 6px; padding: 8px 16px; background: var(--accent); color: white; border: none; border-radius: var(--radius-sm); font-size: 13px; font-family: 'DM Sans', sans-serif; font-weight: 500; cursor: pointer; transition: opacity .15s; }
+  #lastUpdated { font-size: 12px; color: var(--teal-light); font-family: 'DM Mono', monospace; }
+  button { display: flex; align-items: center; gap: 6px; padding: 8px 16px; background: var(--red); color: white; border: none; border-radius: var(--radius-sm); font-size: 13px; font-family: 'DM Sans', sans-serif; font-weight: 500; cursor: pointer; transition: opacity .15s; }
   button:hover { opacity: 0.88; }
   button:disabled { opacity: 0.5; cursor: not-allowed; }
 
@@ -32,7 +33,7 @@
   .tabs { display: flex; gap: 4px; margin-bottom: 1.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 4px; width: fit-content; }
   .tab-btn { padding: 7px 20px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; font-family: 'DM Sans', sans-serif; cursor: pointer; border: none; background: transparent; color: var(--muted); transition: all .15s; }
   .tab-btn:hover { color: var(--text); }
-  .tab-btn.active { background: var(--accent); color: white; }
+  .tab-btn.active { background: var(--navy); color: white; }
   .tab-content { display: none; }
   .tab-content.active { display: block; }
 
@@ -52,10 +53,10 @@
   .funnel-option { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: var(--radius-sm); cursor: pointer; font-size: 13px; color: var(--text); transition: background .1s; user-select: none; }
   .funnel-option:hover { background: var(--bg); }
   .funnel-check { width: 16px; height: 16px; border: 1.5px solid var(--border); border-radius: 4px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; background: var(--bg); transition: all .15s; }
-  .funnel-option.checked .funnel-check { background: var(--accent); border-color: var(--accent); }
+  .funnel-option.checked .funnel-check { background: var(--teal); border-color: var(--teal); }
   .funnel-option.checked .funnel-check::after { content: ''; width: 8px; height: 5px; border-left: 2px solid white; border-bottom: 2px solid white; transform: rotate(-45deg) translateY(-1px); }
   .funnel-sigla { font-size: 10px; font-weight: 600; color: var(--muted); background: var(--bg); padding: 1px 5px; border-radius: 4px; border: 1px solid var(--border); font-family: 'DM Mono', monospace; }
-  .funnel-option.checked .funnel-sigla { background: var(--info-bg); color: var(--accent); border-color: var(--accent); }
+  .funnel-option.checked .funnel-sigla { background: var(--info-bg); color: var(--teal); border-color: var(--teal); }
   .funnel-menu-footer { display: flex; gap: 6px; padding: 6px 4px 2px; border-top: 1px solid var(--border); margin-top: 4px; }
   .funnel-menu-footer button { flex: 1; padding: 5px; font-size: 11px; border-radius: var(--radius-sm); }
   .funnel-menu-footer button.secondary { background: var(--bg); color: var(--muted); border: 1px solid var(--border); }
@@ -63,7 +64,7 @@
   .period-btns { display: flex; gap: 6px; flex-wrap: wrap; }
   .period-btn { padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 500; font-family: 'DM Sans', sans-serif; cursor: pointer; border: 1px solid var(--border); background: var(--bg); color: var(--muted); transition: all .15s; }
   .period-btn:hover { border-color: var(--accent); color: var(--accent); }
-  .period-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+  .period-btn.active { background: var(--navy); color: white; border-color: var(--navy); }
   .date-range { display: flex; align-items: center; gap: 8px; }
   input[type="date"] { font-family: 'DM Sans', sans-serif; font-size: 13px; padding: 6px 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--bg); color: var(--text); cursor: pointer; }
   input[type="date"]:focus { outline: none; border-color: var(--accent); }
@@ -79,7 +80,7 @@
   .metric-label { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
   .metric-value { font-size: 24px; font-weight: 600; letter-spacing: -0.5px; line-height: 1.2; }
   .metric-value.info { color: var(--info); }
-  .metric-value.success { color: var(--success); }
+  .metric-value.success { color: var(--teal); }
   .metric-value.danger { color: var(--danger); }
   .metric-value.warning { color: var(--warning); }
   .metric-sub { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; margin-top: 4px; }
@@ -91,12 +92,12 @@
   .progress-bar { height: 4px; border-radius: 2px; background: var(--bg); overflow: hidden; }
   .progress-fill { height: 100%; border-radius: 2px; transition: width .4s ease; }
   .progress-fill.info { background: var(--info); }
-  .progress-fill.success { background: var(--success); }
+  .progress-fill.success { background: var(--teal); }
   .progress-fill.danger { background: var(--danger); }
 
   .card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 1.2rem 1.4rem; margin-bottom: 1.5rem; }
   .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; gap: 8px; flex-wrap: wrap; }
-  .card-title { font-size: 13px; font-weight: 600; color: var(--text); }
+  .card-title { font-size: 13px; font-weight: 700; color: var(--navy); font-family: 'Comfortaa', cursive; }
   .period-tag { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; background: var(--bg); padding: 3px 8px; border-radius: 20px; }
 
   .status-checks { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
@@ -174,9 +175,9 @@
 
 <header>
   <div class="logo">
-    <div class="logo-dot"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
+    <div class="logo-dot"><svg viewBox="0 0 24 24" style="stroke:#91DBE4"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
     <div>
-      <div class="logo-text">Dashboard Agendor</div>
+      <div class="logo-text">Lucralize · Vendas</div>
       <div class="logo-sub" id="funnelLabel">Todos os funis</div>
     </div>
   </div>
