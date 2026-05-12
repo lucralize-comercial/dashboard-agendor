@@ -493,6 +493,31 @@
     </div>
   </div>
 
+  <!-- Desempenho por funil -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Desempenho por funil</span>
+      <span class="period-tag" id="a2-funnelPeriodTag">—</span>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="origin-table">
+        <thead>
+          <tr>
+            <th style="text-align:left;">Funil</th>
+            <th>Total</th>
+            <th>Andamento</th>
+            <th>Ganhos</th>
+            <th>Perdidos</th>
+            <th>% Conversão</th>
+            <th>% Perda</th>
+            <th>Valor ganho</th>
+          </tr>
+        </thead>
+        <tbody id="funnelTableBody"><tr><td colspan="8" style="text-align:center;padding:1rem;color:var(--muted);">Carregando...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
   <br>
 
   <!-- Responsável x Origem + Motivo perda por origem -->
@@ -902,7 +927,7 @@ function renderAnalise() {
   // Tabela de origens
   const tbody = document.getElementById('origensTableBody');
   if (!sorted.length) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:1rem;color:var(--muted);">Nenhum dado.</td></tr>'; return; }
-  tbody.innerHTML = sorted.slice(0,20).map(([name,s]) => {
+  const origemRows = sorted.slice(0,20).map(([name,s]) => {
     const pConv = pct(s.won, s.won+s.lost);
     const pLoss = pct(s.lost, s.total);
     const convColor = pConv>=20?'var(--success)':pConv>=10?'var(--warning)':'var(--danger)';
@@ -918,6 +943,21 @@ function renderAnalise() {
       <td>${fmt(s.value)}</td>
     </tr>`;
   }).join('');
+  const oTotal = sorted.reduce((acc,[,s])=>({ total:acc.total+s.total, open:acc.open+s.open, won:acc.won+s.won, lost:acc.lost+s.lost, value:acc.value+s.value }), {total:0,open:0,won:0,lost:0,value:0});
+  const oPConv = pct(oTotal.won, oTotal.won+oTotal.lost);
+  const oPLoss = pct(oTotal.lost, oTotal.total);
+  const oConvColor = oPConv>=20?'var(--success)':oPConv>=10?'var(--warning)':'var(--danger)';
+  const oLossColor = oPLoss>=60?'var(--danger)':oPLoss>=40?'var(--warning)':'var(--success)';
+  tbody.innerHTML = origemRows + `<tr style="border-top:2px solid var(--border);background:var(--bg);">
+    <td style="font-weight:600;">Total</td>
+    <td style="font-weight:600;">${oTotal.total.toLocaleString('pt-BR')}</td>
+    <td style="color:var(--info);font-weight:600;">${oTotal.open}</td>
+    <td style="color:var(--success);font-weight:600;">${oTotal.won}</td>
+    <td style="color:var(--danger);font-weight:600;">${oTotal.lost}</td>
+    <td style="color:${oConvColor};font-weight:600;">${oPConv}%</td>
+    <td style="color:${oLossColor};font-weight:600;">${oPLoss}%</td>
+    <td style="font-weight:600;">${fmt(oTotal.value)}</td>
+  </tr>`;
 
   // Gráfico volume
   if (a2VolChart) a2VolChart.destroy();
@@ -988,6 +1028,56 @@ function renderAnalise() {
       }
     }
   });
+
+  // Tabela por funil
+  document.getElementById('a2-funnelPeriodTag').textContent = document.getElementById('a2-periodTag').textContent;
+  const funnelMap = {};
+  deals.forEach(d => {
+    const f = d.dealStage?.funnel?.name || 'Não informado';
+    if (!funnelMap[f]) funnelMap[f] = { total:0, open:0, won:0, lost:0, value:0 };
+    funnelMap[f].total++;
+    funnelMap[f].value += d.value||0;
+    if (d.dealStatus?.id===1) funnelMap[f].open++;
+    else if (d.dealStatus?.id===2) funnelMap[f].won++;
+    else if (d.dealStatus?.id===3) funnelMap[f].lost++;
+  });
+  const funnelSorted = Object.entries(funnelMap).sort((a,b)=>b[1].total-a[1].total);
+  const funnelTbody = document.getElementById('funnelTableBody');
+  if (!funnelSorted.length) {
+    funnelTbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:1rem;color:var(--muted);">Nenhum dado.</td></tr>';
+  } else {
+    funnelTbody.innerHTML = funnelSorted.map(([name,s]) => {
+      const pConv = pct(s.won, s.won+s.lost);
+      const pLoss = pct(s.lost, s.total);
+      const convColor = pConv>=20?'var(--success)':pConv>=10?'var(--warning)':'var(--danger)';
+      const lossColor = pLoss>=60?'var(--danger)':pLoss>=40?'var(--warning)':'var(--success)';
+      return `<tr>
+        <td style="font-weight:500;">${name}</td>
+        <td>${s.total.toLocaleString('pt-BR')}</td>
+        <td style="color:var(--info);">${s.open}</td>
+        <td style="color:var(--success);">${s.won}</td>
+        <td style="color:var(--danger);">${s.lost}</td>
+        <td style="color:${convColor};font-weight:500;">${pConv}%</td>
+        <td style="color:${lossColor};font-weight:500;">${pLoss}%</td>
+        <td>${fmt(s.value)}</td>
+      </tr>`;
+    }).join('');
+    const fTotal = funnelSorted.reduce((acc,[,s])=>({ total:acc.total+s.total, open:acc.open+s.open, won:acc.won+s.won, lost:acc.lost+s.lost, value:acc.value+s.value }), {total:0,open:0,won:0,lost:0,value:0});
+    const fPConv = pct(fTotal.won, fTotal.won+fTotal.lost);
+    const fPLoss = pct(fTotal.lost, fTotal.total);
+    const fConvColor = fPConv>=20?'var(--success)':fPConv>=10?'var(--warning)':'var(--danger)';
+    const fLossColor = fPLoss>=60?'var(--danger)':fPLoss>=40?'var(--warning)':'var(--success)';
+    funnelTbody.innerHTML += `<tr style="border-top:2px solid var(--border);background:var(--bg);">
+      <td style="font-weight:600;">Total</td>
+      <td style="font-weight:600;">${fTotal.total.toLocaleString('pt-BR')}</td>
+      <td style="color:var(--info);font-weight:600;">${fTotal.open}</td>
+      <td style="color:var(--success);font-weight:600;">${fTotal.won}</td>
+      <td style="color:var(--danger);font-weight:600;">${fTotal.lost}</td>
+      <td style="color:${fConvColor};font-weight:600;">${fPConv}%</td>
+      <td style="color:${fLossColor};font-weight:600;">${fPLoss}%</td>
+      <td style="font-weight:600;">${fmt(fTotal.value)}</td>
+    </tr>`;
+  }
 
   // Responsável por conversão
   const ownerMap = {};
