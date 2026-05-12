@@ -12,11 +12,12 @@
     --bg: #f5f4f0; --surface: #ffffff; --border: rgba(0,0,0,0.08);
     --text: #1a1a18; --muted: #6b6a66; --accent: #1a5fb4;
     --success: #1e7e4a; --danger: #b32d2d; --info: #1a5fb4;
-    --success-bg: #e8f5ee; --danger-bg: #fceaea; --info-bg: #e8f0fb;
-    --warning: #a05c00; --warning-bg: #fef3e2;
+    --warning: #a05c00;
+    --success-bg: #e8f5ee; --danger-bg: #fceaea; --info-bg: #e8f0fb; --warning-bg: #fef3e2;
     --radius: 12px; --radius-sm: 8px;
   }
   body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; padding: 2rem; }
+
   header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; flex-wrap: wrap; gap: 1rem; }
   .logo { display: flex; align-items: center; gap: 10px; }
   .logo-dot { width: 32px; height: 32px; background: var(--accent); border-radius: 8px; display: flex; align-items: center; justify-content: center; }
@@ -26,12 +27,31 @@
   .header-actions { display: flex; gap: 10px; align-items: center; }
   #lastUpdated { font-size: 12px; color: var(--muted); font-family: 'DM Mono', monospace; }
 
+  button {
+    display: flex; align-items: center; gap: 6px; padding: 8px 16px;
+    background: var(--accent); color: white; border: none; border-radius: var(--radius-sm);
+    font-size: 13px; font-family: 'DM Sans', sans-serif; font-weight: 500; cursor: pointer; transition: opacity .15s;
+  }
+  button:hover { opacity: 0.88; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* Filtros */
   .filters {
     background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
     padding: 1rem 1.4rem; margin-bottom: 1.5rem;
-    display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
   }
+  .filter-group { display: flex; align-items: center; gap: 8px; }
   .filter-label { font-size: 13px; font-weight: 500; color: var(--muted); white-space: nowrap; }
+  .filter-sep { width: 1px; height: 24px; background: var(--border); flex-shrink: 0; }
+
+  select {
+    font-family: 'DM Sans', sans-serif; font-size: 13px; padding: 6px 12px;
+    border-radius: var(--radius-sm); border: 1px solid var(--border);
+    background: var(--bg); color: var(--text); cursor: pointer;
+  }
+  select:focus { outline: none; border-color: var(--accent); }
+
   .period-btns { display: flex; gap: 6px; flex-wrap: wrap; }
   .period-btn {
     padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 500;
@@ -40,7 +60,7 @@
   }
   .period-btn:hover { border-color: var(--accent); color: var(--accent); }
   .period-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
-  .filter-sep { width: 1px; height: 24px; background: var(--border); margin: 0 4px; flex-shrink: 0; }
+
   .date-range { display: flex; align-items: center; gap: 8px; }
   input[type="date"] {
     font-family: 'DM Sans', sans-serif; font-size: 13px; padding: 6px 10px;
@@ -50,14 +70,7 @@
   input[type="date"]:focus { outline: none; border-color: var(--accent); }
   .date-sep { font-size: 13px; color: var(--muted); }
 
-  button {
-    display: flex; align-items: center; gap: 6px; padding: 8px 16px;
-    background: var(--accent); color: white; border: none; border-radius: var(--radius-sm);
-    font-size: 13px; font-family: 'DM Sans', sans-serif; font-weight: 500; cursor: pointer; transition: opacity .15s;
-  }
-  button:hover { opacity: 0.88; }
-  button:disabled { opacity: 0.5; cursor: not-allowed; }
-
+  /* Msgs */
   .msg { padding: 10px 14px; border-radius: var(--radius-sm); font-size: 13px; margin-bottom: 1.5rem; display: none; }
   .msg.error   { background: var(--danger-bg);  color: var(--danger); }
   .msg.success { background: var(--success-bg); color: var(--success); }
@@ -87,25 +100,26 @@
   /* Cards */
   .card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 1.2rem 1.4rem; margin-bottom: 1.5rem; }
   .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; gap: 8px; flex-wrap: wrap; }
-  .card-title { font-size: 13px; font-weight: 500; color: var(--muted); }
+  .card-title { font-size: 13px; font-weight: 600; color: var(--text); }
   .period-tag { font-size: 11px; color: var(--muted); font-family: 'DM Mono', monospace; background: var(--bg); padding: 3px 8px; border-radius: 20px; }
 
-  .status-checks { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .status-checks { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
   .check-label {
-    display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 500;
-    cursor: pointer; user-select: none; padding: 5px 10px; border-radius: 20px;
+    display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 500;
+    cursor: pointer; user-select: none; padding: 4px 10px; border-radius: 20px;
     border: 1px solid var(--border); background: var(--bg); color: var(--muted); transition: all .15s;
   }
-  .check-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; opacity: 0.3; transition: opacity .15s; }
+  .check-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; opacity: 0.3; transition: opacity .15s; }
   .check-label.checked .check-dot { opacity: 1; }
   .check-label.open.checked  { color: var(--info);    border-color: var(--info);    background: var(--info-bg); }
   .check-label.won.checked   { color: var(--success); border-color: var(--success); background: var(--success-bg); }
   .check-label.lost.checked  { color: var(--danger);  border-color: var(--danger);  background: var(--danger-bg); }
 
-  .legend { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 12px; }
-  .legend-item { display: flex; align-items: center; gap: 5px; font-size: 12px; color: var(--muted); }
-  .legend-dot { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
-  .chart-wrap { position: relative; width: 100%; height: 240px; }
+  /* Gráficos horizontais */
+  .chart-wrap { position: relative; width: 100%; }
+  .chart-wrap.vertical { height: 260px; }
+  .chart-wrap.horizontal { height: 320px; }
+
   .chart-loading {
     display: none; position: absolute; inset: 0; background: rgba(255,255,255,0.88);
     border-radius: var(--radius-sm); align-items: center; justify-content: center;
@@ -117,7 +131,7 @@
   /* Rows */
   .row { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--border); }
   .row:last-child { border-bottom: none; }
-  .row-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
+  .row-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
   .row-sub  { font-size: 11px; color: var(--muted); margin-top: 2px; }
   .row-right { text-align: right; flex-shrink: 0; margin-left: 12px; }
   .row-value { font-size: 13px; font-weight: 500; }
@@ -127,7 +141,6 @@
   .badge.lost { background: var(--danger-bg);  color: var(--danger); }
   .badge.open { background: var(--info-bg);    color: var(--info); }
 
-  /* Responsável com conversão */
   .owner-row { display: flex; align-items: center; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
   .owner-row:last-child { border-bottom: none; }
   .owner-info { flex: 1; min-width: 0; }
@@ -137,16 +150,15 @@
   .conv-pct { font-size: 16px; font-weight: 600; }
   .conv-label { font-size: 11px; color: var(--muted); }
   .conv-bar { height: 3px; background: var(--bg); border-radius: 2px; margin-top: 4px; width: 60px; }
-  .conv-fill { height: 100%; border-radius: 2px; background: var(--success); }
+  .conv-fill { height: 100%; border-radius: 2px; }
 
-  select { font-family: 'DM Sans', sans-serif; font-size: 12px; padding: 5px 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; }
   .empty { font-size: 13px; color: var(--muted); padding: 1rem 0; }
   .spinner { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(255,255,255,0.4); border-top-color: white; border-radius: 50%; animation: spin .6s linear infinite; }
   @keyframes spin { to { transform: rotate(360deg); } }
 
-  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
-  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
-  @media (max-width: 900px) { .three-col { grid-template-columns: 1fr 1fr; } }
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1.5rem; }
+  .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; }
+  @media (max-width: 1000px) { .three-col { grid-template-columns: 1fr 1fr; } }
   @media (max-width: 700px) { .two-col, .three-col { grid-template-columns: 1fr; } body { padding: 1rem; } }
 </style>
 </head>
@@ -157,7 +169,7 @@
     <div class="logo-dot"><svg viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
     <div>
       <div class="logo-text">Dashboard Agendor</div>
-      <div class="logo-sub">Funil Comercial</div>
+      <div class="logo-sub" id="funnelLabel">Todos os funis</div>
     </div>
   </div>
   <div class="header-actions">
@@ -170,19 +182,42 @@
 </header>
 
 <div class="filters">
-  <span class="filter-label">Período:</span>
-  <div class="period-btns">
-    <button class="period-btn" onclick="setPeriod(7,this)">7 dias</button>
-    <button class="period-btn active" onclick="setPeriod(30,this)">30 dias</button>
-    <button class="period-btn" onclick="setPeriod(90,this)">90 dias</button>
-    <button class="period-btn" onclick="setPeriod(365,this)">1 ano</button>
-    <button class="period-btn" onclick="setPeriod(0,this)">Todos</button>
+  <!-- Seletor de funil -->
+  <div class="filter-group">
+    <span class="filter-label">Funil:</span>
+    <select id="funnelFilter" onchange="applyFilter()">
+      <option value="todos">Todos os funis</option>
+      <option value="Funil Comercial">Funil Comercial</option>
+      <option value="Funil de Prospecção Ativa">Funil de Prospecção Ativa</option>
+      <option value="Funil de Legalização">Funil de Legalização</option>
+      <option value="Funil de Perdas Lucralize">Funil de Perdas Lucralize</option>
+      <option value="Funil Prospecção Eventos">Funil Prospecção Eventos</option>
+      <option value="Funil de GDG BH e Uberlândia">Funil de GDG BH e Uberlândia</option>
+      <option value="Funil de BPO Jurídico">Funil de BPO Jurídico</option>
+      <option value="Funil de Reativação">Funil de Reativação</option>
+    </select>
   </div>
+
   <div class="filter-sep"></div>
+
+  <!-- Período rápido -->
+  <div class="filter-group">
+    <span class="filter-label">Período:</span>
+    <div class="period-btns">
+      <button class="period-btn" onclick="setPeriod(7,this)">7d</button>
+      <button class="period-btn active" onclick="setPeriod(30,this)">30d</button>
+      <button class="period-btn" onclick="setPeriod(90,this)">90d</button>
+      <button class="period-btn" onclick="setPeriod(365,this)">1 ano</button>
+      <button class="period-btn" onclick="setPeriod(0,this)">Todos</button>
+    </div>
+  </div>
+
+  <div class="filter-sep"></div>
+
+  <!-- Datas customizadas -->
   <div class="date-range">
-    <span class="filter-label">De</span>
     <input type="date" id="dateFrom" onchange="clearActive();applyFilter();">
-    <span class="date-sep">até</span>
+    <span class="date-sep">→</span>
     <input type="date" id="dateTo" onchange="clearActive();applyFilter();">
   </div>
 </div>
@@ -191,7 +226,7 @@
 <div id="successMsg" class="msg success"></div>
 <div id="infoMsg" class="msg info"></div>
 
-<!-- Métricas principais -->
+<!-- Métricas -->
 <div class="metrics">
   <div class="metric-card">
     <div class="metric-label">Total no período</div>
@@ -207,7 +242,7 @@
     <div class="metric-sub" id="convSub">—</div>
   </div>
   <div class="metric-card">
-    <div class="metric-label">Ticket médio (ganhos)</div>
+    <div class="metric-label">Ticket médio</div>
     <div class="metric-value warning" id="avgTicket">—</div>
   </div>
   <div class="metric-card">
@@ -236,8 +271,8 @@
   </div>
 </div>
 
-<!-- Gráficos: funil + origem -->
-<div class="two-col" style="margin-bottom:1.5rem;">
+<!-- Gráficos -->
+<div class="two-col">
   <div class="card" style="margin-bottom:0;">
     <div class="card-header">
       <span class="card-title">Por etapa do funil</span>
@@ -250,42 +285,41 @@
         <span class="period-tag" id="periodTag">—</span>
       </div>
     </div>
-    <div class="legend" id="funnelLegend"></div>
-    <div class="chart-wrap">
-      <canvas id="funnelChart" role="img" aria-label="Por etapa do funil"></canvas>
+    <div class="chart-wrap horizontal">
+      <canvas id="funnelChart" role="img"></canvas>
       <div class="chart-loading" id="chartLoading"><div class="spinner-dark"></div><span>Buscando...</span></div>
     </div>
   </div>
+
   <div class="card" style="margin-bottom:0;">
     <div class="card-header">
-      <span class="card-title">Por origem</span>
+      <span class="card-title">Por origem <span style="font-size:11px;color:var(--muted);font-weight:400;">(top 10)</span></span>
       <div class="status-checks">
         <label class="check-label open checked" id="lbl2-open" onclick="toggleStatus('open','origin')"><span class="check-dot" style="background:var(--info)"></span>Andamento</label>
         <label class="check-label won checked" id="lbl2-won" onclick="toggleStatus('won','origin')"><span class="check-dot" style="background:var(--success)"></span>Ganhos</label>
         <label class="check-label lost checked" id="lbl2-lost" onclick="toggleStatus('lost','origin')"><span class="check-dot" style="background:var(--danger)"></span>Perdidos</label>
       </div>
     </div>
-    <div class="legend" id="originLegend"></div>
-    <div class="chart-wrap">
-      <canvas id="originChart" role="img" aria-label="Por origem"></canvas>
+    <div class="chart-wrap horizontal">
+      <canvas id="originChart" role="img"></canvas>
     </div>
   </div>
 </div>
 
-<!-- Motivo de perda + Responsáveis + Negócios -->
+<!-- Motivos + Responsáveis + Negócios -->
 <div class="three-col">
   <div class="card" style="margin-bottom:0;">
     <div class="card-header"><span class="card-title">Motivos de perda</span></div>
     <div id="lossReasonList"><p class="empty">—</p></div>
   </div>
   <div class="card" style="margin-bottom:0;">
-    <div class="card-header"><span class="card-title">Responsáveis — conversão</span></div>
+    <div class="card-header"><span class="card-title">Responsáveis</span></div>
     <div id="ownersList"><p class="empty">—</p></div>
   </div>
   <div class="card" style="margin-bottom:0;">
     <div class="card-header">
       <span class="card-title">Negócios</span>
-      <select id="filterStatus" onchange="renderDeals()">
+      <select id="filterStatus" onchange="renderDeals()" style="font-size:12px;">
         <option value="all">Todos</option>
         <option value="open">Andamento</option>
         <option value="won">Ganhos</option>
@@ -298,7 +332,7 @@
 
 <script>
 const PROXY = 'https://agendo-proxy.onrender.com';
-const COLORS = ['#1a5fb4','#1e7e4a','#a05c00','#8b3a8b','#c0392b','#16697a','#d35400','#2c3e50','#b32d2d','#1d6b4a','#5c7a2e','#6b3a7d','#2e7d8b','#8b6914','#4a7c59'];
+const COLORS = ['#1a5fb4','#1e7e4a','#a05c00','#8b3a8b','#c0392b','#16697a','#d35400','#2c3e50','#b32d2d','#1d6b4a'];
 
 let baseDeals = [], filteredDeals = [];
 let funnelChart = null, originChart = null;
@@ -349,15 +383,30 @@ function setMsg(type, msg) {
 function applyFilter() {
   const from = document.getElementById('dateFrom').value;
   const to   = document.getElementById('dateTo').value;
+  const funil = document.getElementById('funnelFilter').value;
+
+  // Atualiza label do funil no header
+  document.getElementById('funnelLabel').textContent = funil === 'todos' ? 'Todos os funis' : funil;
+
+  let deals = baseDeals;
+
+  // Filtro de funil
+  if (funil !== 'todos') {
+    deals = deals.filter(d => d.dealStage?.funnel?.name === funil);
+  }
+
+  // Filtro de data
   if (from && to) {
     const fd = new Date(from+'T00:00:00'), td = new Date(to+'T23:59:59');
-    filteredDeals = baseDeals.filter(d => { const c = new Date(d.createdAt); return c>=fd && c<=td; });
+    deals = deals.filter(d => { const c = new Date(d.createdAt); return c>=fd && c<=td; });
     const f = s => new Date(s+'T00:00:00').toLocaleDateString('pt-BR');
     document.getElementById('periodTag').textContent = f(from) + ' → ' + f(to);
   } else {
-    filteredDeals = [...baseDeals];
     document.getElementById('periodTag').textContent = 'todos os períodos';
   }
+
+  filteredDeals = deals;
+
   updateMetrics();
   updateFunnelChart();
   updateOriginChart();
@@ -366,7 +415,7 @@ function applyFilter() {
   renderDeals();
 
   document.getElementById('infoMsg').textContent =
-    'Mostrando ' + filteredDeals.length + ' de ' + baseDeals.length.toLocaleString('pt-BR') + ' negócios na base';
+    'Mostrando ' + filteredDeals.length.toLocaleString('pt-BR') + ' de ' + baseDeals.length.toLocaleString('pt-BR') + ' negócios';
   document.getElementById('infoMsg').style.display = 'block';
 }
 
@@ -377,15 +426,13 @@ function updateMetrics() {
   const won   = d.filter(x=>x.dealStatus?.id===2).length;
   const lost  = d.filter(x=>x.dealStatus?.id===3).length;
   const concluded = won + lost;
-  const convP = pct(won, concluded);
-
   const wonDeals = d.filter(x=>x.dealStatus?.id===2);
   const totalWonValue = wonDeals.reduce((s,x)=>s+(x.value||0),0);
-  const avgTicket = wonDeals.length ? Math.round(totalWonValue / wonDeals.length) : 0;
+  const avgTicket = wonDeals.length ? Math.round(totalWonValue/wonDeals.length) : 0;
 
   document.getElementById('totalDeals').textContent = total.toLocaleString('pt-BR');
   document.getElementById('totalValue').textContent  = fmt(d.reduce((s,x)=>s+(x.value||0),0));
-  document.getElementById('convRate').textContent    = convP + '%';
+  document.getElementById('convRate').textContent    = pct(won,concluded) + '%';
   document.getElementById('convSub').textContent     = won + ' ganhos de ' + concluded + ' concluídos';
   document.getElementById('avgTicket').textContent   = fmt(avgTicket);
   document.getElementById('openDeals').textContent   = open;
@@ -393,15 +440,15 @@ function updateMetrics() {
   document.getElementById('lostDeals').textContent   = lost;
 
   const openP = pct(open,total), wonP = pct(won,total), lostP = pct(lost,total);
-  document.getElementById('openPct').textContent = openP + '% do total';
-  document.getElementById('wonPct').textContent  = wonP  + '% do total';
-  document.getElementById('lostPct').textContent = lostP + '% do total';
-  document.getElementById('openBar').style.width = openP + '%';
-  document.getElementById('wonBar').style.width  = wonP  + '%';
-  document.getElementById('lostBar').style.width = lostP + '%';
+  document.getElementById('openPct').textContent = openP+'% do total';
+  document.getElementById('wonPct').textContent  = wonP+'% do total';
+  document.getElementById('lostPct').textContent = lostP+'% do total';
+  document.getElementById('openBar').style.width = openP+'%';
+  document.getElementById('wonBar').style.width  = wonP+'%';
+  document.getElementById('lostBar').style.width = lostP+'%';
 }
 
-function buildChart(canvasId, legendId, statusRef, deals, keyFn) {
+function buildHorizontalChart(canvasId, statusRef, deals, keyFn, topN = 10) {
   const filtered = deals.filter(d => {
     const sid = d.dealStatus?.id;
     if (sid===1 && !statusRef.open) return false;
@@ -409,25 +456,28 @@ function buildChart(canvasId, legendId, statusRef, deals, keyFn) {
     if (sid===3 && !statusRef.lost) return false;
     return true;
   });
+
   const map = {};
   filtered.forEach(d => { const k = keyFn(d)||'Não informado'; map[k]=(map[k]||0)+1; });
-  const sorted = Object.entries(map).sort((a,b)=>b[1]-a[1]);
-  const labels = sorted.map(e=>e[0]), counts = sorted.map(e=>e[1]);
-  const colors = labels.map((_,i)=>COLORS[i%COLORS.length]);
 
-  document.getElementById(legendId).innerHTML = labels.map((l,i)=>
-    `<span class="legend-item"><span class="legend-dot" style="background:${colors[i]}"></span>${l} (${counts[i]})</span>`
-  ).join('');
+  const sorted = Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0, topN);
+  const labels = sorted.map(e => e[0].length > 30 ? e[0].substring(0,28)+'…' : e[0]);
+  const counts = sorted.map(e => e[1]);
+  const colors = sorted.map((_,i) => COLORS[i%COLORS.length]);
 
   return new Chart(document.getElementById(canvasId), {
     type: 'bar',
-    data: { labels, datasets: [{ data: counts, backgroundColor: colors, borderRadius: 5, borderSkipped: false }] },
+    data: { labels, datasets: [{ data: counts, backgroundColor: colors, borderRadius: 4, borderSkipped: false }] },
     options: {
+      indexAxis: 'y',
       responsive: true, maintainAspectRatio: false,
-      plugins: { legend:{display:false}, tooltip:{callbacks:{label:ctx=>' '+ctx.parsed.y+' negócios'}} },
+      plugins: {
+        legend: { display: false },
+        tooltip: { callbacks: { label: ctx => ' ' + ctx.parsed.x + ' negócios' } }
+      },
       scales: {
-        x: { ticks:{font:{size:10,family:'DM Sans'},autoSkip:false,maxRotation:35,color:'#6b6a66'}, grid:{display:false}, border:{display:false} },
-        y: { ticks:{font:{size:10,family:'DM Sans'},stepSize:1,color:'#6b6a66'}, grid:{color:'rgba(0,0,0,0.05)'}, border:{display:false} }
+        x: { ticks: { font:{size:11,family:'DM Sans'}, color:'#6b6a66' }, grid:{color:'rgba(0,0,0,0.04)'}, border:{display:false} },
+        y: { ticks: { font:{size:11,family:'DM Sans'}, color:'#1a1a18' }, grid:{display:false}, border:{display:false} }
       }
     }
   });
@@ -436,21 +486,18 @@ function buildChart(canvasId, legendId, statusRef, deals, keyFn) {
 function updateFunnelChart() {
   if (funnelChart) funnelChart.destroy();
   const sorted = [...filteredDeals].sort((a,b)=>(a.dealStage?.sequence||99)-(b.dealStage?.sequence||99));
-  funnelChart = buildChart('funnelChart','funnelLegend',chartStatus.funnel,sorted,d=>d.dealStage?.name);
+  funnelChart = buildHorizontalChart('funnelChart', chartStatus.funnel, sorted, d => d.dealStage?.name, 12);
 }
 
 function updateOriginChart() {
   if (originChart) originChart.destroy();
-  originChart = buildChart('originChart','originLegend',chartStatus.origin,filteredDeals,getOrigem);
+  originChart = buildHorizontalChart('originChart', chartStatus.origin, filteredDeals, getOrigem, 10);
 }
 
 function renderLossReasons() {
   const lost = filteredDeals.filter(d=>d.dealStatus?.id===3);
   const map = {};
-  lost.forEach(d => {
-    const name = d.lossReason?.name || 'Não informado';
-    map[name] = (map[name]||0) + 1;
-  });
+  lost.forEach(d => { const n = d.lossReason?.name||'Não informado'; map[n]=(map[n]||0)+1; });
   const sorted = Object.entries(map).sort((a,b)=>b[1]-a[1]);
   const total = lost.length;
 
@@ -458,12 +505,12 @@ function renderLossReasons() {
   if (!sorted.length) { el.innerHTML = '<p class="empty">Nenhum negócio perdido.</p>'; return; }
 
   el.innerHTML = sorted.map(([name, count]) => {
-    const p = pct(count, total);
+    const p = pct(count,total);
     return `<div class="row">
       <div style="min-width:0;flex:1;">
         <div class="row-name">${name}</div>
         <div style="height:3px;background:var(--bg);border-radius:2px;margin-top:5px;overflow:hidden;">
-          <div style="height:100%;width:${p}%;background:var(--danger);border-radius:2px;"></div>
+          <div style="height:100%;width:${p}%;background:var(--danger);border-radius:2px;transition:width .4s;"></div>
         </div>
       </div>
       <div class="row-right" style="margin-left:16px;">
@@ -477,8 +524,8 @@ function renderLossReasons() {
 function renderOwners() {
   const map = {};
   filteredDeals.forEach(d => {
-    const name = d.owner?.name || 'Sem responsável';
-    if (!map[name]) map[name] = { total:0, won:0, lost:0, open:0, value:0 };
+    const name = d.owner?.name||'Sem responsável';
+    if (!map[name]) map[name] = {total:0,won:0,lost:0,open:0,value:0};
     map[name].total++; map[name].value += d.value||0;
     if (d.dealStatus?.id===2) map[name].won++;
     else if (d.dealStatus?.id===3) map[name].lost++;
@@ -487,17 +534,17 @@ function renderOwners() {
 
   const sorted = Object.entries(map).sort((a,b)=>b[1].total-a[1].total);
   document.getElementById('ownersList').innerHTML = sorted.map(([name, s]) => {
-    const concluded = s.won + s.lost;
-    const conv = pct(s.won, concluded);
+    const conv = pct(s.won, s.won+s.lost);
+    const color = conv>=50?'var(--success)':conv>=25?'var(--warning)':'var(--danger)';
     return `<div class="owner-row">
       <div class="owner-info">
         <div class="owner-name">${name}</div>
         <div class="owner-stats">${s.open} abertos · <span style="color:var(--success)">${s.won} ganhos</span> · <span style="color:var(--danger)">${s.lost} perdidos</span></div>
       </div>
       <div class="owner-conv">
-        <div class="conv-pct" style="color:${conv>=50?'var(--success)':conv>=25?'var(--warning)':'var(--danger)'}">${conv}%</div>
+        <div class="conv-pct" style="color:${color}">${conv}%</div>
         <div class="conv-label">conversão</div>
-        <div class="conv-bar"><div class="conv-fill" style="width:${conv}%;background:${conv>=50?'var(--success)':conv>=25?'var(--warning)':'var(--danger)'}"></div></div>
+        <div class="conv-bar"><div class="conv-fill" style="width:${conv}%;background:${color}"></div></div>
       </div>
     </div>`;
   }).join('') || '<p class="empty">Nenhum dado.</p>';
@@ -514,14 +561,14 @@ function renderDeals() {
   if (!deals.length) { el.innerHTML = '<p class="empty">Nenhum negócio.</p>'; return; }
 
   el.innerHTML = deals.slice(0,12).map(d => {
-    const name   = d.person?.name || d.organization?.name || d.title || 'Sem nome';
-    const stage  = d.dealStage?.name || '—';
+    const name   = d.person?.name||d.organization?.name||d.title||'Sem nome';
+    const stage  = d.dealStage?.name||'—';
     const sId    = d.dealStatus?.id;
     const sLabel = sId===2?'Ganho':sId===3?'Perdido':'Andamento';
     const sClass = sId===2?'won':sId===3?'lost':'open';
     const date   = d.createdAt ? new Date(d.createdAt).toLocaleDateString('pt-BR') : '';
     const origem = getOrigem(d);
-    const tag    = origem ? `<span style="color:var(--accent);font-size:11px;"> · ${origem}</span>` : '';
+    const tag    = origem ? `<span style="color:var(--accent);"> · ${origem}</span>` : '';
     return `<div class="row">
       <div style="min-width:0;flex:1;">
         <div class="row-name">${name}</div>
@@ -553,7 +600,7 @@ async function fetchAll() {
     setMsg('success', '✓ ' + baseDeals.length.toLocaleString('pt-BR') + ' negócios carregados');
     applyFilter();
   } catch(e) {
-    setMsg('error', '❌ Proxy não encontrado. Certifique-se que o agendor_proxy.py está rodando. (' + e.message + ')');
+    setMsg('error', '❌ Não foi possível conectar ao proxy. (' + e.message + ')');
   }
 
   document.getElementById('chartLoading').classList.remove('visible');
