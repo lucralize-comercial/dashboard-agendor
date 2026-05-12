@@ -34,17 +34,29 @@
   button:hover { opacity: 0.88; }
   button:disabled { opacity: 0.5; cursor: not-allowed; }
 
+  /* Abas */
+  .tabs { display: flex; gap: 4px; margin-bottom: 1.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 4px; width: fit-content; }
+  .tab-btn {
+    padding: 7px 20px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500;
+    font-family: 'DM Sans', sans-serif; cursor: pointer; border: none;
+    background: transparent; color: var(--muted); transition: all .15s;
+  }
+  .tab-btn:hover { color: var(--text); }
+  .tab-btn.active { background: var(--accent); color: white; }
+  .tab-content { display: none; }
+  .tab-content.active { display: block; }
+
   /* Filtros */
   .filters {
     background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
     padding: 1rem 1.4rem; margin-bottom: 1.5rem;
-    display: flex; align-items: flex-start; gap: 16px; flex-wrap: wrap;
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
   }
   .filter-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
   .filter-label { font-size: 13px; font-weight: 500; color: var(--muted); white-space: nowrap; }
   .filter-sep { width: 1px; height: 24px; background: var(--border); flex-shrink: 0; align-self: center; }
 
-  /* Dropdown multi-select de funis */
+  /* Dropdown funis */
   .funnel-dropdown { position: relative; }
   .funnel-btn {
     display: flex; align-items: center; gap: 8px; padding: 6px 12px;
@@ -55,29 +67,24 @@
   .funnel-btn:hover { border-color: var(--accent); }
   .funnel-btn svg { flex-shrink: 0; transition: transform .2s; }
   .funnel-btn.open svg { transform: rotate(180deg); }
-
   .funnel-menu {
     display: none; position: absolute; top: calc(100% + 6px); left: 0;
     background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
     box-shadow: 0 4px 20px rgba(0,0,0,0.1); z-index: 100; min-width: 240px; padding: 6px;
   }
   .funnel-menu.open { display: block; }
-
   .funnel-option {
     display: flex; align-items: center; gap: 10px; padding: 8px 10px;
     border-radius: var(--radius-sm); cursor: pointer; font-size: 13px; color: var(--text);
     transition: background .1s; user-select: none;
   }
   .funnel-option:hover { background: var(--bg); }
-  .funnel-option input[type="checkbox"] { display: none; }
   .funnel-check {
     width: 16px; height: 16px; border: 1.5px solid var(--border); border-radius: 4px;
     flex-shrink: 0; display: flex; align-items: center; justify-content: center;
     background: var(--bg); transition: all .15s;
   }
-  .funnel-option.checked .funnel-check {
-    background: var(--accent); border-color: var(--accent);
-  }
+  .funnel-option.checked .funnel-check { background: var(--accent); border-color: var(--accent); }
   .funnel-option.checked .funnel-check::after {
     content: ''; width: 8px; height: 5px;
     border-left: 2px solid white; border-bottom: 2px solid white;
@@ -89,16 +96,10 @@
     border: 1px solid var(--border); font-family: 'DM Mono', monospace;
   }
   .funnel-option.checked .funnel-sigla { background: var(--info-bg); color: var(--accent); border-color: var(--accent); }
-
-  .funnel-menu-footer {
-    display: flex; gap: 6px; padding: 6px 4px 2px; border-top: 1px solid var(--border); margin-top: 4px;
-  }
-  .funnel-menu-footer button {
-    flex: 1; padding: 5px; font-size: 11px; border-radius: var(--radius-sm);
-  }
+  .funnel-menu-footer { display: flex; gap: 6px; padding: 6px 4px 2px; border-top: 1px solid var(--border); margin-top: 4px; }
+  .funnel-menu-footer button { flex: 1; padding: 5px; font-size: 11px; border-radius: var(--radius-sm); }
   .funnel-menu-footer button.secondary { background: var(--bg); color: var(--muted); border: 1px solid var(--border); }
 
-  /* Período */
   .period-btns { display: flex; gap: 6px; flex-wrap: wrap; }
   .period-btn {
     padding: 6px 14px; border-radius: 20px; font-size: 12px; font-weight: 500;
@@ -107,7 +108,6 @@
   }
   .period-btn:hover { border-color: var(--accent); color: var(--accent); }
   .period-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
-
   .date-range { display: flex; align-items: center; gap: 8px; }
   input[type="date"] {
     font-family: 'DM Sans', sans-serif; font-size: 13px; padding: 6px 10px;
@@ -122,6 +122,7 @@
   .msg.success { background: var(--success-bg); color: var(--success); }
   .msg.info    { background: var(--info-bg);    color: var(--info); }
 
+  /* Métricas */
   .metrics { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 1.5rem; }
   .metric-card { background: var(--surface); border-radius: var(--radius); padding: 1rem 1.2rem; border: 1px solid var(--border); }
   .metric-label { font-size: 12px; color: var(--muted); margin-bottom: 4px; }
@@ -142,6 +143,7 @@
   .progress-fill.success { background: var(--success); }
   .progress-fill.danger  { background: var(--danger); }
 
+  /* Cards */
   .card { background: var(--surface); border-radius: var(--radius); border: 1px solid var(--border); padding: 1.2rem 1.4rem; margin-bottom: 1.5rem; }
   .card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1rem; gap: 8px; flex-wrap: wrap; }
   .card-title { font-size: 13px; font-weight: 600; color: var(--text); }
@@ -160,9 +162,11 @@
   .check-label.lost.checked  { color: var(--danger);  border-color: var(--danger);  background: var(--danger-bg); }
 
   .chart-wrap { position: relative; width: 100%; }
+  .chart-wrap.h220 { height: 220px; }
   .chart-wrap.h260 { height: 260px; }
   .chart-wrap.h300 { height: 300px; }
   .chart-wrap.h320 { height: 320px; }
+  .chart-wrap.h400 { height: 400px; }
 
   .chart-loading {
     display: none; position: absolute; inset: 0; background: rgba(255,255,255,0.88);
@@ -172,6 +176,16 @@
   .chart-loading.visible { display: flex; }
   .spinner-dark { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin .6s linear infinite; }
 
+  /* Tabela de tendência */
+  .trend-table { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 16px; }
+  .trend-table th, .trend-table td { padding: 7px 8px; text-align: right; white-space: nowrap; }
+  .trend-table th:first-child, .trend-table td:first-child { text-align: left; }
+  .trend-table thead tr { border-bottom: 2px solid var(--border); }
+  .trend-table tbody tr { border-bottom: 1px solid var(--border); }
+  .trend-table tbody tr.sep { border-top: 2px solid var(--border); }
+  .trend-table td.mono { font-family: 'DM Mono', monospace; }
+
+  /* Rows gerais */
   .row { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid var(--border); }
   .row:last-child { border-bottom: none; }
   .row-name { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 200px; }
@@ -194,6 +208,15 @@
   .conv-label { font-size: 11px; color: var(--muted); }
   .conv-bar { height: 3px; background: var(--bg); border-radius: 2px; margin-top: 4px; width: 60px; }
   .conv-fill { height: 100%; border-radius: 2px; }
+
+  /* Aba 2 — tabela de origem */
+  .origin-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  .origin-table th { padding: 8px 10px; text-align: right; font-weight: 500; color: var(--muted); border-bottom: 2px solid var(--border); white-space: nowrap; }
+  .origin-table th:first-child { text-align: left; }
+  .origin-table td { padding: 8px 10px; text-align: right; border-bottom: 1px solid var(--border); font-family: 'DM Mono', monospace; font-size: 12px; }
+  .origin-table td:first-child { text-align: left; font-family: 'DM Sans', sans-serif; font-weight: 500; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .origin-table tr:last-child td { border-bottom: none; }
+  .origin-table tr:hover td { background: var(--bg); }
 
   select { font-family: 'DM Sans', sans-serif; font-size: 12px; padding: 5px 10px; border-radius: var(--radius-sm); border: 1px solid var(--border); background: var(--surface); color: var(--text); cursor: pointer; }
   .empty { font-size: 13px; color: var(--muted); padding: 1rem 0; }
@@ -225,8 +248,14 @@
   </div>
 </header>
 
+<!-- Abas -->
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('visao-geral', this)">Visão Geral</button>
+  <button class="tab-btn" onclick="switchTab('analise', this)">Análise de Conversão</button>
+</div>
+
+<!-- Filtros (compartilhados) -->
 <div class="filters">
-  <!-- Multi-select funis -->
   <div class="filter-group">
     <span class="filter-label">Funil:</span>
     <div class="funnel-dropdown">
@@ -235,46 +264,14 @@
         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>
       </button>
       <div class="funnel-menu" id="funnelMenu">
-        <div class="funnel-option checked" data-funnel="Funil Comercial" onclick="toggleFunnel(this)">
-          <div class="funnel-check"></div>
-          <span style="flex:1;">Funil Comercial</span>
-          <span class="funnel-sigla">COM</span>
-        </div>
-        <div class="funnel-option checked" data-funnel="Funil de Prospecção Ativa" onclick="toggleFunnel(this)">
-          <div class="funnel-check"></div>
-          <span style="flex:1;">Funil de Prospecção Ativa</span>
-          <span class="funnel-sigla">PAT</span>
-        </div>
-        <div class="funnel-option checked" data-funnel="Funil de Legalização" onclick="toggleFunnel(this)">
-          <div class="funnel-check"></div>
-          <span style="flex:1;">Funil de Legalização</span>
-          <span class="funnel-sigla">LGL</span>
-        </div>
-        <div class="funnel-option checked" data-funnel="Funil de Perdas Lucralize" onclick="toggleFunnel(this)">
-          <div class="funnel-check"></div>
-          <span style="flex:1;">Funil de Perdas Lucralize</span>
-          <span class="funnel-sigla">FPL</span>
-        </div>
-        <div class="funnel-option checked" data-funnel="Funil Prospecção Eventos" onclick="toggleFunnel(this)">
-          <div class="funnel-check"></div>
-          <span style="flex:1;">Funil Prospecção Eventos</span>
-          <span class="funnel-sigla">PEV</span>
-        </div>
-        <div class="funnel-option checked" data-funnel="Funil de GDG BH e Uberlândia" onclick="toggleFunnel(this)">
-          <div class="funnel-check"></div>
-          <span style="flex:1;">Funil de GDG BH e Uberlândia</span>
-          <span class="funnel-sigla">GDG</span>
-        </div>
-        <div class="funnel-option checked" data-funnel="Funil de BPO Jurídico" onclick="toggleFunnel(this)">
-          <div class="funnel-check"></div>
-          <span style="flex:1;">Funil de BPO Jurídico</span>
-          <span class="funnel-sigla">JUR</span>
-        </div>
-        <div class="funnel-option checked" data-funnel="Funil de Reativação" onclick="toggleFunnel(this)">
-          <div class="funnel-check"></div>
-          <span style="flex:1;">Funil de Reativação</span>
-          <span class="funnel-sigla">REA</span>
-        </div>
+        <div class="funnel-option checked" data-funnel="Funil Comercial" onclick="toggleFunnel(this)"><div class="funnel-check"></div><span style="flex:1;">Funil Comercial</span><span class="funnel-sigla">COM</span></div>
+        <div class="funnel-option checked" data-funnel="Funil de Prospecção Ativa" onclick="toggleFunnel(this)"><div class="funnel-check"></div><span style="flex:1;">Funil de Prospecção Ativa</span><span class="funnel-sigla">PAT</span></div>
+        <div class="funnel-option checked" data-funnel="Funil de Legalização" onclick="toggleFunnel(this)"><div class="funnel-check"></div><span style="flex:1;">Funil de Legalização</span><span class="funnel-sigla">LGL</span></div>
+        <div class="funnel-option checked" data-funnel="Funil de Perdas Lucralize" onclick="toggleFunnel(this)"><div class="funnel-check"></div><span style="flex:1;">Funil de Perdas Lucralize</span><span class="funnel-sigla">FPL</span></div>
+        <div class="funnel-option checked" data-funnel="Funil Prospecção Eventos" onclick="toggleFunnel(this)"><div class="funnel-check"></div><span style="flex:1;">Funil Prospecção Eventos</span><span class="funnel-sigla">PEV</span></div>
+        <div class="funnel-option checked" data-funnel="Funil de GDG BH e Uberlândia" onclick="toggleFunnel(this)"><div class="funnel-check"></div><span style="flex:1;">Funil de GDG BH e Uberlândia</span><span class="funnel-sigla">GDG</span></div>
+        <div class="funnel-option checked" data-funnel="Funil de BPO Jurídico" onclick="toggleFunnel(this)"><div class="funnel-check"></div><span style="flex:1;">Funil de BPO Jurídico</span><span class="funnel-sigla">JUR</span></div>
+        <div class="funnel-option checked" data-funnel="Funil de Reativação" onclick="toggleFunnel(this)"><div class="funnel-check"></div><span style="flex:1;">Funil de Reativação</span><span class="funnel-sigla">REA</span></div>
         <div class="funnel-menu-footer">
           <button class="secondary" onclick="selectAllFunnels()">Todos</button>
           <button class="secondary" onclick="clearAllFunnels()">Limpar</button>
@@ -282,9 +279,7 @@
       </div>
     </div>
   </div>
-
   <div class="filter-sep"></div>
-
   <div class="filter-group">
     <span class="filter-label">Período:</span>
     <div class="period-btns">
@@ -295,9 +290,7 @@
       <button class="period-btn" onclick="setPeriod(0,this)">Todos</button>
     </div>
   </div>
-
   <div class="filter-sep"></div>
-
   <div class="date-range">
     <input type="date" id="dateFrom" onchange="clearActive();applyFilter();">
     <span class="date-sep">→</span>
@@ -309,187 +302,268 @@
 <div id="successMsg" class="msg success"></div>
 <div id="infoMsg" class="msg info"></div>
 
-<div class="metrics">
-  <div class="metric-card"><div class="metric-label">Total no período</div><div class="metric-value" id="totalDeals">—</div></div>
-  <div class="metric-card"><div class="metric-label">Valor total</div><div class="metric-value" id="totalValue">—</div></div>
-  <div class="metric-card">
-    <div class="metric-label">Taxa de conversão</div>
-    <div class="metric-value success" id="convRate">—</div>
-    <div class="metric-sub" id="convSub">—</div>
-  </div>
-  <div class="metric-card"><div class="metric-label">Ticket médio</div><div class="metric-value warning" id="avgTicket">—</div></div>
-  <div class="metric-card">
-    <div class="metric-label">Em andamento</div>
-    <div class="metric-value info" id="openDeals">—</div>
-    <div class="metric-footer">
-      <div class="metric-pct info" id="openPct">—</div>
-      <div class="progress-bar"><div class="progress-fill info" id="openBar" style="width:0%"></div></div>
-    </div>
-  </div>
-  <div class="metric-card">
-    <div class="metric-label">Ganhos</div>
-    <div class="metric-value success" id="wonDeals">—</div>
-    <div class="metric-footer">
-      <div class="metric-pct success" id="wonPct">—</div>
-      <div class="progress-bar"><div class="progress-fill success" id="wonBar" style="width:0%"></div></div>
-    </div>
-  </div>
-  <div class="metric-card">
-    <div class="metric-label">Perdidos</div>
-    <div class="metric-value danger" id="lostDeals">—</div>
-    <div class="metric-footer">
-      <div class="metric-pct danger" id="lostPct">—</div>
-      <div class="progress-bar"><div class="progress-fill danger" id="lostBar" style="width:0%"></div></div>
-    </div>
-  </div>
-</div>
+<!-- ===== ABA 1: VISÃO GERAL ===== -->
+<div id="tab-visao-geral" class="tab-content active">
 
-<!-- Gráfico de linha -->
-<div class="card">
-  <div class="card-header">
-    <span class="card-title">Evolução mensal — últimos 12 meses</span>
-    <div style="display:flex;gap:16px;flex-wrap:wrap;">
-      <span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);"><span style="width:20px;height:2px;background:#6366f1;display:inline-block;border-radius:2px;"></span>Total</span>
-      <span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);"><span style="width:20px;height:2px;background:var(--info);display:inline-block;border-radius:2px;"></span>Andamento</span>
-      <span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);"><span style="width:20px;height:2px;background:var(--success);display:inline-block;border-radius:2px;"></span>Ganhos</span>
-      <span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);"><span style="width:20px;height:2px;background:var(--danger);display:inline-block;border-radius:2px;"></span>Perdidos</span>
+  <div class="metrics">
+    <div class="metric-card"><div class="metric-label">Total no período</div><div class="metric-value" id="totalDeals">—</div></div>
+    <div class="metric-card"><div class="metric-label">Valor total</div><div class="metric-value" id="totalValue">—</div></div>
+    <div class="metric-card">
+      <div class="metric-label">Taxa de conversão</div>
+      <div class="metric-value success" id="convRate">—</div>
+      <div class="metric-sub" id="convSub">—</div>
+    </div>
+    <div class="metric-card"><div class="metric-label">Ticket médio</div><div class="metric-value warning" id="avgTicket">—</div></div>
+    <div class="metric-card">
+      <div class="metric-label">Em andamento</div>
+      <div class="metric-value info" id="openDeals">—</div>
+      <div class="metric-footer">
+        <div class="metric-pct info" id="openPct">—</div>
+        <div class="progress-bar"><div class="progress-fill info" id="openBar" style="width:0%"></div></div>
+      </div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Ganhos</div>
+      <div class="metric-value success" id="wonDeals">—</div>
+      <div class="metric-footer">
+        <div class="metric-pct success" id="wonPct">—</div>
+        <div class="progress-bar"><div class="progress-fill success" id="wonBar" style="width:0%"></div></div>
+      </div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Perdidos</div>
+      <div class="metric-value danger" id="lostDeals">—</div>
+      <div class="metric-footer">
+        <div class="metric-pct danger" id="lostPct">—</div>
+        <div class="progress-bar"><div class="progress-fill danger" id="lostBar" style="width:0%"></div></div>
+      </div>
     </div>
   </div>
-  <div class="chart-wrap h300"><canvas id="trendChart"></canvas></div>
-</div>
 
-<div class="two-col">
-  <div class="card" style="margin-bottom:0;">
+  <!-- Gráfico de linha + tabela -->
+  <div class="card">
     <div class="card-header">
-      <span class="card-title">Por etapa do funil</span>
-      <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-        <div class="status-checks">
-          <label class="check-label open checked" id="lbl-open" onclick="toggleStatus('open','funnel')"><span class="check-dot" style="background:var(--info)"></span>Andamento</label>
-          <label class="check-label won checked" id="lbl-won" onclick="toggleStatus('won','funnel')"><span class="check-dot" style="background:var(--success)"></span>Ganhos</label>
-          <label class="check-label lost checked" id="lbl-lost" onclick="toggleStatus('lost','funnel')"><span class="check-dot" style="background:var(--danger)"></span>Perdidos</label>
+      <span class="card-title">Evolução mensal — últimos 12 meses</span>
+      <div style="display:flex;gap:14px;flex-wrap:wrap;">
+        <span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);"><span style="width:18px;height:2px;background:#6366f1;display:inline-block;border-radius:2px;"></span>Total</span>
+        <span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);"><span style="width:18px;height:2px;background:#1a5fb4;display:inline-block;border-radius:2px;"></span>Andamento</span>
+        <span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);"><span style="width:18px;height:2px;background:#1e7e4a;display:inline-block;border-radius:2px;"></span>Ganhos</span>
+        <span style="display:flex;align-items:center;gap:5px;font-size:12px;color:var(--muted);"><span style="width:18px;height:2px;background:#b32d2d;display:inline-block;border-radius:2px;"></span>Perdidos</span>
+      </div>
+    </div>
+    <div class="chart-wrap h220">
+      <canvas id="trendChart" role="img" aria-label="Evolução mensal dos últimos 12 meses"></canvas>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="trend-table">
+        <thead><tr id="trendThead"></tr></thead>
+        <tbody id="trendTbody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Funil + Origem -->
+  <div class="two-col">
+    <div class="card" style="margin-bottom:0;">
+      <div class="card-header">
+        <span class="card-title">Por etapa do funil</span>
+        <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+          <div class="status-checks">
+            <label class="check-label open checked" id="lbl-open" onclick="toggleStatus('open','funnel')"><span class="check-dot" style="background:var(--info)"></span>Andamento</label>
+            <label class="check-label won checked" id="lbl-won" onclick="toggleStatus('won','funnel')"><span class="check-dot" style="background:var(--success)"></span>Ganhos</label>
+            <label class="check-label lost checked" id="lbl-lost" onclick="toggleStatus('lost','funnel')"><span class="check-dot" style="background:var(--danger)"></span>Perdidos</label>
+          </div>
+          <span class="period-tag" id="periodTag">—</span>
         </div>
-        <span class="period-tag" id="periodTag">—</span>
+      </div>
+      <div class="chart-wrap h320">
+        <canvas id="funnelChart" role="img"></canvas>
+        <div class="chart-loading" id="chartLoading"><div class="spinner-dark"></div><span>Buscando...</span></div>
       </div>
     </div>
-    <div class="chart-wrap h320">
-      <canvas id="funnelChart"></canvas>
-      <div class="chart-loading" id="chartLoading"><div class="spinner-dark"></div><span>Buscando...</span></div>
-    </div>
-  </div>
-  <div class="card" style="margin-bottom:0;">
-    <div class="card-header">
-      <span class="card-title">Por origem <span style="font-size:11px;color:var(--muted);font-weight:400;">(top 15)</span></span>
-      <div class="status-checks">
-        <label class="check-label open checked" id="lbl2-open" onclick="toggleStatus('open','origin')"><span class="check-dot" style="background:var(--info)"></span>Andamento</label>
-        <label class="check-label won checked" id="lbl2-won" onclick="toggleStatus('won','origin')"><span class="check-dot" style="background:var(--success)"></span>Ganhos</label>
-        <label class="check-label lost checked" id="lbl2-lost" onclick="toggleStatus('lost','origin')"><span class="check-dot" style="background:var(--danger)"></span>Perdidos</label>
+    <div class="card" style="margin-bottom:0;">
+      <div class="card-header">
+        <span class="card-title">Por origem <span style="font-size:11px;color:var(--muted);font-weight:400;">(top 15)</span></span>
+        <div class="status-checks">
+          <label class="check-label open checked" id="lbl2-open" onclick="toggleStatus('open','origin')"><span class="check-dot" style="background:var(--info)"></span>Andamento</label>
+          <label class="check-label won checked" id="lbl2-won" onclick="toggleStatus('won','origin')"><span class="check-dot" style="background:var(--success)"></span>Ganhos</label>
+          <label class="check-label lost checked" id="lbl2-lost" onclick="toggleStatus('lost','origin')"><span class="check-dot" style="background:var(--danger)"></span>Perdidos</label>
+        </div>
       </div>
+      <div class="chart-wrap h320"><canvas id="originChart" role="img"></canvas></div>
     </div>
-    <div class="chart-wrap h320"><canvas id="originChart"></canvas></div>
   </div>
+
+  <br>
+
+  <div class="three-col">
+    <div class="card" style="margin-bottom:0;">
+      <div class="card-header"><span class="card-title">Motivos de perda</span></div>
+      <div id="lossReasonList"><p class="empty">—</p></div>
+    </div>
+    <div class="card" style="margin-bottom:0;">
+      <div class="card-header"><span class="card-title">Responsáveis</span></div>
+      <div id="ownersList"><p class="empty">—</p></div>
+    </div>
+    <div class="card" style="margin-bottom:0;">
+      <div class="card-header">
+        <span class="card-title">Negócios</span>
+        <select id="filterStatus" onchange="renderDeals()" style="font-size:12px;">
+          <option value="all">Todos</option>
+          <option value="open">Andamento</option>
+          <option value="won">Ganhos</option>
+          <option value="lost">Perdidos</option>
+        </select>
+      </div>
+      <div id="dealsList"><p class="empty">—</p></div>
+    </div>
+  </div>
+
 </div>
 
-<br>
+<!-- ===== ABA 2: ANÁLISE DE CONVERSÃO ===== -->
+<div id="tab-analise" class="tab-content">
 
-<div class="three-col">
-  <div class="card" style="margin-bottom:0;">
-    <div class="card-header"><span class="card-title">Motivos de perda</span></div>
-    <div id="lossReasonList"><p class="empty">—</p></div>
-  </div>
-  <div class="card" style="margin-bottom:0;">
-    <div class="card-header"><span class="card-title">Responsáveis</span></div>
-    <div id="ownersList"><p class="empty">—</p></div>
-  </div>
-  <div class="card" style="margin-bottom:0;">
-    <div class="card-header">
-      <span class="card-title">Negócios</span>
-      <select id="filterStatus" onchange="renderDeals()" style="font-size:12px;">
-        <option value="all">Todos</option>
-        <option value="open">Andamento</option>
-        <option value="won">Ganhos</option>
-        <option value="lost">Perdidos</option>
-      </select>
+  <!-- Métricas de conversão -->
+  <div class="metrics" style="margin-bottom:1.5rem;">
+    <div class="metric-card">
+      <div class="metric-label">Origens únicas</div>
+      <div class="metric-value" id="a2-origens">—</div>
     </div>
-    <div id="dealsList"><p class="empty">—</p></div>
+    <div class="metric-card">
+      <div class="metric-label">Melhor conversão</div>
+      <div class="metric-value success" id="a2-bestConv" style="font-size:16px;margin-top:4px;">—</div>
+      <div class="metric-sub" id="a2-bestConvSub">—</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Maior volume</div>
+      <div class="metric-value info" id="a2-bestVol" style="font-size:16px;margin-top:4px;">—</div>
+      <div class="metric-sub" id="a2-bestVolSub">—</div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Maior perda</div>
+      <div class="metric-value danger" id="a2-worstLoss" style="font-size:16px;margin-top:4px;">—</div>
+      <div class="metric-sub" id="a2-worstLossSub">—</div>
+    </div>
   </div>
+
+  <!-- Tabela completa de origens -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Desempenho por origem</span>
+      <span class="period-tag" id="a2-periodTag">—</span>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="origin-table">
+        <thead>
+          <tr>
+            <th style="text-align:left;">Origem</th>
+            <th>Total</th>
+            <th>Andamento</th>
+            <th>Ganhos</th>
+            <th>Perdidos</th>
+            <th>% Conversão</th>
+            <th>% Perda</th>
+            <th>Valor ganho</th>
+          </tr>
+        </thead>
+        <tbody id="origensTableBody"><tr><td colspan="8" style="text-align:center;padding:1rem;color:var(--muted);">Carregando...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Motivo de perda por origem -->
+  <div class="two-col">
+    <div class="card" style="margin-bottom:0;">
+      <div class="card-header">
+        <span class="card-title">Top origens — volume de leads</span>
+      </div>
+      <div class="chart-wrap h400">
+        <canvas id="a2-volChart" role="img" aria-label="Volume de leads por origem"></canvas>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:0;">
+      <div class="card-header">
+        <span class="card-title">Top origens — taxa de conversão</span>
+        <span style="font-size:11px;color:var(--muted);">mín. 5 leads</span>
+      </div>
+      <div class="chart-wrap h400">
+        <canvas id="a2-convChart" role="img" aria-label="Taxa de conversão por origem"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <br>
+
+  <!-- Responsável x Origem + Motivo perda por origem -->
+  <div class="two-col">
+    <div class="card" style="margin-bottom:0;">
+      <div class="card-header">
+        <span class="card-title">Responsável por conversão</span>
+      </div>
+      <div id="a2-ownerConv"><p class="empty">—</p></div>
+    </div>
+    <div class="card" style="margin-bottom:0;">
+      <div class="card-header">
+        <span class="card-title">Principais motivos de perda</span>
+      </div>
+      <div id="a2-lossReasons"><p class="empty">—</p></div>
+    </div>
+  </div>
+
 </div>
 
 <script>
 const PROXY = 'https://agendo-proxy.onrender.com';
-const COLORS = ['#1a5fb4','#1e7e4a','#a05c00','#8b3a8b','#c0392b','#16697a','#d35400','#2c3e50','#b32d2d','#1d6b4a'];
+const COLORS = ['#1a5fb4','#1e7e4a','#a05c00','#8b3a8b','#c0392b','#16697a','#d35400','#2c3e50','#b32d2d','#1d6b4a','#5c7a2e','#6b3a7d','#2e7d8b','#8b6914','#4a7c59'];
 const MONTHS_PT = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 
 let baseDeals = [], filteredDeals = [];
 let funnelChart = null, originChart = null, trendChart = null;
+let a2VolChart = null, a2ConvChart = null;
 let chartStatus = { funnel:{open:true,won:true,lost:true}, origin:{open:true,won:true,lost:true} };
 
-// --- Funnel multi-select ---
-function toggleFunnelMenu(e) {
-  e.stopPropagation();
-  const menu = document.getElementById('funnelMenu');
-  const btn  = document.getElementById('funnelBtn');
-  menu.classList.toggle('open');
-  btn.classList.toggle('open');
+// --- Abas ---
+function switchTab(id, btn) {
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + id).classList.add('active');
 }
 
+// --- Funil multi-select ---
+function toggleFunnelMenu(e) {
+  e.stopPropagation();
+  document.getElementById('funnelMenu').classList.toggle('open');
+  document.getElementById('funnelBtn').classList.toggle('open');
+}
 document.addEventListener('click', () => {
   document.getElementById('funnelMenu').classList.remove('open');
   document.getElementById('funnelBtn').classList.remove('open');
 });
-
-function toggleFunnel(el) {
-  el.classList.toggle('checked');
-  updateFunnelBtnLabel();
-  applyFilter();
-}
-
-function selectAllFunnels() {
-  document.querySelectorAll('.funnel-option').forEach(el => el.classList.add('checked'));
-  updateFunnelBtnLabel();
-  applyFilter();
-}
-
-function clearAllFunnels() {
-  document.querySelectorAll('.funnel-option').forEach(el => el.classList.remove('checked'));
-  updateFunnelBtnLabel();
-  applyFilter();
-}
-
+function toggleFunnel(el) { el.classList.toggle('checked'); updateFunnelBtnLabel(); applyFilter(); }
+function selectAllFunnels() { document.querySelectorAll('.funnel-option').forEach(el => el.classList.add('checked')); updateFunnelBtnLabel(); applyFilter(); }
+function clearAllFunnels()  { document.querySelectorAll('.funnel-option').forEach(el => el.classList.remove('checked')); updateFunnelBtnLabel(); applyFilter(); }
 function updateFunnelBtnLabel() {
   const checked = [...document.querySelectorAll('.funnel-option.checked')];
   const total   = document.querySelectorAll('.funnel-option').length;
   const label   = document.getElementById('funnelBtnLabel');
-  const subLabel = document.getElementById('funnelLabel');
-  if (checked.length === 0) {
-    label.textContent = 'Nenhum funil';
-    subLabel.textContent = 'Nenhum funil selecionado';
-  } else if (checked.length === total) {
-    label.textContent = 'Todos os funis';
-    subLabel.textContent = 'Todos os funis';
-  } else if (checked.length === 1) {
-    const name = checked[0].dataset.funnel;
-    label.textContent = name;
-    subLabel.textContent = name;
-  } else {
-    label.textContent = checked.length + ' funis selecionados';
-    subLabel.textContent = checked.length + ' funis selecionados';
-  }
+  const sub     = document.getElementById('funnelLabel');
+  if (checked.length === 0)     { label.textContent = 'Nenhum funil'; sub.textContent = 'Nenhum funil'; }
+  else if (checked.length === total) { label.textContent = 'Todos os funis'; sub.textContent = 'Todos os funis'; }
+  else if (checked.length === 1) { label.textContent = checked[0].dataset.funnel; sub.textContent = checked[0].dataset.funnel; }
+  else { label.textContent = checked.length + ' funis'; sub.textContent = checked.length + ' funis selecionados'; }
 }
-
-function getSelectedFunnels() {
-  return [...document.querySelectorAll('.funnel-option.checked')].map(el => el.dataset.funnel);
-}
+function getSelectedFunnels() { return [...document.querySelectorAll('.funnel-option.checked')].map(el => el.dataset.funnel); }
 
 // --- Datas ---
 function toISO(d) { return d.toISOString().split('T')[0]; }
-
 function initDates() {
   const to = new Date(), from = new Date();
   from.setDate(from.getDate() - 30);
   document.getElementById('dateTo').value = toISO(to);
   document.getElementById('dateFrom').value = toISO(from);
 }
-
 function setPeriod(days, btn) {
   document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
@@ -500,9 +574,7 @@ function setPeriod(days, btn) {
   document.getElementById('dateFrom').value = toISO(from);
   applyFilter();
 }
-
 function clearActive() { document.querySelectorAll('.period-btn').forEach(b => b.classList.remove('active')); }
-
 function toggleStatus(type, chart) {
   chartStatus[chart][type] = !chartStatus[chart][type];
   document.getElementById(chart==='funnel'?`lbl-${type}`:`lbl2-${type}`).classList.toggle('checked', chartStatus[chart][type]);
@@ -512,7 +584,6 @@ function toggleStatus(type, chart) {
 function fmt(v) { return 'R$\u00a0' + Number(v||0).toLocaleString('pt-BR',{minimumFractionDigits:0,maximumFractionDigits:0}); }
 function pct(a,b) { return b ? Math.round((a/b)*100) : 0; }
 function getOrigem(d) { return d.customFields?.origem_do_negocio?.value || null; }
-
 function setMsg(type, msg) {
   ['errorMsg','successMsg','infoMsg'].forEach(id => document.getElementById(id).style.display='none');
   if (!msg) return;
@@ -521,27 +592,24 @@ function setMsg(type, msg) {
 }
 
 function applyFilter() {
-  const from   = document.getElementById('dateFrom').value;
-  const to     = document.getElementById('dateTo').value;
-  const funis  = getSelectedFunnels();
+  const from  = document.getElementById('dateFrom').value;
+  const to    = document.getElementById('dateTo').value;
+  const funis = getSelectedFunnels();
 
   let deals = baseDeals;
-
-  // Filtro de funis (múltiplos)
   if (funis.length > 0 && funis.length < document.querySelectorAll('.funnel-option').length) {
     deals = deals.filter(d => funis.includes(d.dealStage?.funnel?.name));
-  } else if (funis.length === 0) {
-    deals = [];
-  }
+  } else if (funis.length === 0) { deals = []; }
 
-  // Filtro de data
   if (from && to) {
     const fd = new Date(from+'T00:00:00'), td = new Date(to+'T23:59:59');
     deals = deals.filter(d => { const c = new Date(d.createdAt); return c>=fd && c<=td; });
     const f = s => new Date(s+'T00:00:00').toLocaleDateString('pt-BR');
     document.getElementById('periodTag').textContent = f(from) + ' → ' + f(to);
+    document.getElementById('a2-periodTag').textContent = f(from) + ' → ' + f(to);
   } else {
     document.getElementById('periodTag').textContent = 'todos os períodos';
+    document.getElementById('a2-periodTag').textContent = 'todos os períodos';
   }
 
   filteredDeals = deals;
@@ -553,6 +621,7 @@ function applyFilter() {
   renderLossReasons();
   renderOwners();
   renderDeals();
+  renderAnalise();
 
   document.getElementById('infoMsg').textContent =
     'Mostrando ' + filteredDeals.length.toLocaleString('pt-BR') + ' de ' + baseDeals.length.toLocaleString('pt-BR') + ' negócios';
@@ -591,52 +660,86 @@ function updateTrendChart() {
   const now = new Date();
   const months = [];
   for (let i = 11; i >= 0; i--) {
-    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-    months.push({ year: d.getFullYear(), month: d.getMonth(), label: MONTHS_PT[d.getMonth()] + '/' + String(d.getFullYear()).slice(2) });
+    const d = new Date(now.getFullYear(), now.getMonth()-i, 1);
+    months.push({ year:d.getFullYear(), month:d.getMonth(), label:MONTHS_PT[d.getMonth()]+'/'+String(d.getFullYear()).slice(2) });
   }
 
-  // Usa filteredDeals sem filtro de data para tendência
   const funis = getSelectedFunnels();
   let deals = baseDeals;
   if (funis.length > 0 && funis.length < document.querySelectorAll('.funnel-option').length) {
     deals = deals.filter(d => funis.includes(d.dealStage?.funnel?.name));
-  } else if (funis.length === 0) {
-    deals = [];
-  }
+  } else if (funis.length === 0) { deals = []; }
 
-  const totals = months.map(m => deals.filter(d => { const c = new Date(d.createdAt); return c.getFullYear()===m.year && c.getMonth()===m.month; }).length);
-  const opens  = months.map(m => deals.filter(d => { const c = new Date(d.createdAt); return c.getFullYear()===m.year && c.getMonth()===m.month && d.dealStatus?.id===1; }).length);
-  const wons   = months.map(m => deals.filter(d => { const c = new Date(d.createdAt); return c.getFullYear()===m.year && c.getMonth()===m.month && d.dealStatus?.id===2; }).length);
-  const losts  = months.map(m => deals.filter(d => { const c = new Date(d.createdAt); return c.getFullYear()===m.year && c.getMonth()===m.month && d.dealStatus?.id===3; }).length);
+  const totais   = months.map(m => deals.filter(d => { const c = new Date(d.createdAt); return c.getFullYear()===m.year && c.getMonth()===m.month; }).length);
+  const abertos  = months.map(m => deals.filter(d => { const c = new Date(d.createdAt); return c.getFullYear()===m.year && c.getMonth()===m.month && d.dealStatus?.id===1; }).length);
+  const ganhos   = months.map(m => deals.filter(d => { const c = new Date(d.createdAt); return c.getFullYear()===m.year && c.getMonth()===m.month && d.dealStatus?.id===2; }).length);
+  const perdidos = months.map(m => deals.filter(d => { const c = new Date(d.createdAt); return c.getFullYear()===m.year && c.getMonth()===m.month && d.dealStatus?.id===3; }).length);
 
   if (trendChart) trendChart.destroy();
   trendChart = new Chart(document.getElementById('trendChart'), {
-    type: 'line',
-    data: {
-      labels: months.map(m => m.label),
-      datasets: [
-        { label:'Total', data:totals, borderColor:'#6366f1', borderWidth:2, pointRadius:4, tension:0.3, fill:false },
-        { label:'Andamento', data:opens, borderColor:'#1a5fb4', borderWidth:2, pointRadius:4, tension:0.3, fill:false },
-        { label:'Ganhos', data:wons, borderColor:'#1e7e4a', borderWidth:2, pointRadius:4, tension:0.3, fill:false },
-        { label:'Perdidos', data:losts, borderColor:'#b32d2d', borderWidth:2, pointRadius:4, tension:0.3, fill:false }
+    type:'line',
+    data:{
+      labels: months.map(m=>m.label),
+      datasets:[
+        { label:'Total',     data:totais,   borderColor:'#6366f1', borderWidth:2, pointRadius:3, tension:0.3, fill:false },
+        { label:'Andamento', data:abertos,  borderColor:'#1a5fb4', borderWidth:2, pointRadius:3, tension:0.3, fill:false },
+        { label:'Ganhos',    data:ganhos,   borderColor:'#1e7e4a', borderWidth:2, pointRadius:3, tension:0.3, fill:false },
+        { label:'Perdidos',  data:perdidos, borderColor:'#b32d2d', borderWidth:2, pointRadius:3, tension:0.3, fill:false }
       ]
     },
-    options: {
+    options:{
       responsive:true, maintainAspectRatio:false,
       interaction:{ mode:'index', intersect:false },
-      plugins:{
-        legend:{display:false},
-        tooltip:{
-          backgroundColor:'white', titleColor:'#1a1a18', bodyColor:'#6b6a66',
-          borderColor:'rgba(0,0,0,0.08)', borderWidth:1, padding:10,
-          callbacks:{ label: ctx => `  ${ctx.dataset.label}: ${ctx.parsed.y}` }
-        }
-      },
+      plugins:{ legend:{display:false}, tooltip:{ backgroundColor:'white', titleColor:'#1a1a18', bodyColor:'#6b6a66', borderColor:'rgba(0,0,0,0.1)', borderWidth:1, padding:10 } },
       scales:{
-        x:{ ticks:{font:{size:11,family:'DM Sans'},color:'#6b6a66'}, grid:{color:'rgba(0,0,0,0.04)'}, border:{display:false} },
-        y:{ ticks:{font:{size:11,family:'DM Sans'},color:'#6b6a66'}, grid:{color:'rgba(0,0,0,0.04)'}, border:{display:false} }
+        x:{ ticks:{font:{size:11},color:'#6b6a66',autoSkip:false,maxRotation:0}, grid:{display:false}, border:{display:false} },
+        y:{ ticks:{font:{size:11},color:'#6b6a66'}, grid:{color:'rgba(0,0,0,0.04)'}, border:{display:false} }
       }
     }
+  });
+
+  // Monta tabela
+  const pctConv  = totais.map((t,i) => t ? Math.round((ganhos[i]/t)*100) : 0);
+  const pctPerda = totais.map((t,i) => t ? Math.round((perdidos[i]/t)*100) : 0);
+  const pctVar   = totais.map((t,i) => i===0 ? null : (totais[i-1] ? Math.round(((t-totais[i-1])/totais[i-1])*100) : null));
+
+  const thead = document.getElementById('trendThead');
+  thead.innerHTML = '<td style="padding:6px 8px;font-weight:500;color:var(--muted);min-width:110px;"></td>';
+  months.forEach(m => {
+    thead.innerHTML += `<td style="padding:6px 8px;font-weight:500;color:var(--muted);text-align:right;white-space:nowrap;">${m.label}</td>`;
+  });
+
+  const dataRows = [
+    { label:'Total', color:'#6366f1', data:totais },
+    { label:'Andamento', color:'#1a5fb4', data:abertos },
+    { label:'Ganhos', color:'#1e7e4a', data:ganhos },
+    { label:'Perdidos', color:'#b32d2d', data:perdidos },
+  ];
+  const pctRows = [
+    { label:'% conversão', data:pctConv, cell: v => { const c = v>=20?'var(--success)':v>=10?'var(--warning)':'var(--danger)'; return `<span style="color:${c};font-weight:500;">${v}%</span>`; } },
+    { label:'% perda',     data:pctPerda, cell: v => { const c = v>=60?'var(--danger)':v>=40?'var(--warning)':'var(--success)'; return `<span style="color:${c};font-weight:500;">${v}%</span>`; } },
+    { label:'% variação',  data:pctVar,  cell: v => v===null ? '<span style="color:var(--muted);">—</span>' : (() => { const c=v>0?'var(--success)':v<0?'var(--danger)':'var(--muted)'; const s=v>0?'▲ +':v<0?'▼ ':''; return `<span style="color:${c};font-weight:500;">${s}${v}%</span>`; })() }
+  ];
+
+  const tbody = document.getElementById('trendTbody');
+  tbody.innerHTML = '';
+  dataRows.forEach(row => {
+    const tr = document.createElement('tr');
+    tr.style.borderBottom = '1px solid var(--border)';
+    tr.innerHTML = `<td style="padding:7px 8px;white-space:nowrap;"><span style="display:inline-flex;align-items:center;gap:6px;"><span style="width:12px;height:3px;border-radius:2px;background:${row.color};display:inline-block;"></span><span style="font-size:12px;font-weight:500;">${row.label}</span></span></td>`;
+    row.data.forEach(v => { tr.innerHTML += `<td class="mono" style="padding:7px 8px;text-align:right;font-size:12px;">${v.toLocaleString('pt-BR')}</td>`; });
+    tbody.appendChild(tr);
+  });
+  const sepTr = document.createElement('tr');
+  sepTr.className = 'sep';
+  sepTr.innerHTML = `<td colspan="${months.length+1}" style="padding:0;"></td>`;
+  tbody.appendChild(sepTr);
+  pctRows.forEach(row => {
+    const tr = document.createElement('tr');
+    tr.style.borderBottom = '1px solid var(--border)';
+    tr.innerHTML = `<td style="padding:7px 8px;font-size:12px;color:var(--muted);">${row.label}</td>`;
+    row.data.forEach((v,i) => { tr.innerHTML += `<td class="mono" style="padding:7px 8px;text-align:right;font-size:12px;">${row.cell(v,i)}</td>`; });
+    tbody.appendChild(tr);
   });
 }
 
@@ -656,39 +759,35 @@ function buildHorizontalChart(canvasId, statusRef, deals, keyFn, topN=15) {
   const counts = sorted.map(e => e[1]);
   const colors = sorted.map((_,i) => COLORS[i%COLORS.length]);
 
+  const topLabelsPlugin = {
+    id:'topLabels'+canvasId,
+    afterDatasetsDraw(chart) {
+      const ctx = chart.ctx; ctx.save();
+      ctx.font = '10px DM Sans, sans-serif'; ctx.fillStyle = '#6b6a66';
+      ctx.textAlign = 'left'; ctx.textBaseline = 'middle';
+      chart.data.datasets.forEach((dataset, i) => {
+        const meta = chart.getDatasetMeta(i);
+        meta.data.forEach((bar, index) => {
+          const value = dataset.data[index];
+          const p = total ? Math.round((value/total)*100) : 0;
+          ctx.fillText(value+' ('+p+'%)', bar.x+6, bar.y);
+        });
+      });
+      ctx.restore();
+    }
+  };
+
   return new Chart(document.getElementById(canvasId), {
     type:'bar',
+    plugins:[topLabelsPlugin],
     data:{ labels, datasets:[{ data:counts, backgroundColor:colors, borderRadius:4, borderSkipped:false }] },
     options:{
       indexAxis:'y', responsive:true, maintainAspectRatio:false,
-      layout:{ padding:{ right: 80 } },
-      plugins:{
-        legend:{display:false},
-        tooltip:{callbacks:{label:ctx=>' '+ctx.parsed.x+' negócios'}}
-      },
+      layout:{ padding:{ right:80 } },
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>' '+ctx.parsed.x+' negócios'}} },
       scales:{
-        x:{ ticks:{font:{size:11,family:'DM Sans'},color:'#6b6a66'}, grid:{color:'rgba(0,0,0,0.04)'}, border:{display:false} },
-        y:{ ticks:{font:{size:11,family:'DM Sans'},color:'#1a1a18'}, grid:{display:false}, border:{display:false} }
-      },
-      animation:{
-        onComplete: function() {
-          const chart = this;
-          const ctx = chart.ctx;
-          ctx.save();
-          ctx.font = '11px DM Sans';
-          ctx.fillStyle = '#6b6a66';
-          ctx.textAlign = 'left';
-          ctx.textBaseline = 'middle';
-          chart.data.datasets.forEach((dataset, i) => {
-            const meta = chart.getDatasetMeta(i);
-            meta.data.forEach((bar, index) => {
-              const value = dataset.data[index];
-              const p = total ? Math.round((value/total)*100) : 0;
-              ctx.fillText(value + ' (' + p + '%)', bar.x + 6, bar.y);
-            });
-          });
-          ctx.restore();
-        }
+        x:{ ticks:{font:{size:11},color:'#6b6a66'}, grid:{color:'rgba(0,0,0,0.04)'}, border:{display:false} },
+        y:{ ticks:{font:{size:11},color:'#1a1a18'}, grid:{display:false}, border:{display:false} }
       }
     }
   });
@@ -699,34 +798,21 @@ function updateFunnelChart() {
   const sorted = [...filteredDeals].sort((a,b)=>(a.dealStage?.sequence||99)-(b.dealStage?.sequence||99));
   funnelChart = buildHorizontalChart('funnelChart', chartStatus.funnel, sorted, d=>d.dealStage?.name, 12);
 }
-
 function updateOriginChart() {
   if (originChart) originChart.destroy();
-  originChart = buildHorizontalChart('originChart', chartStatus.origin, filteredDeals, getOrigem, 10);
+  originChart = buildHorizontalChart('originChart', chartStatus.origin, filteredDeals, getOrigem, 15);
 }
 
 function renderLossReasons() {
   const lost = filteredDeals.filter(d=>d.dealStatus?.id===3);
-  const map = {};
-  lost.forEach(d => { const n = d.lossReason?.name||'Não informado'; map[n]=(map[n]||0)+1; });
+  const map = {}; lost.forEach(d => { const n=d.lossReason?.name||'Não informado'; map[n]=(map[n]||0)+1; });
   const sorted = Object.entries(map).sort((a,b)=>b[1]-a[1]);
   const total = lost.length;
   const el = document.getElementById('lossReasonList');
   if (!sorted.length) { el.innerHTML = '<p class="empty">Nenhum negócio perdido.</p>'; return; }
-  el.innerHTML = sorted.map(([name, count]) => {
+  el.innerHTML = sorted.map(([name,count]) => {
     const p = pct(count,total);
-    return `<div class="row">
-      <div style="min-width:0;flex:1;">
-        <div class="row-name">${name}</div>
-        <div style="height:3px;background:var(--bg);border-radius:2px;margin-top:5px;overflow:hidden;">
-          <div style="height:100%;width:${p}%;background:var(--danger);border-radius:2px;transition:width .4s;"></div>
-        </div>
-      </div>
-      <div class="row-right" style="margin-left:16px;">
-        <div class="row-value" style="color:var(--danger);">${count}</div>
-        <div style="font-size:11px;color:var(--muted);">${p}%</div>
-      </div>
-    </div>`;
+    return `<div class="row"><div style="min-width:0;flex:1;"><div class="row-name">${name}</div><div style="height:3px;background:var(--bg);border-radius:2px;margin-top:5px;overflow:hidden;"><div style="height:100%;width:${p}%;background:var(--danger);border-radius:2px;transition:width .4s;"></div></div></div><div class="row-right" style="margin-left:16px;"><div class="row-value" style="color:var(--danger);">${count}</div><div style="font-size:11px;color:var(--muted);">${p}%</div></div></div>`;
   }).join('');
 }
 
@@ -741,20 +827,10 @@ function renderOwners() {
     else map[name].open++;
   });
   const sorted = Object.entries(map).sort((a,b)=>b[1].total-a[1].total);
-  document.getElementById('ownersList').innerHTML = sorted.map(([name, s]) => {
+  document.getElementById('ownersList').innerHTML = sorted.map(([name,s]) => {
     const conv = pct(s.won, s.won+s.lost);
     const color = conv>=50?'var(--success)':conv>=25?'var(--warning)':'var(--danger)';
-    return `<div class="owner-row">
-      <div class="owner-info">
-        <div class="owner-name">${name}</div>
-        <div class="owner-stats">${s.open} abertos · <span style="color:var(--success)">${s.won} ganhos</span> · <span style="color:var(--danger)">${s.lost} perdidos</span></div>
-      </div>
-      <div class="owner-conv">
-        <div class="conv-pct" style="color:${color}">${conv}%</div>
-        <div class="conv-label">conversão</div>
-        <div class="conv-bar"><div class="conv-fill" style="width:${conv}%;background:${color}"></div></div>
-      </div>
-    </div>`;
+    return `<div class="owner-row"><div class="owner-info"><div class="owner-name">${name}</div><div class="owner-stats">${s.open} abertos · <span style="color:var(--success)">${s.won} ganhos</span> · <span style="color:var(--danger)">${s.lost} perdidos</span></div></div><div class="owner-conv"><div class="conv-pct" style="color:${color}">${conv}%</div><div class="conv-label">conversão</div><div class="conv-bar"><div class="conv-fill" style="width:${conv}%;background:${color}"></div></div></div></div>`;
   }).join('') || '<p class="empty">Nenhum dado.</p>';
 }
 
@@ -767,25 +843,189 @@ function renderDeals() {
   const el = document.getElementById('dealsList');
   if (!deals.length) { el.innerHTML = '<p class="empty">Nenhum negócio.</p>'; return; }
   el.innerHTML = deals.slice(0,12).map(d => {
-    const name   = d.person?.name||d.organization?.name||d.title||'Sem nome';
-    const stage  = d.dealStage?.name||'—';
-    const sId    = d.dealStatus?.id;
+    const name  = d.person?.name||d.organization?.name||d.title||'Sem nome';
+    const stage = d.dealStage?.name||'—';
+    const sId   = d.dealStatus?.id;
     const sLabel = sId===2?'Ganho':sId===3?'Perdido':'Andamento';
     const sClass = sId===2?'won':sId===3?'lost':'open';
-    const date   = d.createdAt ? new Date(d.createdAt).toLocaleDateString('pt-BR') : '';
+    const date  = d.createdAt ? new Date(d.createdAt).toLocaleDateString('pt-BR') : '';
     const origem = getOrigem(d);
-    const tag    = origem ? `<span style="color:var(--accent);"> · ${origem}</span>` : '';
-    return `<div class="row">
-      <div style="min-width:0;flex:1;">
-        <div class="row-name">${name}</div>
-        <div class="row-sub">${stage} · ${date}${tag}</div>
+    const tag   = origem ? `<span style="color:var(--accent);"> · ${origem}</span>` : '';
+    return `<div class="row"><div style="min-width:0;flex:1;"><div class="row-name">${name}</div><div class="row-sub">${stage} · ${date}${tag}</div></div><div class="row-right"><div class="row-value">${fmt(d.value)}</div><span class="badge ${sClass}">${sLabel}</span></div></div>`;
+  }).join('');
+}
+
+// ===== ABA 2: ANÁLISE =====
+function renderAnalise() {
+  const deals = filteredDeals;
+
+  // Monta mapa por origem
+  const origemMap = {};
+  deals.forEach(d => {
+    const o = getOrigem(d) || 'Não informado';
+    if (!origemMap[o]) origemMap[o] = { total:0, open:0, won:0, lost:0, value:0, motivos:{} };
+    origemMap[o].total++;
+    origemMap[o].value += d.value||0;
+    if (d.dealStatus?.id===1) origemMap[o].open++;
+    else if (d.dealStatus?.id===2) origemMap[o].won++;
+    else if (d.dealStatus?.id===3) {
+      origemMap[o].lost++;
+      const m = d.lossReason?.name||'Não informado';
+      origemMap[o].motivos[m] = (origemMap[o].motivos[m]||0)+1;
+    }
+  });
+
+  const sorted = Object.entries(origemMap).sort((a,b)=>b[1].total-a[1].total);
+
+  // Métricas de destaque
+  const origens = sorted.filter(([,s]) => s.total >= 1);
+  document.getElementById('a2-origens').textContent = origens.length;
+
+  const bestConv = [...sorted].filter(([,s]) => s.won+s.lost >= 5).sort((a,b) => pct(b[1].won,b[1].won+b[1].lost) - pct(a[1].won,a[1].won+a[1].lost))[0];
+  if (bestConv) {
+    document.getElementById('a2-bestConv').textContent = bestConv[0].length>20 ? bestConv[0].substring(0,18)+'…' : bestConv[0];
+    document.getElementById('a2-bestConvSub').textContent = pct(bestConv[1].won, bestConv[1].won+bestConv[1].lost)+'% conversão';
+  }
+
+  const bestVol = sorted[0];
+  if (bestVol) {
+    document.getElementById('a2-bestVol').textContent = bestVol[0].length>20 ? bestVol[0].substring(0,18)+'…' : bestVol[0];
+    document.getElementById('a2-bestVolSub').textContent = bestVol[1].total.toLocaleString('pt-BR')+' leads';
+  }
+
+  const worstLoss = [...sorted].filter(([,s]) => s.total >= 5).sort((a,b) => pct(b[1].lost,b[1].total) - pct(a[1].lost,a[1].total))[0];
+  if (worstLoss) {
+    document.getElementById('a2-worstLoss').textContent = worstLoss[0].length>20 ? worstLoss[0].substring(0,18)+'…' : worstLoss[0];
+    document.getElementById('a2-worstLossSub').textContent = pct(worstLoss[1].lost, worstLoss[1].total)+'% perda';
+  }
+
+  // Tabela de origens
+  const tbody = document.getElementById('origensTableBody');
+  if (!sorted.length) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:1rem;color:var(--muted);">Nenhum dado.</td></tr>'; return; }
+  tbody.innerHTML = sorted.slice(0,20).map(([name,s]) => {
+    const pConv = pct(s.won, s.won+s.lost);
+    const pLoss = pct(s.lost, s.total);
+    const convColor = pConv>=20?'var(--success)':pConv>=10?'var(--warning)':'var(--danger)';
+    const lossColor = pLoss>=60?'var(--danger)':pLoss>=40?'var(--warning)':'var(--success)';
+    return `<tr>
+      <td title="${name}">${name.length>30?name.substring(0,28)+'…':name}</td>
+      <td>${s.total.toLocaleString('pt-BR')}</td>
+      <td style="color:var(--info);">${s.open}</td>
+      <td style="color:var(--success);">${s.won}</td>
+      <td style="color:var(--danger);">${s.lost}</td>
+      <td style="color:${convColor};font-weight:500;">${pConv}%</td>
+      <td style="color:${lossColor};font-weight:500;">${pLoss}%</td>
+      <td>${fmt(s.value)}</td>
+    </tr>`;
+  }).join('');
+
+  // Gráfico volume
+  if (a2VolChart) a2VolChart.destroy();
+  const top15Vol = sorted.slice(0,15);
+  const volLabels = top15Vol.map(([n]) => n.length>30?n.substring(0,28)+'…':n);
+  const volData   = top15Vol.map(([,s]) => s.total);
+  const volColors = top15Vol.map((_,i) => COLORS[i%COLORS.length]);
+  const volTotal  = deals.length;
+
+  const volPlugin = {
+    id:'volLabels',
+    afterDatasetsDraw(chart) {
+      const ctx=chart.ctx; ctx.save();
+      ctx.font='10px DM Sans'; ctx.fillStyle='#6b6a66'; ctx.textAlign='left'; ctx.textBaseline='middle';
+      chart.data.datasets.forEach((ds,i) => {
+        chart.getDatasetMeta(i).data.forEach((bar,idx) => {
+          const v=ds.data[idx], p=volTotal?Math.round((v/volTotal)*100):0;
+          ctx.fillText(v+' ('+p+'%)', bar.x+6, bar.y);
+        });
+      });
+      ctx.restore();
+    }
+  };
+
+  a2VolChart = new Chart(document.getElementById('a2-volChart'), {
+    type:'bar', plugins:[volPlugin],
+    data:{ labels:volLabels, datasets:[{ data:volData, backgroundColor:volColors, borderRadius:4, borderSkipped:false }] },
+    options:{
+      indexAxis:'y', responsive:true, maintainAspectRatio:false, layout:{padding:{right:80}},
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>' '+ctx.parsed.x+' leads'}} },
+      scales:{
+        x:{ ticks:{font:{size:11},color:'#6b6a66'}, grid:{color:'rgba(0,0,0,0.04)'}, border:{display:false} },
+        y:{ ticks:{font:{size:11},color:'#1a1a18'}, grid:{display:false}, border:{display:false} }
+      }
+    }
+  });
+
+  // Gráfico conversão
+  if (a2ConvChart) a2ConvChart.destroy();
+  const top15Conv = [...sorted].filter(([,s])=>s.won+s.lost>=5).sort((a,b)=>pct(b[1].won,b[1].won+b[1].lost)-pct(a[1].won,a[1].won+a[1].lost)).slice(0,15);
+  const convLabels = top15Conv.map(([n]) => n.length>30?n.substring(0,28)+'…':n);
+  const convData   = top15Conv.map(([,s]) => pct(s.won, s.won+s.lost));
+  const convColors = convData.map(v => v>=30?'rgba(30,126,74,0.8)':v>=15?'rgba(160,92,0,0.8)':'rgba(179,45,45,0.8)');
+
+  const convPlugin = {
+    id:'convLabels',
+    afterDatasetsDraw(chart) {
+      const ctx=chart.ctx; ctx.save();
+      ctx.font='10px DM Sans'; ctx.fillStyle='#6b6a66'; ctx.textAlign='left'; ctx.textBaseline='middle';
+      chart.data.datasets.forEach((ds,i) => {
+        chart.getDatasetMeta(i).data.forEach((bar,idx) => {
+          ctx.fillText(ds.data[idx]+'%', bar.x+6, bar.y);
+        });
+      });
+      ctx.restore();
+    }
+  };
+
+  a2ConvChart = new Chart(document.getElementById('a2-convChart'), {
+    type:'bar', plugins:[convPlugin],
+    data:{ labels:convLabels, datasets:[{ data:convData, backgroundColor:convColors, borderRadius:4, borderSkipped:false }] },
+    options:{
+      indexAxis:'y', responsive:true, maintainAspectRatio:false, layout:{padding:{right:50}},
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>ctx.parsed.x+'% conversão'}} },
+      scales:{
+        x:{ max:100, ticks:{font:{size:11},color:'#6b6a66',callback:v=>v+'%'}, grid:{color:'rgba(0,0,0,0.04)'}, border:{display:false} },
+        y:{ ticks:{font:{size:11},color:'#1a1a18'}, grid:{display:false}, border:{display:false} }
+      }
+    }
+  });
+
+  // Responsável por conversão
+  const ownerMap = {};
+  deals.forEach(d => {
+    const name = d.owner?.name||'Sem responsável';
+    if (!ownerMap[name]) ownerMap[name] = {total:0,won:0,lost:0,open:0};
+    ownerMap[name].total++;
+    if (d.dealStatus?.id===2) ownerMap[name].won++;
+    else if (d.dealStatus?.id===3) ownerMap[name].lost++;
+    else ownerMap[name].open++;
+  });
+  const ownerSorted = Object.entries(ownerMap).sort((a,b)=>b[1].total-a[1].total);
+  document.getElementById('a2-ownerConv').innerHTML = ownerSorted.map(([name,s]) => {
+    const conv = pct(s.won, s.won+s.lost);
+    const color = conv>=50?'var(--success)':conv>=25?'var(--warning)':'var(--danger)';
+    return `<div class="owner-row">
+      <div class="owner-info">
+        <div class="owner-name">${name}</div>
+        <div class="owner-stats">${s.total} leads · ${s.open} abertos · <span style="color:var(--success)">${s.won} ganhos</span> · <span style="color:var(--danger)">${s.lost} perdidos</span></div>
       </div>
-      <div class="row-right">
-        <div class="row-value">${fmt(d.value)}</div>
-        <span class="badge ${sClass}">${sLabel}</span>
+      <div class="owner-conv">
+        <div class="conv-pct" style="color:${color}">${conv}%</div>
+        <div class="conv-label">conversão</div>
+        <div class="conv-bar"><div class="conv-fill" style="width:${conv}%;background:${color}"></div></div>
       </div>
     </div>`;
-  }).join('');
+  }).join('') || '<p class="empty">Nenhum dado.</p>';
+
+  // Motivos de perda
+  const lostDeals = deals.filter(d=>d.dealStatus?.id===3);
+  const motivoMap = {};
+  lostDeals.forEach(d => { const m=d.lossReason?.name||'Não informado'; motivoMap[m]=(motivoMap[m]||0)+1; });
+  const motivoSorted = Object.entries(motivoMap).sort((a,b)=>b[1]-a[1]);
+  const motivoTotal = lostDeals.length;
+  document.getElementById('a2-lossReasons').innerHTML = motivoSorted.map(([name,count]) => {
+    const p = pct(count,motivoTotal);
+    return `<div class="row"><div style="min-width:0;flex:1;"><div class="row-name">${name}</div><div style="height:3px;background:var(--bg);border-radius:2px;margin-top:5px;overflow:hidden;"><div style="height:100%;width:${p}%;background:var(--danger);border-radius:2px;transition:width .4s;"></div></div></div><div class="row-right" style="margin-left:16px;"><div class="row-value" style="color:var(--danger);">${count}</div><div style="font-size:11px;color:var(--muted);">${p}%</div></div></div>`;
+  }).join('') || '<p class="empty">Nenhum negócio perdido.</p>';
 }
 
 async function fetchAll() {
@@ -815,14 +1055,8 @@ async function fetchAll() {
 
 initDates();
 fetchAll();
-
-// Auto-refresh a cada 1 hora
 setInterval(() => fetchAll(), 60 * 60 * 1000);
-
-// Keep-alive: ping no proxy a cada 10 minutos para não dormir
-setInterval(() => {
-  fetch(PROXY + '/').catch(() => {});
-}, 10 * 60 * 1000);
+setInterval(() => { fetch(PROXY + '/').catch(() => {}); }, 10 * 60 * 1000);
 </script>
 </body>
 </html>
