@@ -421,6 +421,7 @@
     <div class="metric-card"><div class="metric-label">Valor total</div><div class="metric-value" id="c-valor" style="color:var(--teal);">—</div></div>
     <div class="metric-card"><div class="metric-label">Ticket médio</div><div class="metric-value" id="c-ticket" style="color:var(--teal);">—</div></div>
     <div class="metric-card"><div class="metric-label">Com produto</div><div class="metric-value" id="c-comprod">—</div></div>
+    <div class="metric-card"><div class="metric-label">Tempo médio</div><div class="metric-value" id="c-tempo" style="color:var(--teal);">—</div><div class="metric-sub">dias do início ao ganho</div></div>
   </div>
 
   <div class="card">
@@ -440,7 +441,9 @@
             <th style="text-align:left;">Produto</th>
             <th style="text-align:left;">Funil</th>
             <th>Valor</th>
+            <th>Início</th>
             <th>Data ganho</th>
+            <th>Duração</th>
           </tr>
         </thead>
         <tbody id="contratosBody"><tr><td colspan="6" style="text-align:center;padding:1rem;color:var(--muted);">—</td></tr></tbody>
@@ -796,14 +799,20 @@ function renderContratos() {
   // Métricas
   const totalVal = deals.reduce((s,d) => s+(d.value||0), 0);
   const comProd = deals.filter(d => d.products_entities?.length > 0 || d.products?.length > 0).length;
+  const dealsComTempo = deals.filter(d => (d.startTime||d.createdAt) && (d.wonAt||d.endTime));
+  const avgTempo = dealsComTempo.length ? Math.round(dealsComTempo.reduce((s,d) => {
+    const ini = new Date(d.startTime||d.createdAt), fim = new Date(d.wonAt||d.endTime);
+    return s + Math.max(0, Math.round((fim-ini)/(1000*60*60*24)));
+  }, 0) / dealsComTempo.length) : null;
   document.getElementById('c-total').textContent = deals.length.toLocaleString('pt-BR');
   document.getElementById('c-valor').textContent = fmt(totalVal);
   document.getElementById('c-ticket').textContent = fmt(deals.length ? Math.round(totalVal/deals.length) : 0);
   document.getElementById('c-comprod').textContent = comProd;
+  document.getElementById('c-tempo').textContent = avgTempo !== null ? avgTempo+'d' : '—';
 
   // Tabela
   const tbody = document.getElementById('contratosBody');
-  if (!deals.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:1rem;color:var(--muted);">Nenhum negócio ganho no período.</td></tr>'; return; }
+  if (!deals.length) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:1rem;color:var(--muted);">Nenhum negócio ganho no período.</td></tr>'; return; }
 
   // Ordena por data de ganho (mais recente primeiro)
   const sorted = [...deals].sort((a,b) => new Date(b.wonAt||b.updatedAt) - new Date(a.wonAt||a.updatedAt));
@@ -822,13 +831,26 @@ function renderContratos() {
       produto = Array.isArray(d.products) ? d.products.join(', ') : d.products;
     }
 
+    // Data de início e duração
+    const iniDate = d.startTime || d.createdAt;
+    const fimDate = d.wonAt || d.endTime;
+    const iniStr = iniDate ? new Date(iniDate).toLocaleDateString('pt-BR') : '—';
+    let durStr = '—', durColor = 'var(--muted)';
+    if (iniDate && fimDate) {
+      const dias = Math.max(0, Math.round((new Date(fimDate) - new Date(iniDate)) / (1000*60*60*24)));
+      durStr = dias + 'd';
+      durColor = dias <= 7 ? 'var(--teal)' : dias <= 30 ? 'var(--warning)' : 'var(--red)';
+    }
+
     return `<tr>
       <td style="font-weight:500;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${name}">${name}</td>
       <td>${owner}</td>
       <td style="color:var(--teal);">${produto}</td>
       <td style="color:var(--muted);font-size:11px;">${funnel}</td>
       <td style="font-family:'DM Mono',monospace;">${fmt(d.value)}</td>
+      <td style="font-family:'DM Mono',monospace;white-space:nowrap;color:var(--muted);">${iniStr}</td>
       <td style="font-family:'DM Mono',monospace;white-space:nowrap;">${wonDate}</td>
+      <td style="font-weight:500;color:${durColor};">${durStr}</td>
     </tr>`;
   }).join('');
 }
