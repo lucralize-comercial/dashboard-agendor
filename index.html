@@ -195,6 +195,7 @@
     <button class="tab-btn active" onclick="switchTab('visao-geral',this)">Visão Geral</button>
     <button class="tab-btn" onclick="switchTab('analise',this)">Análise de Conversão</button>
     <button class="tab-btn" onclick="switchTab('acompanhamento',this)">Acompanhamento</button>
+    <button class="tab-btn" onclick="switchTab('contratos',this)">Contratos Ganhos</button>
   </div>
   <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
     <div id="successMsg" class="msg success" style="margin-bottom:0;padding:5px 12px;font-size:12px;"></div>
@@ -413,6 +414,41 @@
   </div>
 </div>
 
+<!-- ===== ABA 4: CONTRATOS GANHOS ===== -->
+<div id="tab-contratos" class="tab-content">
+  <div class="metrics" style="margin-bottom:1.5rem;">
+    <div class="metric-card"><div class="metric-label">Total ganhos</div><div class="metric-value" id="c-total">—</div></div>
+    <div class="metric-card"><div class="metric-label">Valor total</div><div class="metric-value" id="c-valor" style="color:var(--teal);">—</div></div>
+    <div class="metric-card"><div class="metric-label">Ticket médio</div><div class="metric-value" id="c-ticket" style="color:var(--teal);">—</div></div>
+    <div class="metric-card"><div class="metric-label">Com produto</div><div class="metric-value" id="c-comprod">—</div></div>
+  </div>
+
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Negócios ganhos no período</span>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <input type="text" id="c-search" placeholder="Buscar negócio..." onkeyup="renderContratos()" style="padding:5px 10px;border-radius:var(--radius-sm);border:1px solid var(--border);font-family:'Poppins',sans-serif;font-size:12px;background:var(--bg);color:var(--text);width:180px;">
+        <select id="c-owner" onchange="renderContratos()" style="font-size:12px;"><option value="all">Todos responsáveis</option></select>
+      </div>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="std-table">
+        <thead>
+          <tr>
+            <th style="text-align:left;min-width:180px;">Negócio</th>
+            <th style="text-align:left;">Responsável</th>
+            <th style="text-align:left;">Produto</th>
+            <th style="text-align:left;">Funil</th>
+            <th>Valor</th>
+            <th>Data ganho</th>
+          </tr>
+        </thead>
+        <tbody id="contratosBody"><tr><td colspan="6" style="text-align:center;padding:1rem;color:var(--muted);">—</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 <script>
 const PROXY = 'https://agendo-proxy.onrender.com';
 const COLORS = ['#1a5fb4','#1e7e4a','#a05c00','#8b3a8b','#c0392b','#16697a','#d35400','#2c3e50','#b32d2d','#1d6b4a','#5c7a2e','#6b3a7d','#2e7d8b','#8b6914','#4a7c59'];
@@ -483,7 +519,7 @@ function applyFilter() {
   } else { ['periodTag','a2-periodTag','a2-funnelPeriodTag'].forEach(id=>document.getElementById(id).textContent='todos os períodos'); }
   filteredDeals=deals;
   updateMetrics(); updateTrendChart(); updateFunnelChart(); updateOriginChart();
-  renderLossReasons(); renderOwners(); renderDeals(); renderAnalise(); renderAcompanhamento();
+  renderLossReasons(); renderOwners(); renderDeals(); renderAnalise(); renderAcompanhamento(); renderContratos();
   document.getElementById('infoMsg').textContent='Mostrando '+filteredDeals.length.toLocaleString('pt-BR')+' de '+baseDeals.length.toLocaleString('pt-BR')+' negócios';
   document.getElementById('infoMsg').style.display='block';
 }
@@ -738,6 +774,62 @@ function renderAcompanhamento() {
     const avgW=s.won.length?Math.round(s.won.reduce((a,b)=>a+b,0)/s.won.length):null;
     const avgL=s.lost.length?Math.round(s.lost.reduce((a,b)=>a+b,0)/s.lost.length):null;
     return `<tr><td>${f}</td><td style="color:var(--success);">${avgW!==null?avgW+'d':'—'}</td><td style="color:var(--danger);">${avgL!==null?avgL+'d':'—'}</td></tr>`;
+  }).join('');
+}
+
+function renderContratos() {
+  const won = filteredDeals.filter(d => d.dealStatus?.id === 2);
+
+  // Popula select de responsáveis
+  const ownerSel = document.getElementById('c-owner');
+  const currentOwner = ownerSel.value;
+  const owners = [...new Set(won.map(d => d.owner?.name || 'Sem responsável'))].sort();
+  ownerSel.innerHTML = '<option value="all">Todos responsáveis</option>' + owners.map(o => `<option value="${o}" ${o===currentOwner?'selected':''}>${o}</option>`).join('');
+
+  // Filtros
+  const search = (document.getElementById('c-search').value || '').toLowerCase();
+  const ownerFilter = ownerSel.value;
+  let deals = won;
+  if (search) deals = deals.filter(d => (d.title||'').toLowerCase().includes(search) || (d.person?.name||'').toLowerCase().includes(search) || (d.organization?.name||'').toLowerCase().includes(search));
+  if (ownerFilter !== 'all') deals = deals.filter(d => (d.owner?.name||'Sem responsável') === ownerFilter);
+
+  // Métricas
+  const totalVal = deals.reduce((s,d) => s+(d.value||0), 0);
+  const comProd = deals.filter(d => d.products_entities?.length > 0 || d.products?.length > 0).length;
+  document.getElementById('c-total').textContent = deals.length.toLocaleString('pt-BR');
+  document.getElementById('c-valor').textContent = fmt(totalVal);
+  document.getElementById('c-ticket').textContent = fmt(deals.length ? Math.round(totalVal/deals.length) : 0);
+  document.getElementById('c-comprod').textContent = comProd;
+
+  // Tabela
+  const tbody = document.getElementById('contratosBody');
+  if (!deals.length) { tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:1rem;color:var(--muted);">Nenhum negócio ganho no período.</td></tr>'; return; }
+
+  // Ordena por data de ganho (mais recente primeiro)
+  const sorted = [...deals].sort((a,b) => new Date(b.wonAt||b.updatedAt) - new Date(a.wonAt||a.updatedAt));
+
+  tbody.innerHTML = sorted.map(d => {
+    const name = d.title || d.person?.name || d.organization?.name || '—';
+    const owner = d.owner?.name || '—';
+    const funnel = d.dealStage?.funnel?.name || '—';
+    const wonDate = d.wonAt ? new Date(d.wonAt).toLocaleDateString('pt-BR') : (d.endTime ? new Date(d.endTime).toLocaleDateString('pt-BR') : '—');
+
+    // Produto — tenta vários campos
+    let produto = '—';
+    if (d.products_entities && d.products_entities.length > 0) {
+      produto = d.products_entities.map(p => p.name || p.product?.name || p.productName || JSON.stringify(p)).filter(Boolean).join(', ');
+    } else if (d.products && d.products.length > 0) {
+      produto = Array.isArray(d.products) ? d.products.join(', ') : d.products;
+    }
+
+    return `<tr>
+      <td style="font-weight:500;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${name}">${name}</td>
+      <td>${owner}</td>
+      <td style="color:var(--teal);">${produto}</td>
+      <td style="color:var(--muted);font-size:11px;">${funnel}</td>
+      <td style="font-family:'DM Mono',monospace;">${fmt(d.value)}</td>
+      <td style="font-family:'DM Mono',monospace;white-space:nowrap;">${wonDate}</td>
+    </tr>`;
   }).join('');
 }
 
