@@ -430,8 +430,10 @@
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         <input type="text" id="c-search" placeholder="Buscar negócio..." onkeyup="renderContratos()" style="padding:5px 10px;border-radius:var(--radius-sm);border:1px solid var(--border);font-family:'Poppins',sans-serif;font-size:12px;background:var(--bg);color:var(--text);width:180px;">
         <select id="c-owner" onchange="renderContratos()" style="font-size:12px;"><option value="all">Todos responsáveis</option></select>
+        <button onclick="debugProduto()" style="background:var(--warning);font-size:11px;padding:5px 10px;" title="Mostra o JSON do primeiro negócio ganho no período">🔍 Debug produto</button>
       </div>
     </div>
+    <div id="c-debug" style="display:none;background:#1a1a18;color:#91DBE4;font-family:'DM Mono',monospace;font-size:11px;padding:1rem;border-radius:var(--radius-sm);margin-bottom:1rem;overflow-x:auto;white-space:pre;max-height:400px;overflow-y:auto;"></div>
     <div style="overflow-x:auto;">
       <table class="std-table">
         <thead>
@@ -853,6 +855,18 @@ function renderContratos() {
       <td style="font-weight:500;color:${durColor};">${durStr}</td>
     </tr>`;
   }).join('');
+}
+
+function debugProduto() {
+  const won = filteredDeals.filter(d => d.dealStatus?.id === 2);
+  const el = document.getElementById('c-debug');
+  if (!won.length) { el.style.display='block'; el.textContent='Nenhum negócio ganho no período filtrado.'; return; }
+  // Pega o negócio do Divon se existir, senão o primeiro
+  const divon = won.find(d => (d.title||d.person?.name||'').toLowerCase().includes('divon')) || won[0];
+  el.style.display = el.style.display === 'none' ? 'block' : 'none';
+  if (el.style.display === 'block') {
+    el.textContent = '// Negócio: ' + (divon.title || divon.person?.name || divon.id) + '\n\n' + JSON.stringify(divon, null, 2);
+  }
 }
 
 async function fetchAll() {
