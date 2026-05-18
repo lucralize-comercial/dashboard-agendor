@@ -954,6 +954,7 @@ function renderContratos() {
 const SENHA_COMISSOES = 'GestaoComercial';
 let comissoesDesbloqueadas = false;
 
+// Taxas padrão (Ronaldo, Everton e outros)
 const TAXAS_COMISSAO = {
   'Preço base': 0.30,
   'Indicação de Amigo': 0.80,
@@ -964,6 +965,24 @@ const TAXAS_COMISSAO = {
   'Gratuidade três meses': 0.15,
   'Parceria Leo Marconi': 0.20,
 };
+
+// Taxas específicas da Fabíola (100% com descontos por condição)
+const TAXAS_FABIOLA = {
+  'Preço base': 1.00,
+  'IRPF grátis primeiro ano': 0.85,
+  'Isenção do primeiro mês': 0.82,
+  'Parceria Afiliados': 0.80,
+  'Gratuidade dois meses': 0.60,
+  '15% de desconto no primeiro ano': 0.60,
+  'Gratuidade três meses': 0.50,
+  'Indicação de Amigo': 0.80,
+  'Parceria Leo Marconi': 0.80,
+};
+
+// Bônus de reunião manual (R$ 30 por reunião) — chave: deal.id, valor: qtd reuniões
+// Temporário até integração com Agendor
+const BONUS_REUNIAO = {};
+const VALOR_BONUS_REUNIAO = 30;
 
 function openComissoes(btn) {
   if (comissoesDesbloqueadas) {
@@ -1153,12 +1172,15 @@ function renderComissoes() {
     const isDiretoria = origem.toLowerCase().includes('relacionamento diretoria');
     const isRegraOrigem = REGRA_ORIGEM.includes(owner);
 
-    // Taxa: regra especial para Diogo/Brenda, regra padrão para os demais
+    // Taxa: Fabíola tem tabela própria, Diogo/Brenda usam origem, demais usam condição comercial
     let taxa;
+    const isFabiola = owner === 'Fabíola Carvalho';
     if (isDiretoria) {
-      taxa = null; // sem comissão
+      taxa = null;
     } else if (isRegraOrigem) {
       taxa = getComissaoEspecial(d);
+    } else if (isFabiola) {
+      taxa = condicao ? (TAXAS_FABIOLA[condicao] ?? getTaxaComissao(condicao)) : null;
     } else {
       taxa = getTaxaComissao(condicao);
     }
@@ -1166,23 +1188,30 @@ function renderComissoes() {
     const valor = d.value || 0;
     const isPendente = !isRegraOrigem && !isDiretoria && !condicao;
     const comissao = taxa !== null ? valor * taxa : null;
-    // Bônus do Ronaldo (1/3 da comissão, só se o responsável for Everton ou Fabíola)
+
+    // Bônus de reunião manual (Fabíola)
+    const reunioes = BONUS_REUNIAO[d.id] || 0;
+    const bonusReuniao = reunioes * VALOR_BONUS_REUNIAO;
+
+    // Bônus do Ronaldo (1/3 da comissão de Everton ou Fabíola)
     const bonusRonaldo = (comissao !== null && GERAM_BONUS_RONALDO.includes(owner)) ? comissao / 3 : 0;
 
     totalValor += valor;
     if (comissao !== null) totalComissao += comissao;
+    if (bonusReuniao > 0) totalComissao += bonusReuniao;
     if (isPendente) pendentes++;
 
     // Acumula por responsável
-    if (!porResponsavel[owner]) porResponsavel[owner] = { negocios: 0, valor: 0, comissao: 0, pendentes: 0 };
+    if (!porResponsavel[owner]) porResponsavel[owner] = { negocios: 0, valor: 0, comissao: 0, pendentes: 0, bonusReuniao: 0 };
     porResponsavel[owner].negocios++;
     porResponsavel[owner].valor += valor;
     if (comissao !== null) porResponsavel[owner].comissao += comissao;
+    if (bonusReuniao > 0) porResponsavel[owner].bonusReuniao += bonusReuniao;
     if (isPendente) porResponsavel[owner].pendentes++;
 
     // Acumula bônus do Ronaldo
     if (bonusRonaldo > 0) {
-      if (!porResponsavel[NOME_RONALDO]) porResponsavel[NOME_RONALDO] = { negocios: 0, valor: 0, comissao: 0, pendentes: 0 };
+      if (!porResponsavel[NOME_RONALDO]) porResponsavel[NOME_RONALDO] = { negocios: 0, valor: 0, comissao: 0, pendentes: 0, bonusReuniao: 0 };
       porResponsavel[NOME_RONALDO].comissao += bonusRonaldo;
       totalComissao += bonusRonaldo;
     }
@@ -1200,8 +1229,13 @@ function renderComissoes() {
       : '—';
 
     const taxaDisplay = taxa !== null ? `${(taxa*100).toFixed(0)}%` : '<span style="color:#999;">—</span>';
-    const comDisplay = (comissao !== null) ? `<strong>${fmtBRL(comissao)}</strong>` : '<span style="color:#999;">—</span>';
+    const comTotal = (comissao || 0) + bonusReuniao;
+    const comDisplay = comTotal > 0 ? `<strong>${fmtBRL(comTotal)}</strong>${bonusReuniao > 0 ? `<br><span style="font-size:10px;color:#657786;">incl. ${reunioes}x reunião</span>` : ''}` : '<span style="color:#999;">—</span>';
     const bonusDisplay = bonusRonaldo > 0 ? `<span style="color:#0C7488;font-size:11px;">+${fmtBRL(bonusRonaldo)} Ronaldo</span>` : '';
+
+    const reuniaoBtn = isFabiola
+      ? `<br><button onclick="addReuniao(${d.id})" style="background:none;border:1px dashed #0C7488;color:#0C7488;font-size:10px;padding:2px 6px;border-radius:4px;cursor:pointer;margin-top:2px;">+reunião (${reunioes})</button>`
+      : '';
 
     return `<tr>
       <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${d.title||''}">${d.title || d.person?.name || '—'}</td>
@@ -1211,7 +1245,7 @@ function renderComissoes() {
       <td>${origemDisplay}</td>
       <td style="text-align:right;">${fmtBRL(valor)}</td>
       <td style="text-align:right;">${taxaDisplay}</td>
-      <td style="text-align:right;">${comDisplay}${bonusDisplay ? '<br>'+bonusDisplay : ''}</td>
+      <td style="text-align:right;">${comDisplay}${bonusDisplay ? '<br>'+bonusDisplay : ''}${reuniaoBtn}</td>
       <td style="text-align:right;font-family:'DM Mono',monospace;font-size:12px;">${fmtDate(d.wonAt)}</td>
     </tr>`;
   }).join('');
@@ -1227,16 +1261,39 @@ function renderComissoes() {
   else document.getElementById('com-pendentes').style.color = '';
 
   // Resumo por responsável
+  const totalNegocios = Object.values(porResponsavel).reduce((s,r) => s + r.negocios, 0);
+  const totalValorResumo = Object.values(porResponsavel).reduce((s,r) => s + r.valor, 0);
+
   const resumoRows = Object.entries(porResponsavel)
-    .sort((a,b) => b[1].comissao - a[1].comissao)
-    .map(([name, r]) => `<tr>
-      <td><strong>${name}</strong></td>
-      <td style="text-align:right;">${r.negocios}</td>
-      <td style="text-align:right;">${fmtBRL(r.valor)}</td>
-      <td style="text-align:right;"><strong style="color:#0C7488;">${fmtBRL(r.comissao)}</strong></td>
-      <td style="text-align:right;">${r.pendentes > 0 ? `<span style="color:#F62642;">${r.pendentes}</span>` : '0'}</td>
-    </tr>`).join('');
+    .sort((a,b) => (b[1].comissao + b[1].bonusReuniao) - (a[1].comissao + a[1].bonusReuniao))
+    .map(([name, r]) => {
+      const total = r.comissao + (r.bonusReuniao || 0);
+      const bonusTag = r.bonusReuniao > 0 ? ` <span style="font-size:10px;color:#657786;">(+${fmtBRL(r.bonusReuniao)} reunião)</span>` : '';
+      const pctNeg = totalNegocios > 0 ? ((r.negocios / totalNegocios) * 100).toFixed(0) : 0;
+      const pctVal = totalValorResumo > 0 ? ((r.valor / totalValorResumo) * 100).toFixed(0) : 0;
+      return `<tr>
+        <td><strong>${name}</strong></td>
+        <td style="text-align:right;">${r.negocios} <span style="color:#657786;font-size:11px;">${pctNeg}%</span></td>
+        <td style="text-align:right;">${fmtBRL(r.valor)} <span style="color:#657786;font-size:11px;">${pctVal}%</span></td>
+        <td style="text-align:right;"><strong style="color:#0C7488;">${fmtBRL(total)}</strong>${bonusTag}</td>
+        <td style="text-align:right;">${r.pendentes > 0 ? `<span style="color:#F62642;">${r.pendentes}</span>` : '0'}</td>
+      </tr>`;
+    }).join('');
   document.getElementById('com-resumo-body').innerHTML = resumoRows || '<tr><td colspan="5" class="empty">—</td></tr>';
+}
+
+function addReuniao(dealId) {
+  const atual = BONUS_REUNIAO[dealId] || 0;
+  const novo = prompt(`Quantas reuniões para este negócio? (atual: ${atual})`, atual);
+  if (novo === null) return;
+  const qtd = parseInt(novo);
+  if (isNaN(qtd) || qtd < 0) { alert('Número inválido'); return; }
+  if (qtd === 0) {
+    delete BONUS_REUNIAO[dealId];
+  } else {
+    BONUS_REUNIAO[dealId] = qtd;
+  }
+  renderComissoes();
 }
 
 let refreshBlockedUntil = null;
