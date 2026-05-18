@@ -510,6 +510,38 @@
     </div>
   </div>
 
+  <!-- Resumo condição comercial + origem -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
+    <div class="card" style="margin-bottom:0;">
+      <div class="card-header"><span class="card-title">Por condição comercial</span></div>
+      <div style="overflow-x:auto;">
+        <table class="std-table">
+          <thead><tr>
+            <th style="text-align:left;">Condição</th>
+            <th style="text-align:right;">Negócios</th>
+            <th style="text-align:right;">%</th>
+            <th style="text-align:right;">Valor total</th>
+          </tr></thead>
+          <tbody id="com-condicao-body"><tr><td colspan="4" class="empty">—</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card" style="margin-bottom:0;">
+      <div class="card-header"><span class="card-title">Por origem</span></div>
+      <div style="overflow-x:auto;">
+        <table class="std-table">
+          <thead><tr>
+            <th style="text-align:left;">Origem</th>
+            <th style="text-align:right;">Negócios</th>
+            <th style="text-align:right;">%</th>
+            <th style="text-align:right;">Valor total</th>
+          </tr></thead>
+          <tbody id="com-origem-body"><tr><td colspan="4" class="empty">—</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <!-- Tabela detalhada -->
   <div class="card">
     <div class="card-header">
@@ -953,6 +985,18 @@ function renderContratos() {
 // ===== COMISSÕES =====
 const SENHA_COMISSOES = 'GestaoComercial';
 let comissoesDesbloqueadas = false;
+let comissoesExpiresAt = null;
+const COMISSOES_TIMEOUT_MS = 2 * 60 * 60 * 1000; // 2 horas
+
+function isComissoesValido() {
+  if (!comissoesDesbloqueadas || !comissoesExpiresAt) return false;
+  if (Date.now() > comissoesExpiresAt) {
+    comissoesDesbloqueadas = false;
+    comissoesExpiresAt = null;
+    return false;
+  }
+  return true;
+}
 
 // Taxas padrão (Ronaldo, Everton e outros)
 const TAXAS_COMISSAO = {
@@ -985,7 +1029,7 @@ const BONUS_REUNIAO = {};
 const VALOR_BONUS_REUNIAO = 30;
 
 function openComissoes(btn) {
-  if (comissoesDesbloqueadas) {
+  if (isComissoesValido()) {
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
     btn.classList.add('active');
@@ -1005,6 +1049,7 @@ function verificarSenha() {
   const val = document.getElementById('senha-input').value;
   if (val === SENHA_COMISSOES) {
     comissoesDesbloqueadas = true;
+    comissoesExpiresAt = Date.now() + COMISSOES_TIMEOUT_MS;
     document.getElementById('modal-senha').style.display = 'none';
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -1025,6 +1070,7 @@ function fecharModalSenha() {
 
 function sairComissoes() {
   comissoesDesbloqueadas = false;
+  comissoesExpiresAt = null;
   // voltar para visão geral
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -1260,6 +1306,9 @@ function renderComissoes() {
   if (pendentes > 0) document.getElementById('com-pendentes').style.color = '#F62642';
   else document.getElementById('com-pendentes').style.color = '';
 
+  // Responsáveis que são Diretoria (sem comissão, mas aparecem no resumo)
+  const DIRETORIA_NOMES = ['Luiz Santos'];
+
   // Resumo por responsável
   const totalNegocios = Object.values(porResponsavel).reduce((s,r) => s + r.negocios, 0);
   const totalValorResumo = Object.values(porResponsavel).reduce((s,r) => s + r.valor, 0);
@@ -1271,15 +1320,60 @@ function renderComissoes() {
       const bonusTag = r.bonusReuniao > 0 ? ` <span style="font-size:10px;color:#657786;">(+${fmtBRL(r.bonusReuniao)} reunião)</span>` : '';
       const pctNeg = totalNegocios > 0 ? ((r.negocios / totalNegocios) * 100).toFixed(0) : 0;
       const pctVal = totalValorResumo > 0 ? ((r.valor / totalValorResumo) * 100).toFixed(0) : 0;
+      const isDiretoriaResumo = DIRETORIA_NOMES.includes(name);
+      const nomeDisplay = isDiretoriaResumo ? `${name} <span style="background:#f5f5f5;color:#999;padding:1px 6px;border-radius:8px;font-size:10px;">Diretoria</span>` : name;
       return `<tr>
-        <td><strong>${name}</strong></td>
+        <td><strong>${nomeDisplay}</strong></td>
         <td style="text-align:right;">${r.negocios} <span style="color:#657786;font-size:11px;">${pctNeg}%</span></td>
         <td style="text-align:right;">${fmtBRL(r.valor)} <span style="color:#657786;font-size:11px;">${pctVal}%</span></td>
-        <td style="text-align:right;"><strong style="color:#0C7488;">${fmtBRL(total)}</strong>${bonusTag}</td>
+        <td style="text-align:right;"><strong style="color:${isDiretoriaResumo ? '#999' : '#0C7488'};">${isDiretoriaResumo ? '—' : fmtBRL(total)}</strong>${bonusTag}</td>
         <td style="text-align:right;">${r.pendentes > 0 ? `<span style="color:#F62642;">${r.pendentes}</span>` : '0'}</td>
       </tr>`;
     }).join('');
   document.getElementById('com-resumo-body').innerHTML = resumoRows || '<tr><td colspan="5" class="empty">—</td></tr>';
+
+  // Resumo por condição comercial
+  const porCondicao = {};
+  const porOrigem = {};
+  deals.forEach(d => {
+    const condicao = getCondicao(d) || '⚠ Pendente';
+    const origem = d.customFields?.origem_do_negocio?.value || '—';
+    const valor = d.value || 0;
+    if (!porCondicao[condicao]) porCondicao[condicao] = { negocios: 0, valor: 0 };
+    porCondicao[condicao].negocios++;
+    porCondicao[condicao].valor += valor;
+    if (!porOrigem[origem]) porOrigem[origem] = { negocios: 0, valor: 0 };
+    porOrigem[origem].negocios++;
+    porOrigem[origem].valor += valor;
+  });
+
+  const totalDealsCond = deals.length;
+  const condicaoRows = Object.entries(porCondicao)
+    .sort((a,b) => b[1].negocios - a[1].negocios)
+    .map(([cond, r]) => {
+      const pct = totalDealsCond > 0 ? ((r.negocios / totalDealsCond) * 100).toFixed(0) : 0;
+      const isPend = cond === '⚠ Pendente';
+      return `<tr>
+        <td>${isPend ? '<span style="color:#F62642;font-size:11px;font-weight:600;">⚠ Pendente</span>' : `<span style="background:#e0f5f7;color:#0C7488;padding:2px 8px;border-radius:12px;font-size:11px;">${cond}</span>`}</td>
+        <td style="text-align:right;">${r.negocios}</td>
+        <td style="text-align:right;color:#657786;">${pct}%</td>
+        <td style="text-align:right;">${fmtBRL(r.valor)}</td>
+      </tr>`;
+    }).join('');
+  document.getElementById('com-condicao-body').innerHTML = condicaoRows || '<tr><td colspan="4" class="empty">—</td></tr>';
+
+  const origemRows = Object.entries(porOrigem)
+    .sort((a,b) => b[1].negocios - a[1].negocios)
+    .map(([orig, r]) => {
+      const pct = totalDealsCond > 0 ? ((r.negocios / totalDealsCond) * 100).toFixed(0) : 0;
+      return `<tr>
+        <td style="font-size:12px;">${orig}</td>
+        <td style="text-align:right;">${r.negocios}</td>
+        <td style="text-align:right;color:#657786;">${pct}%</td>
+        <td style="text-align:right;">${fmtBRL(r.valor)}</td>
+      </tr>`;
+    }).join('');
+  document.getElementById('com-origem-body').innerHTML = origemRows || '<tr><td colspan="4" class="empty">—</td></tr>';
 }
 
 function addReuniao(dealId) {
