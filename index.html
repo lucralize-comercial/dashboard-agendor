@@ -196,6 +196,7 @@
     <button class="tab-btn" onclick="switchTab('analise',this)">Análise de Conversão</button>
     <button class="tab-btn" onclick="switchTab('acompanhamento',this)">Acompanhamento</button>
     <button class="tab-btn" onclick="switchTab('contratos',this)">Contratos Ganhos</button>
+    <button class="tab-btn comissoes-tab" onclick="openComissoes(this)">💰 Comissões</button>
   </div>
   <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
     <div id="successMsg" class="msg success" style="margin-bottom:0;padding:5px 12px;font-size:12px;"></div>
@@ -453,6 +454,95 @@
     </div>
   </div>
 </div>
+
+<!-- ===== MODAL SENHA COMISSÕES ===== -->
+<div id="modal-senha" style="display:none;position:fixed;inset:0;background:rgba(14,20,40,0.7);z-index:1000;align-items:center;justify-content:center;">
+  <div style="background:white;border-radius:16px;padding:2rem;width:360px;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
+    <div style="text-align:center;margin-bottom:1.5rem;">
+      <div style="font-size:2rem;margin-bottom:0.5rem;">🔒</div>
+      <div style="font-size:18px;font-weight:700;color:#0E1428;font-family:'Comfortaa',cursive;">Área Restrita</div>
+      <div style="font-size:13px;color:#657786;margin-top:4px;">Digite a senha para acessar as comissões</div>
+    </div>
+    <input type="password" id="senha-input" placeholder="Senha" onkeydown="if(event.key==='Enter')verificarSenha()" style="width:100%;padding:10px 14px;border:1.5px solid #e0e0e0;border-radius:8px;font-size:14px;font-family:'Poppins',sans-serif;outline:none;margin-bottom:8px;">
+    <div id="senha-erro" style="color:#F62642;font-size:12px;height:16px;margin-bottom:8px;"></div>
+    <div style="display:flex;gap:8px;">
+      <button onclick="fecharModalSenha()" style="flex:1;background:#EBF0F3;color:#0E1428;font-size:13px;">Cancelar</button>
+      <button onclick="verificarSenha()" style="flex:1;background:#0C7488;font-size:13px;">Entrar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ABA 5: COMISSÕES ===== -->
+<div id="tab-comissoes" class="tab-content">
+  <!-- Filtro de período próprio -->
+  <div style="background:white;border:1px solid rgba(14,20,40,0.1);border-radius:12px;padding:1rem 1.4rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+    <span style="font-size:13px;font-weight:500;color:#657786;">Período:</span>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;">
+      <button class="period-btn" onclick="setComPeriod(30,this)">30d</button>
+      <button class="period-btn active" onclick="setComPeriod(0,this)" id="com-mes-btn">Mês atual</button>
+      <button class="period-btn" onclick="setComPeriod(90,this)">90d</button>
+      <button class="period-btn" onclick="setComPeriod(365,this)">1 ano</button>
+    </div>
+    <span style="width:1px;height:24px;background:rgba(14,20,40,0.1);"></span>
+    <input type="date" id="com-dateFrom" onchange="renderComissoes()" style="padding:5px 8px;border-radius:8px;border:1px solid rgba(14,20,40,0.1);font-size:12px;font-family:'Poppins',sans-serif;">
+    <span style="font-size:12px;color:#657786;">→</span>
+    <input type="date" id="com-dateTo" onchange="renderComissoes()" style="padding:5px 8px;border-radius:8px;border:1px solid rgba(14,20,40,0.1);font-size:12px;font-family:'Poppins',sans-serif;">
+    <span style="width:1px;height:24px;background:rgba(14,20,40,0.1);"></span>
+    <select id="com-owner" onchange="renderComissoes()" style="font-size:12px;padding:5px 8px;border-radius:8px;border:1px solid rgba(14,20,40,0.1);font-family:'Poppins',sans-serif;">
+      <option value="all">Todos responsáveis</option>
+    </select>
+    <button onclick="sairComissoes()" style="margin-left:auto;background:#EBF0F3;color:#0E1428;font-size:12px;padding:6px 14px;">🔒 Sair</button>
+  </div>
+
+  <!-- Métricas resumo -->
+  <div class="metrics" style="margin-bottom:1.5rem;" id="com-metrics">
+    <div class="metric-card"><div class="metric-label">Total ganhos</div><div class="metric-value" id="com-total">—</div></div>
+    <div class="metric-card"><div class="metric-label">Valor total contratos</div><div class="metric-value success" id="com-valor">—</div></div>
+    <div class="metric-card"><div class="metric-label">Total comissões</div><div class="metric-value warning" id="com-comissao">—</div></div>
+    <div class="metric-card"><div class="metric-label">Pendentes preenchimento</div><div class="metric-value danger" id="com-pendentes">—</div></div>
+  </div>
+
+  <!-- Resumo por responsável -->
+  <div class="card" style="margin-bottom:1.5rem;">
+    <div class="card-header"><span class="card-title">Resumo por responsável</span></div>
+    <div style="overflow-x:auto;">
+      <table class="std-table">
+        <thead><tr>
+          <th style="text-align:left;">Responsável</th>
+          <th style="text-align:right;">Negócios</th>
+          <th style="text-align:right;">Valor total</th>
+          <th style="text-align:right;">Comissão</th>
+          <th style="text-align:right;">Pendentes</th>
+        </tr></thead>
+        <tbody id="com-resumo-body"><tr><td colspan="5" class="empty">—</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Tabela detalhada -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Detalhamento por negócio</span>
+      <input type="text" id="com-search" placeholder="Buscar negócio..." oninput="renderComissoes()" style="padding:5px 10px;border-radius:8px;border:1px solid rgba(14,20,40,0.1);font-size:12px;font-family:'Poppins',sans-serif;background:#EBF0F3;width:200px;">
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="std-table">
+        <thead><tr>
+          <th style="text-align:left;min-width:180px;">Negócio</th>
+          <th style="text-align:left;">Responsável</th>
+          <th style="text-align:left;">Produto</th>
+          <th style="text-align:left;">Condição</th>
+          <th style="text-align:right;">Valor</th>
+          <th style="text-align:right;">% Comissão</th>
+          <th style="text-align:right;">Comissão</th>
+          <th style="text-align:right;">Data ganho</th>
+        </tr></thead>
+        <tbody id="com-detail-body"><tr><td colspan="8" class="empty">—</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 
 <script>
 const PROXY = 'https://agendo-proxy.onrender.com';
@@ -855,6 +945,210 @@ function renderContratos() {
       <td style="font-weight:500;color:${durColor};">${durStr}</td>
     </tr>`;
   }).join('');
+}
+
+
+// ===== COMISSÕES =====
+const SENHA_COMISSOES = 'GestaoComercial';
+let comissoesDesbloqueadas = false;
+
+const TAXAS_COMISSAO = {
+  'Preço base': 0.30,
+  'Indicação de Amigo': 0.80,
+  'IRPF grátis primeiro ano': 0.28,
+  'Isenção do primeiro mês': 0.25,
+  '15% de desconto no primeiro ano': 0.22,
+  'Gratuidade dois meses': 0.20,
+  'Gratuidade três meses': 0.15,
+  'Parceria Leo Marconi': 0.20,
+};
+
+function openComissoes(btn) {
+  if (comissoesDesbloqueadas) {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-comissoes').classList.add('active');
+    renderComissoes();
+    return;
+  }
+  document.getElementById('modal-senha').style.display = 'flex';
+  document.getElementById('senha-input').value = '';
+  document.getElementById('senha-erro').textContent = '';
+  setTimeout(() => document.getElementById('senha-input').focus(), 100);
+  // guardar ref do btn para ativar depois
+  window._comBtn = btn;
+}
+
+function verificarSenha() {
+  const val = document.getElementById('senha-input').value;
+  if (val === SENHA_COMISSOES) {
+    comissoesDesbloqueadas = true;
+    document.getElementById('modal-senha').style.display = 'none';
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    if (window._comBtn) window._comBtn.classList.add('active');
+    document.getElementById('tab-comissoes').classList.add('active');
+    initComPeriod();
+    renderComissoes();
+  } else {
+    document.getElementById('senha-erro').textContent = 'Senha incorreta. Tente novamente.';
+    document.getElementById('senha-input').value = '';
+    document.getElementById('senha-input').focus();
+  }
+}
+
+function fecharModalSenha() {
+  document.getElementById('modal-senha').style.display = 'none';
+}
+
+function sairComissoes() {
+  comissoesDesbloqueadas = false;
+  // voltar para visão geral
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.querySelector('.tab-btn').classList.add('active');
+  document.getElementById('tab-visao-geral').classList.add('active');
+}
+
+function initComPeriod() {
+  // Padrão: mês atual
+  const now = new Date();
+  const from = new Date(now.getFullYear(), now.getMonth(), 1);
+  const to = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+  document.getElementById('com-dateFrom').value = from.toISOString().split('T')[0];
+  document.getElementById('com-dateTo').value = to.toISOString().split('T')[0];
+}
+
+function setComPeriod(days, btn) {
+  document.querySelectorAll('#tab-comissoes .period-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const to = new Date();
+  let from = new Date();
+  if (days === 0) {
+    // mês atual
+    from = new Date(to.getFullYear(), to.getMonth(), 1);
+  } else {
+    from.setDate(from.getDate() - days);
+  }
+  document.getElementById('com-dateFrom').value = from.toISOString().split('T')[0];
+  document.getElementById('com-dateTo').value = to.toISOString().split('T')[0];
+  renderComissoes();
+}
+
+function getCondicao(d) {
+  const c = d.customFields?.condicao_comercial;
+  return c ? c.trim() : null;
+}
+
+function getTaxaComissao(condicao) {
+  if (!condicao) return null;
+  // busca exata primeiro
+  if (TAXAS_COMISSAO[condicao] !== undefined) return TAXAS_COMISSAO[condicao];
+  // busca parcial (case insensitive)
+  const key = Object.keys(TAXAS_COMISSAO).find(k => k.toLowerCase().includes(condicao.toLowerCase()) || condicao.toLowerCase().includes(k.toLowerCase()));
+  return key ? TAXAS_COMISSAO[key] : null;
+}
+
+function getProdutoNome(d) {
+  if (d.products_entities?.length > 0) return d.products_entities[0].name || '—';
+  if (d.products?.length > 0) return d.products[0].name || '—';
+  return '—';
+}
+
+function fmtBRL(v) { return 'R$ ' + Number(v).toLocaleString('pt-BR', {minimumFractionDigits:0, maximumFractionDigits:0}); }
+function fmtDate(s) { if (!s) return '—'; const d = new Date(s); return d.toLocaleDateString('pt-BR'); }
+
+function renderComissoes() {
+  const fromVal = document.getElementById('com-dateFrom').value;
+  const toVal = document.getElementById('com-dateTo').value;
+  const ownerSel = document.getElementById('com-owner').value;
+  const search = (document.getElementById('com-search')?.value || '').toLowerCase();
+
+  const from = fromVal ? new Date(fromVal + 'T00:00:00') : null;
+  const to = toVal ? new Date(toVal + 'T23:59:59') : null;
+
+  // Popular select de responsáveis
+  const owners = [...new Set(baseDeals.filter(d => d.dealStatus?.id === 2).map(d => d.owner?.name).filter(Boolean))].sort();
+  const sel = document.getElementById('com-owner');
+  const curVal = sel.value;
+  sel.innerHTML = '<option value="all">Todos responsáveis</option>' + owners.map(o => `<option value="${o}" ${o===curVal?'selected':''}>${o}</option>`).join('');
+
+  let deals = baseDeals.filter(d => {
+    if (d.dealStatus?.id !== 2) return false;
+    const wonAt = d.wonAt ? new Date(d.wonAt) : null;
+    if (from && wonAt && wonAt < from) return false;
+    if (to && wonAt && wonAt > to) return false;
+    if (ownerSel !== 'all' && d.owner?.name !== ownerSel) return false;
+    if (search) {
+      const title = (d.title || d.person?.name || '').toLowerCase();
+      if (!title.includes(search)) return false;
+    }
+    return true;
+  });
+
+  let totalValor = 0, totalComissao = 0, pendentes = 0;
+  const porResponsavel = {};
+
+  const rows = deals.map(d => {
+    const condicao = getCondicao(d);
+    const taxa = getTaxaComissao(condicao);
+    const valor = d.value || 0;
+    const comissao = taxa !== null ? valor * taxa : null;
+    const owner = d.owner?.name || '—';
+    const produto = getProdutoNome(d);
+    const isPendente = !condicao;
+
+    totalValor += valor;
+    if (comissao !== null) totalComissao += comissao;
+    if (isPendente) pendentes++;
+
+    if (!porResponsavel[owner]) porResponsavel[owner] = { negocios: 0, valor: 0, comissao: 0, pendentes: 0 };
+    porResponsavel[owner].negocios++;
+    porResponsavel[owner].valor += valor;
+    if (comissao !== null) porResponsavel[owner].comissao += comissao;
+    if (isPendente) porResponsavel[owner].pendentes++;
+
+    const condDisplay = isPendente
+      ? '<span style="color:#F62642;font-size:11px;font-weight:600;">⚠ Pendente</span>'
+      : `<span style="background:#e0f5f7;color:#0C7488;padding:2px 8px;border-radius:12px;font-size:11px;">${condicao}</span>`;
+
+    const taxaDisplay = taxa !== null ? `${(taxa*100).toFixed(0)}%` : '<span style="color:#F62642;">—</span>';
+    const comDisplay = comissao !== null ? `<strong>${fmtBRL(comissao)}</strong>` : '<span style="color:#F62642;">—</span>';
+
+    return `<tr>
+      <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${d.title||''}">${d.title || d.person?.name || '—'}</td>
+      <td>${owner}</td>
+      <td style="color:#0C7488;font-size:12px;">${produto}</td>
+      <td>${condDisplay}</td>
+      <td style="text-align:right;">${fmtBRL(valor)}</td>
+      <td style="text-align:right;">${taxaDisplay}</td>
+      <td style="text-align:right;">${comDisplay}</td>
+      <td style="text-align:right;font-family:'DM Mono',monospace;font-size:12px;">${fmtDate(d.wonAt)}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('com-detail-body').innerHTML = rows || '<tr><td colspan="8" class="empty">Nenhum negócio no período</td></tr>';
+
+  // Métricas
+  document.getElementById('com-total').textContent = deals.length;
+  document.getElementById('com-valor').textContent = fmtBRL(totalValor);
+  document.getElementById('com-comissao').textContent = fmtBRL(totalComissao);
+  document.getElementById('com-pendentes').textContent = pendentes;
+  if (pendentes > 0) document.getElementById('com-pendentes').style.color = '#F62642';
+  else document.getElementById('com-pendentes').style.color = '';
+
+  // Resumo por responsável
+  const resumoRows = Object.entries(porResponsavel)
+    .sort((a,b) => b[1].comissao - a[1].comissao)
+    .map(([name, r]) => `<tr>
+      <td><strong>${name}</strong></td>
+      <td style="text-align:right;">${r.negocios}</td>
+      <td style="text-align:right;">${fmtBRL(r.valor)}</td>
+      <td style="text-align:right;"><strong style="color:#0C7488;">${fmtBRL(r.comissao)}</strong></td>
+      <td style="text-align:right;">${r.pendentes > 0 ? `<span style="color:#F62642;">${r.pendentes}</span>` : '0'}</td>
+    </tr>`).join('');
+  document.getElementById('com-resumo-body').innerHTML = resumoRows || '<tr><td colspan="5" class="empty">—</td></tr>';
 }
 
 function debugNegocio() {
