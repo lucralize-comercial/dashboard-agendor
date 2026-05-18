@@ -858,9 +858,9 @@ function renderContratos() {
 }
 
 function debugNegocio() {
-  const won = (window.filteredDeals||[]).filter(d => d.dealStatus?.id === 2);
+  const won = baseDeals.filter(d => d.dealStatus?.id === 2);
   const el = document.getElementById("c-debug");
-  if (!won.length) { el.style.display="block"; el.textContent="Nenhum negócio ganho no período."; return; }
+  if (!won.length) { el.style.display="block"; el.textContent="Nenhum negócio ganho encontrado na base."; return; }
   el.style.display = el.style.display === "none" ? "block" : "none";
   if (el.style.display === "block") el.textContent = JSON.stringify(won[0], null, 2);
 }
