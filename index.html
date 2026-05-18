@@ -541,25 +541,8 @@ const AGENDOR_TOKEN = 'a89b0def-fd5e-45ed-981f-efe89f20159a';
 const AGENDOR_BASE = 'https://api.agendor.com.br/v3';
 
 async function fetchProductsForDeals(deals) {
-  const won = deals.filter(d => d.dealStatus?.id === 2);
-  if (!won.length) return;
-  // Busca em paralelo, máximo 10 por vez
-  const chunkSize = 10;
-  for (let i = 0; i < won.length; i += chunkSize) {
-    const chunk = won.slice(i, i + chunkSize);
-    await Promise.all(chunk.map(async d => {
-      if (d.products_entities?.length > 0) return; // já tem
-      try {
-        const r = await fetch(`${AGENDOR_BASE}/deals/${d.id}/products`, {
-          headers: { 'Authorization': `Token ${AGENDOR_TOKEN}` }
-        });
-        if (r.ok) {
-          const data = await r.json();
-          d.products_entities = data.data || [];
-        }
-      } catch(e) {}
-    }));
-  }
+  // Produtos já vêm do proxy — não precisa buscar separadamente
+  return;
 }
 const COLORS = ['#1a5fb4','#1e7e4a','#a05c00','#8b3a8b','#c0392b','#16697a','#d35400','#2c3e50','#b32d2d','#1d6b4a','#5c7a2e','#6b3a7d','#2e7d8b','#8b6914','#4a7c59'];
 const MONTHS_PT = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
@@ -1085,7 +1068,10 @@ function setComPeriod(days, btn) {
 
 function getCondicao(d) {
   const c = d.customFields?.condicao_comercial;
-  return c ? c.trim() : null;
+  if (!c) return null;
+  if (typeof c === 'string') return c.trim();
+  if (typeof c === 'object' && c.value) return c.value.trim();
+  return null;
 }
 
 function getTaxaComissao(condicao) {
