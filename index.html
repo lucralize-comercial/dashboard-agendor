@@ -546,6 +546,30 @@
 
 <script>
 const PROXY = 'https://agendo-proxy.onrender.com';
+const AGENDOR_TOKEN = 'a89b0def-fd5e-45ed-981f-efe89f20159a';
+const AGENDOR_BASE = 'https://api.agendor.com.br/v3';
+
+async function fetchProductsForDeals(deals) {
+  const won = deals.filter(d => d.dealStatus?.id === 2);
+  if (!won.length) return;
+  // Busca em paralelo, máximo 10 por vez
+  const chunkSize = 10;
+  for (let i = 0; i < won.length; i += chunkSize) {
+    const chunk = won.slice(i, i + chunkSize);
+    await Promise.all(chunk.map(async d => {
+      if (d.products_entities?.length > 0) return; // já tem
+      try {
+        const r = await fetch(`${AGENDOR_BASE}/deals/${d.id}/products`, {
+          headers: { 'Authorization': `Token ${AGENDOR_TOKEN}` }
+        });
+        if (r.ok) {
+          const data = await r.json();
+          d.products_entities = data.data || [];
+        }
+      } catch(e) {}
+    }));
+  }
+}
 const COLORS = ['#1a5fb4','#1e7e4a','#a05c00','#8b3a8b','#c0392b','#16697a','#d35400','#2c3e50','#b32d2d','#1d6b4a','#5c7a2e','#6b3a7d','#2e7d8b','#8b6914','#4a7c59'];
 const MONTHS_PT = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 
@@ -558,6 +582,9 @@ function switchTab(id, btn) {
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
   btn.classList.add('active');
   document.getElementById('tab-'+id).classList.add('active');
+  if (id === 'contratos') {
+    fetchProductsForDeals(baseDeals).then(() => renderContratos());
+  }
 }
 
 function toggleFunnelMenu(e) { e.stopPropagation(); document.getElementById('funnelMenu').classList.toggle('open'); document.getElementById('funnelBtn').classList.toggle('open'); }
@@ -990,7 +1017,7 @@ function verificarSenha() {
     if (window._comBtn) window._comBtn.classList.add('active');
     document.getElementById('tab-comissoes').classList.add('active');
     initComPeriod();
-    renderComissoes();
+    fetchProductsForDeals(baseDeals).then(() => renderComissoes());
   } else {
     document.getElementById('senha-erro').textContent = 'Senha incorreta. Tente novamente.';
     document.getElementById('senha-input').value = '';
