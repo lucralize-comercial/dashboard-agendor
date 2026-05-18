@@ -1198,10 +1198,6 @@ function renderComissoes() {
   document.getElementById('com-resumo-body').innerHTML = resumoRows || '<tr><td colspan="5" class="empty">—</td></tr>';
 }
 
-  el.style.display = el.style.display === "none" ? "block" : "none";
-  if (el.style.display === "block") el.textContent = JSON.stringify(won[0], null, 2);
-}
-
 async function fetchAll() {
   const btn=document.getElementById('refreshBtn');
   btn.innerHTML='<span class="spinner"></span> Buscando...'; btn.disabled=true;
