@@ -1162,16 +1162,23 @@ function debugNegocio() {
 async function fetchAll() {
   const btn=document.getElementById('refreshBtn');
   btn.innerHTML='<span class="spinner"></span> Buscando...'; btn.disabled=true;
-  setMsg('',''); document.getElementById('chartLoading').classList.add('visible');
+  setMsg('','');
+  // Não limpa os dados atuais — mantém na tela enquanto busca
   try {
     const resp=await fetch(PROXY+'/deals');
     if(!resp.ok) throw new Error('HTTP '+resp.status);
     const result=await resp.json();
-    baseDeals=result.data||[];
-    const now=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
-    document.getElementById('lastUpdated').textContent='Atualizado às '+now;
-    setMsg('success','✓ '+baseDeals.length.toLocaleString('pt-BR')+' negócios carregados');
-    applyFilter();
+    const newDeals = result.data||[];
+    // Só substitui se vieram dados novos
+    if (newDeals.length > 0) {
+      baseDeals = newDeals;
+      const now=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+      document.getElementById('lastUpdated').textContent='Atualizado às '+now;
+      setMsg('success','✓ '+baseDeals.length.toLocaleString('pt-BR')+' negócios carregados');
+      applyFilter();
+    } else {
+      setMsg('error','⚠ Proxy ainda carregando dados. Tente novamente em instantes.');
+    }
   } catch(e) { setMsg('error','❌ Não foi possível conectar ao proxy. ('+e.message+')'); }
   document.getElementById('chartLoading').classList.remove('visible');
   btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg> Atualizar base';
