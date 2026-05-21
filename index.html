@@ -510,9 +510,12 @@
   <!-- Filtro de período próprio -->
   <div style="background:white;border:1px solid rgba(14,20,40,0.1);border-radius:12px;padding:1rem 1.4rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
     <span style="font-size:13px;font-weight:500;color:#657786;">Período:</span>
-    <input type="date" id="com-dateFrom" onchange="renderComissoes()" style="padding:5px 8px;border-radius:8px;border:1px solid rgba(14,20,40,0.1);font-size:12px;font-family:'Poppins',sans-serif;">
+    <button class="period-btn active" id="com-btn-atual" onclick="setComCiclo(0,this)" style="font-size:12px;">Mês atual</button>
+    <button class="period-btn" id="com-btn-anterior" onclick="setComCiclo(-1,this)" style="font-size:12px;">Mês anterior</button>
+    <span style="width:1px;height:24px;background:rgba(14,20,40,0.1);"></span>
+    <input type="date" id="com-dateFrom" onchange="clearComBtns();renderComissoes()" style="padding:5px 8px;border-radius:8px;border:1px solid rgba(14,20,40,0.1);font-size:12px;font-family:'Poppins',sans-serif;">
     <span style="font-size:12px;color:#657786;">→</span>
-    <input type="date" id="com-dateTo" onchange="renderComissoes()" style="padding:5px 8px;border-radius:8px;border:1px solid rgba(14,20,40,0.1);font-size:12px;font-family:'Poppins',sans-serif;">
+    <input type="date" id="com-dateTo" onchange="clearComBtns();renderComissoes()" style="padding:5px 8px;border-radius:8px;border:1px solid rgba(14,20,40,0.1);font-size:12px;font-family:'Poppins',sans-serif;">
     <span style="width:1px;height:24px;background:rgba(14,20,40,0.1);"></span>
     <select id="com-owner" onchange="renderComissoes()" style="font-size:12px;padding:5px 8px;border-radius:8px;border:1px solid rgba(14,20,40,0.1);font-family:'Poppins',sans-serif;">
       <option value="all">Todos responsáveis</option>
@@ -1067,7 +1070,28 @@ function renderAcompanhamento() {
 }
 
 function renderContratos() {
-  const won = filteredDeals.filter(d => d.dealStatus?.id === 2);
+  // Filtra por wonAt (data de ganho) usando o filtro global de período
+  const from = document.getElementById('dateFrom').value;
+  const to = document.getElementById('dateTo').value;
+  const funis = getSelectedFunnels();
+
+  let won = baseDeals.filter(d => d.dealStatus?.id === 2);
+
+  // Filtro de funil
+  if (funis.length > 0 && funis.length < document.querySelectorAll('.funnel-option').length) {
+    won = won.filter(d => funis.includes(d.dealStage?.funnel?.name));
+  } else if (funis.length === 0) {
+    won = [];
+  }
+
+  // Filtro por wonAt (não createdAt)
+  if (from && to) {
+    const fd = new Date(from+'T00:00:00'), td = new Date(to+'T23:59:59');
+    won = won.filter(d => {
+      const w = d.wonAt ? new Date(d.wonAt) : null;
+      return w && w >= fd && w <= td;
+    });
+  }
 
   // Popula select de responsáveis
   const ownerSel = document.getElementById('c-owner');
@@ -1240,58 +1264,25 @@ function sairComissoes() {
   document.getElementById('tab-visao-geral').classList.add('active');
 }
 
-function initComPeriod() {
-  const now = new Date();
-  const y = now.getFullYear(), m = now.getMonth(), d = now.getDate();
-  // Ciclo: 26 do mês anterior até 25 do mês atual
-  let fromY, fromM, toY, toM;
-  if (d >= 26) {
-    // Já passou do dia 26 — ciclo atual: 26 deste mês até 25 do próximo
-    fromY = y; fromM = m;
-    const toDate = new Date(y, m + 1, 25);
-    toY = toDate.getFullYear(); toM = toDate.getMonth();
-  } else {
-    // Antes do dia 26 — ciclo atual: 26 do mês passado até 25 deste mês
-    const fromDate = new Date(y, m - 1, 26);
-    fromY = fromDate.getFullYear(); fromM = fromDate.getMonth();
-    toY = y; toM = m;
-  }
-  const from = `${fromY}-${String(fromM+1).padStart(2,'0')}-26`;
-  const to = `${toY}-${String(toM+1).padStart(2,'0')}-25`;
-  document.getElementById('com-dateFrom').value = from;
-  document.getElementById('com-dateTo').value = to;
+function clearComBtns() {
+  document.getElementById('com-btn-atual')?.classList.remove('active');
+  document.getElementById('com-btn-anterior')?.classList.remove('active');
 }
 
-function setComPeriod(days, btn) {
-  document.querySelectorAll('#tab-comissoes .period-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
+function setComCiclo(offset, btn) {
+  clearComBtns();
+  if (btn) btn.classList.add('active');
   const now = new Date();
-  const y = now.getFullYear(), m = now.getMonth(), d = now.getDate();
-  let from, to;
-  if (days === 0) {
-    // Ciclo atual: 26 do mês anterior até 25 do mês atual
-    const now2 = new Date();
-    const y2 = now2.getFullYear(), m2 = now2.getMonth(), d2 = now2.getDate();
-    let fromY, fromM, toY, toM;
-    if (d2 >= 26) {
-      fromY = y2; fromM = m2;
-      const toDate = new Date(y2, m2 + 1, 25);
-      toY = toDate.getFullYear(); toM = toDate.getMonth();
-    } else {
-      const fromDate = new Date(y2, m2 - 1, 26);
-      fromY = fromDate.getFullYear(); fromM = fromDate.getMonth();
-      toY = y2; toM = m2;
-    }
-    from = `${fromY}-${String(fromM+1).padStart(2,'0')}-26`;
-    to = `${toY}-${String(toM+1).padStart(2,'0')}-25`;
-  } else {
-    const fromDate = new Date(y, m, d - days);
-    from = `${fromDate.getFullYear()}-${String(fromDate.getMonth()+1).padStart(2,'0')}-${String(fromDate.getDate()).padStart(2,'0')}`;
-    to = `${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-  }
-  document.getElementById('com-dateFrom').value = from;
-  document.getElementById('com-dateTo').value = to;
+  const fimMes = new Date(now.getFullYear(), now.getMonth() + offset, 25);
+  const iniMes = new Date(now.getFullYear(), now.getMonth() + offset - 1, 26);
+  const fmt = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  document.getElementById('com-dateFrom').value = fmt(iniMes);
+  document.getElementById('com-dateTo').value = fmt(fimMes);
   renderComissoes();
+}
+
+function initComPeriod() {
+  setComCiclo(0, document.getElementById('com-btn-atual'));
 }
 
 function getCondicao(d) {
