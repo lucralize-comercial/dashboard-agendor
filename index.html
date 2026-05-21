@@ -275,6 +275,41 @@
     <div style="overflow-x:auto;"><table class="trend-table"><thead><tr id="trendThead"></tr></thead><tbody id="trendTbody"></tbody></table></div>
   </div>
 
+  <!-- Cards de leads por origem -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
+
+    <!-- Semanal -->
+    <div class="card" style="margin-bottom:0;">
+      <div class="card-header">
+        <span class="card-title">Leads por semana — por origem</span>
+        <select id="origem-mes-select" onchange="renderLeadsSemanal()" style="font-size:12px;padding:4px 8px;border-radius:8px;border:1px solid var(--border);font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);"></select>
+      </div>
+      <div id="origem-semanal-legend" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:8px;font-size:11px;color:var(--muted);"></div>
+      <div class="chart-wrap h200"><canvas id="origemSemanalChart" role="img" aria-label="Leads por semana e origem"></canvas></div>
+    </div>
+
+    <!-- Mensal -->
+    <div class="card" style="margin-bottom:0;">
+      <div class="card-header">
+        <span class="card-title">Leads por mês — por origem</span>
+        <select id="origem-ano-select" onchange="renderLeadsMensal()" style="font-size:12px;padding:4px 8px;border-radius:8px;border:1px solid var(--border);font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);"></select>
+      </div>
+      <div id="origem-mensal-legend" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:8px;font-size:11px;color:var(--muted);"></div>
+      <div class="chart-wrap h200"><canvas id="origemMensalChart" role="img" aria-label="Leads por mês e origem"></canvas></div>
+    </div>
+
+  </div>
+
+  <!-- Anual -->
+  <div class="card" style="margin-bottom:1.5rem;">
+    <div class="card-header">
+      <span class="card-title">Visão anual — leads por origem</span>
+      <select id="origem-anual-ano-select" onchange="renderLeadsAnual()" style="font-size:12px;padding:4px 8px;border-radius:8px;border:1px solid var(--border);font-family:'Poppins',sans-serif;background:var(--bg);color:var(--text);"></select>
+    </div>
+    <div id="origem-anual-legend" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:8px;font-size:11px;color:var(--muted);"></div>
+    <div class="chart-wrap h220"><canvas id="origemAnualChart" role="img" aria-label="Leads anuais por origem"></canvas></div>
+  </div>
+
   <div class="two-col">
     <div class="card" style="margin-bottom:0;">
       <div class="card-header">
@@ -632,6 +667,131 @@ function daysBetween(d1,d2) { return Math.round(Math.abs(new Date(d2)-new Date(d
 function setMsg(type, msg) {
   ['errorMsg','successMsg','infoMsg'].forEach(id=>document.getElementById(id).style.display='none');
   if(!msg) return; const el=document.getElementById(type+'Msg'); el.textContent=msg; el.style.display='block';
+}
+
+// ===== GRÁFICOS DE LEADS POR ORIGEM =====
+const ORIGEM_CORES = ['#1D9E75','#378ADD','#EF9F27','#E24B4A','#7F77DD','#D4537E','#639922','#BA7517','#185FA5','#993C1D'];
+let origemSemanalChart = null, origemMensalChart = null, origemAnualChart = null;
+
+function getOrigemLabel(d) {
+  return d.customFields?.origem_do_negocio?.value || 'Não informado';
+}
+
+function getTopOrigens(deals, max) {
+  const freq = {};
+  deals.forEach(d => { const o = getOrigemLabel(d); freq[o] = (freq[o]||0) + 1; });
+  return Object.entries(freq).sort((a,b) => b[1]-a[1]).slice(0, max||8).map(e => e[0]);
+}
+
+function buildOrigemLegend(origens, elId) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  el.innerHTML = origens.map((o,i) => `<span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:${ORIGEM_CORES[i%ORIGEM_CORES.length]};display:inline-block;"></span>${o}</span>`).join('');
+}
+
+function initLeadsOrigem() {
+  const anos = [...new Set(baseDeals.map(d => new Date(d.createdAt).getFullYear()))].sort((a,b) => b-a);
+  const anoAtual = new Date().getFullYear();
+
+  ['origem-ano-select','origem-anual-ano-select'].forEach(id => {
+    const sel = document.getElementById(id);
+    if (sel) sel.innerHTML = anos.map(a => `<option value="${a}" ${a===anoAtual?'selected':''}>${a}</option>`).join('');
+  });
+
+  const mesesDisp = [];
+  const now = new Date();
+  for (let i = 0; i < 12; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    mesesDisp.push({ label: d.toLocaleString('pt-BR', {month:'long', year:'numeric'}), year: d.getFullYear(), month: d.getMonth() });
+  }
+  const selMes = document.getElementById('origem-mes-select');
+  if (selMes) selMes.innerHTML = mesesDisp.map((m,i) => `<option value="${i}">${m.label}</option>`).join('');
+
+  renderLeadsSemanal();
+  renderLeadsMensal();
+  renderLeadsAnual();
+}
+
+function renderLeadsSemanal() {
+  const selIdx = parseInt(document.getElementById('origem-mes-select')?.value || 0);
+  const now = new Date();
+  const target = new Date(now.getFullYear(), now.getMonth() - selIdx, 1);
+  const ano = target.getFullYear(), mes = target.getMonth();
+  const diasNoMes = new Date(ano, mes+1, 0).getDate();
+
+  const semanas = [];
+  let d = 1;
+  while (d <= diasNoMes) {
+    const fim = Math.min(d+6, diasNoMes);
+    semanas.push({ label: `${d}-${fim}`, de: d, ate: fim });
+    d = fim + 1;
+  }
+
+  const deals = baseDeals.filter(x => { const dt = new Date(x.createdAt); return dt.getFullYear()===ano && dt.getMonth()===mes; });
+  const origens = getTopOrigens(deals, 8);
+  buildOrigemLegend(origens, 'origem-semanal-legend');
+
+  const datasets = origens.map((o,i) => ({
+    label: o,
+    data: semanas.map(s => deals.filter(x => { const dia = new Date(x.createdAt).getDate(); return getOrigemLabel(x)===o && dia>=s.de && dia<=s.ate; }).length),
+    borderColor: ORIGEM_CORES[i%ORIGEM_CORES.length],
+    borderWidth: 2, pointRadius: 4, tension: 0.3, fill: false,
+    pointBackgroundColor: ORIGEM_CORES[i%ORIGEM_CORES.length],
+  }));
+
+  if (origemSemanalChart) origemSemanalChart.destroy();
+  origemSemanalChart = new Chart(document.getElementById('origemSemanalChart'), {
+    type: 'line', data: { labels: semanas.map(s=>s.label), datasets },
+    options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+      scales: { x:{grid:{display:false},ticks:{font:{size:11}}}, y:{beginAtZero:true,ticks:{font:{size:11},stepSize:1}} } }
+  });
+}
+
+function renderLeadsMensal() {
+  const ano = parseInt(document.getElementById('origem-ano-select')?.value || new Date().getFullYear());
+  const deals = baseDeals.filter(x => new Date(x.createdAt).getFullYear()===ano);
+  const origens = getTopOrigens(deals, 8);
+  buildOrigemLegend(origens, 'origem-mensal-legend');
+  const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+  const datasets = origens.map((o,i) => ({
+    label: o,
+    data: Array.from({length:12}, (_,m) => deals.filter(x => new Date(x.createdAt).getMonth()===m && getOrigemLabel(x)===o).length),
+    borderColor: ORIGEM_CORES[i%ORIGEM_CORES.length],
+    borderWidth: 2, pointRadius: 4, tension: 0.3, fill: false,
+    pointBackgroundColor: ORIGEM_CORES[i%ORIGEM_CORES.length],
+  }));
+
+  if (origemMensalChart) origemMensalChart.destroy();
+  origemMensalChart = new Chart(document.getElementById('origemMensalChart'), {
+    type: 'line', data: { labels: meses, datasets },
+    options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+      scales: { x:{grid:{display:false},ticks:{font:{size:11}}}, y:{beginAtZero:true,ticks:{font:{size:11}}} } }
+  });
+}
+
+function renderLeadsAnual() {
+  const ano = parseInt(document.getElementById('origem-anual-ano-select')?.value || new Date().getFullYear());
+  const deals = baseDeals.filter(x => new Date(x.createdAt).getFullYear()===ano);
+  const origens = getTopOrigens(deals, 8);
+  buildOrigemLegend(origens, 'origem-anual-legend');
+  const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+
+  const datasets = origens.map((o,i) => ({
+    label: o,
+    data: Array.from({length:12}, (_,m) => deals.filter(x => new Date(x.createdAt).getMonth()===m && getOrigemLabel(x)===o).length),
+    borderColor: ORIGEM_CORES[i%ORIGEM_CORES.length],
+    backgroundColor: ORIGEM_CORES[i%ORIGEM_CORES.length] + '18',
+    borderWidth: 2, pointRadius: 3, tension: 0.3, fill: true,
+    pointBackgroundColor: ORIGEM_CORES[i%ORIGEM_CORES.length],
+  }));
+
+  if (origemAnualChart) origemAnualChart.destroy();
+  origemAnualChart = new Chart(document.getElementById('origemAnualChart'), {
+    type: 'line', data: { labels: meses, datasets },
+    options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+      scales: { x:{grid:{display:false},ticks:{font:{size:11}}}, y:{beginAtZero:true,ticks:{font:{size:11}}} } }
+  });
 }
 
 function applyFilter() {
@@ -1004,6 +1164,7 @@ const TAXAS_COMISSAO = {
   'Indicação de Amigo': 0.80,
   'IRPF grátis primeiro ano': 0.28,
   'Isenção do primeiro mês': 0.25,
+  'Isenção primeiro mês': 0.25,
   '15% de desconto no primeiro ano': 0.22,
   'Gratuidade dois meses': 0.20,
   'Gratuidade três meses': 0.15,
@@ -1015,6 +1176,7 @@ const TAXAS_FABIOLA = {
   'Preço base': 1.00,
   'IRPF grátis primeiro ano': 0.85,
   'Isenção do primeiro mês': 0.82,
+  'Isenção primeiro mês': 0.82,
   'Parceria Afiliados': 0.80,
   'Gratuidade dois meses': 0.60,
   '15% de desconto no primeiro ano': 0.60,
@@ -1210,7 +1372,7 @@ function renderComissoes() {
   let totalValor = 0, totalComissao = 0, pendentes = 0;
   const porResponsavel = {};
 
-  const rows = deals.map(d => {
+  const rows = [...deals].sort((a,b) => new Date(b.wonAt||0) - new Date(a.wonAt||0)).map(d => {
     const condicao = getCondicao(d);
     const owner = d.owner?.name || '—';
     const produto = getProdutoNome(d);
@@ -1429,6 +1591,7 @@ async function fetchAll() {
         setMsg('success', '✓ ' + baseDeals.length.toLocaleString('pt-BR') + ' negócios carregados');
       }
       applyFilter();
+      initLeadsOrigem();
     } else {
       setMsg('error', '⚠ Proxy ainda carregando dados. Tente novamente em instantes.');
     }
