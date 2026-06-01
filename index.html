@@ -1452,6 +1452,7 @@ function renderComissoes() {
   deals.forEach(d => {
     const condicao = getCondicao(d);
     const owner = d.owner?.name || '—';
+    const ownerDisplay = getOwnerDisplay(d);
     const origem = d.customFields?.origem_do_negocio?.value || '';
     const isDiretoria = origem.toLowerCase().includes('relacionamento diretoria');
     const isRegraOrigem = isRegraOrigemDeal(owner, d);
@@ -1472,12 +1473,12 @@ function renderComissoes() {
     if (comissao !== null) totalComissao += comissao;
     if (bonusReuniao > 0) totalComissao += bonusReuniao;
     if (isPendente) pendentes++;
-    if (!porResponsavel[owner]) porResponsavel[owner] = { negocios: 0, valor: 0, comissao: 0, pendentes: 0, bonusReuniao: 0 };
-    porResponsavel[owner].negocios++;
-    porResponsavel[owner].valor += valor;
-    if (comissao !== null) porResponsavel[owner].comissao += comissao;
-    if (bonusReuniao > 0) porResponsavel[owner].bonusReuniao += bonusReuniao;
-    if (isPendente) porResponsavel[owner].pendentes++;
+    if (!porResponsavel[ownerDisplay]) porResponsavel[ownerDisplay] = { negocios: 0, valor: 0, comissao: 0, pendentes: 0, bonusReuniao: 0 };
+    porResponsavel[ownerDisplay].negocios++;
+    porResponsavel[ownerDisplay].valor += valor;
+    if (comissao !== null) porResponsavel[ownerDisplay].comissao += comissao;
+    if (bonusReuniao > 0) porResponsavel[ownerDisplay].bonusReuniao += bonusReuniao;
+    if (isPendente) porResponsavel[ownerDisplay].pendentes++;
     if (bonusRonaldo2 > 0) {
       if (!porResponsavel[NOME_RONALDO]) porResponsavel[NOME_RONALDO] = { negocios: 0, valor: 0, comissao: 0, pendentes: 0, bonusReuniao: 0 };
       porResponsavel[NOME_RONALDO].comissao += bonusRonaldo2;
