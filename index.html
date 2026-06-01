@@ -520,15 +520,24 @@
     <select id="com-owner" onchange="renderComissoes()" style="font-size:12px;padding:5px 8px;border-radius:8px;border:1px solid rgba(14,20,40,0.1);font-family:'Poppins',sans-serif;">
       <option value="all">Todos responsáveis</option>
     </select>
-    <button onclick="sairComissoes()" style="margin-left:auto;background:#EBF0F3;color:#0E1428;font-size:12px;padding:6px 14px;">🔒 Sair</button>
+    <button onclick="exportarExcelComissoes()" style="background:#1e7e4a;color:white;font-size:12px;padding:6px 14px;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Exportar Excel
+    </button>
+    <button onclick="sairComissoes()" style="background:#EBF0F3;color:#0E1428;font-size:12px;padding:6px 14px;">🔒 Sair</button>
   </div>
 
   <!-- Métricas resumo -->
   <div class="metrics" style="margin-bottom:1.5rem;" id="com-metrics">
-    <div class="metric-card"><div class="metric-label">Total ganhos</div><div class="metric-value" id="com-total">—</div></div>
+    <div class="metric-card"><div class="metric-label">Total ganhos</div><div class="metric-value" id="com-total">—</div><div class="metric-sub" id="com-total-sub">no período</div></div>
     <div class="metric-card"><div class="metric-label">Valor total contratos</div><div class="metric-value success" id="com-valor">—</div></div>
     <div class="metric-card"><div class="metric-label">Total comissões</div><div class="metric-value warning" id="com-comissao">—</div></div>
     <div class="metric-card"><div class="metric-label">Pendentes preenchimento</div><div class="metric-value danger" id="com-pendentes">—</div></div>
+    <div class="metric-card" style="border:1px dashed #e0b840;background:#fef9ee;" title="Negócios marcados como ganhos no Agendor mas sem data de conclusão preenchida — não entram no período filtrado">
+      <div class="metric-label" style="color:#a05c00;">⚠ Sem data de ganho</div>
+      <div class="metric-value" id="com-sem-wonat" style="color:#a05c00;">—</div>
+      <div class="metric-sub" style="color:#a05c00;">excluídos do filtro</div>
+    </div>
   </div>
 
   <!-- Resumo por responsável -->
@@ -1452,12 +1461,26 @@ function renderComissoes() {
   document.getElementById('com-detail-body').innerHTML = rows || '<tr><td colspan="8" class="empty">Nenhum negócio no período</td></tr>';
 
   // Métricas
+  // Conta ganhos sem wonAt (visíveis no Agendor mas fora do filtro de período)
+  const semWonAt = baseDeals.filter(d => d.dealStatus?.id === 2 && !d.wonAt).length;
+  const semWonAtPeriodo = (from || to)
+    ? baseDeals.filter(d => {
+        if (d.dealStatus?.id !== 2 || d.wonAt) return false;
+        return true;
+      }).length
+    : 0;
+
   document.getElementById('com-total').textContent = deals.length;
+  document.getElementById('com-total-sub').textContent = 'de ' + (deals.length + semWonAtPeriodo) + ' ganhos totais';
   document.getElementById('com-valor').textContent = fmtBRL(totalValor);
   document.getElementById('com-comissao').textContent = fmtBRL(totalComissao);
   document.getElementById('com-pendentes').textContent = pendentes;
   if (pendentes > 0) document.getElementById('com-pendentes').style.color = '#F62642';
   else document.getElementById('com-pendentes').style.color = '';
+  const semWonAtEl = document.getElementById('com-sem-wonat');
+  semWonAtEl.textContent = semWonAt;
+  semWonAtEl.style.color = semWonAt > 0 ? '#a05c00' : '#1e7e4a';
+  if (semWonAt === 0) { semWonAtEl.textContent = '0'; semWonAtEl.closest('.metric-card').style.borderColor = 'rgba(14,20,40,0.1)'; semWonAtEl.closest('.metric-card').style.background = 'white'; }
 
   // Responsáveis que são Diretoria (sem comissão, mas aparecem no resumo)
   const DIRETORIA_NOMES = ['Luiz Santos'];
@@ -1541,6 +1564,58 @@ function addReuniao(dealId) {
     BONUS_REUNIAO[dealId] = qtd;
   }
   renderComissoes();
+}
+
+function exportarExcelComissoes() {
+  // Coleta os dados da tabela de detalhamento atual
+  const rows = document.querySelectorAll('#com-detail-body tr');
+  if (!rows.length || rows[0].querySelector('.empty')) {
+    alert('Nenhum dado para exportar.'); return;
+  }
+
+  // Cabeçalho
+  const headers = ['Negócio','Responsável','Produto','Condição Comercial','Origem','Valor (R$)','% Comissão','Comissão (R$)','Data Ganho'];
+
+  // Extrai texto limpo de cada célula
+  function cellText(td) {
+    return (td ? td.innerText.replace(/
+/g,' ').trim() : '');
+  }
+
+  const data = [headers];
+  rows.forEach(tr => {
+    const tds = tr.querySelectorAll('td');
+    if (tds.length < 8) return;
+    data.push([
+      cellText(tds[0]),
+      cellText(tds[1]),
+      cellText(tds[2]),
+      cellText(tds[3]),
+      cellText(tds[4]),
+      cellText(tds[5]).replace('R$ ','').replace(/\./g,'').replace(',','.'),
+      cellText(tds[6]),
+      cellText(tds[7]).replace('R$ ','').replace(/\./g,'').replace(',','.'),
+      cellText(tds[8]),
+    ]);
+  });
+
+  // Gera CSV com separador ; (compatível com Excel PT-BR)
+  const csv = data.map(row =>
+    row.map(v => '"' + String(v).replace(/"/g,'""') + '"').join(';')
+  ).join('
+');
+
+  // Período para nome do arquivo
+  const from = document.getElementById('com-dateFrom').value || 'inicio';
+  const to = document.getElementById('com-dateTo').value || 'fim';
+  const filename = `comissoes_${from}_${to}.csv`;
+
+  // Download
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
 }
 
 let refreshBlockedUntil = null;
