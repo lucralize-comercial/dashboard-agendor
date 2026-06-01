@@ -1379,6 +1379,15 @@ function fmtBRL(v) { return 'R$ ' + Number(v).toLocaleString('pt-BR', {minimumFr
 function fmtDate(s) { if (!s) return '—'; const d = new Date(s); return d.toLocaleDateString('pt-BR'); }
 // Data de conclusão real: endTime (preenchido pelo usuário) ou wonAt (quando clicou em Ganho)
 function getWonDate(d) { return d.endTime || d.wonAt || null; }
+// Nome de exibição: Matheus Augusto antes de 01/06/2026 aparece como Diogo Vieira (legado)
+function getOwnerDisplay(d) {
+  const owner = d.owner?.name || '—';
+  if (owner === 'Matheus Augusto') {
+    const wonDate = getWonDate(d);
+    if (wonDate && new Date(wonDate) < LEGADO_DIOGO_CORTE) return 'Diogo Vieira';
+  }
+  return owner;
+}
 
 function renderComissoes() {
   const fromVal = document.getElementById('com-dateFrom').value;
@@ -1486,6 +1495,7 @@ function renderComissoes() {
   const rows = [...dealsDetail].sort((a,b) => new Date(getWonDate(b)||0) - new Date(getWonDate(a)||0)).map(d => {
     const condicao = getCondicao(d);
     const owner = d.owner?.name || '—';
+    const ownerDisplay = getOwnerDisplay(d);
     const produto = getProdutoNome(d);
     const origem = d.customFields?.origem_do_negocio?.value || '';
     const isDiretoria = origem.toLowerCase().includes('relacionamento diretoria');
@@ -1543,7 +1553,7 @@ function renderComissoes() {
 
     return `<tr>
       <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${d.title||''}">${d.title || d.person?.name || '—'}</td>
-      <td>${owner}</td>
+      <td>${ownerDisplay}</td>
       <td style="color:#0C7488;font-size:12px;">${produto}</td>
       <td>${condDisplay}</td>
       <td>${origemDisplay}</td>
