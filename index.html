@@ -520,23 +520,29 @@
     <select id="com-owner" onchange="renderComissoes()" style="font-size:12px;padding:5px 8px;border-radius:8px;border:1px solid rgba(14,20,40,0.1);font-family:'Poppins',sans-serif;">
       <option value="all">Todos responsáveis</option>
     </select>
-    <button onclick="exportarExcelComissoes()" style="background:#1e7e4a;color:white;font-size:12px;padding:6px 14px;">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" style="margin-right:4px;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-      Exportar Excel
-    </button>
-    <button onclick="sairComissoes()" style="background:#EBF0F3;color:#0E1428;font-size:12px;padding:6px 14px;">🔒 Sair</button>
+    <button onclick="sairComissoes()" style="margin-left:auto;background:#EBF0F3;color:#0E1428;font-size:12px;padding:6px 14px;">🔒 Sair</button>
   </div>
 
   <!-- Métricas resumo -->
   <div class="metrics" style="margin-bottom:1.5rem;" id="com-metrics">
-    <div class="metric-card"><div class="metric-label">Total ganhos</div><div class="metric-value" id="com-total">—</div><div class="metric-sub" id="com-total-sub">no período</div></div>
+    <div class="metric-card"><div class="metric-label">Total ganhos</div><div class="metric-value" id="com-total">—</div></div>
     <div class="metric-card"><div class="metric-label">Valor total contratos</div><div class="metric-value success" id="com-valor">—</div></div>
     <div class="metric-card"><div class="metric-label">Total comissões</div><div class="metric-value warning" id="com-comissao">—</div></div>
     <div class="metric-card"><div class="metric-label">Pendentes preenchimento</div><div class="metric-value danger" id="com-pendentes">—</div></div>
-    <div class="metric-card" style="border:1px dashed #e0b840;background:#fef9ee;" title="Negócios marcados como ganhos no Agendor mas sem data de conclusão preenchida — não entram no período filtrado">
-      <div class="metric-label" style="color:#a05c00;">⚠ Sem data de ganho</div>
-      <div class="metric-value" id="com-sem-wonat" style="color:#a05c00;">—</div>
-      <div class="metric-sub" style="color:#a05c00;">excluídos do filtro</div>
+  </div>
+
+  <!-- Itens pendentes -->
+  <div style="background:#fef3e2;border:1px dashed #e0b840;border-radius:12px;padding:1rem 1.4rem;margin-bottom:1.5rem;">
+    <div style="font-size:12px;font-weight:700;color:#a05c00;font-family:'Comfortaa',cursive;margin-bottom:0.6rem;cursor:pointer;" onclick="var el=this.nextElementSibling;el.style.display=el.style.display==='none'?'block':'none'">
+      ⚠ Itens ainda não implementados nesta versão <span style="margin-left:8px;font-size:11px;font-weight:400;">▼</span>
+    </div>
+    <div>
+      <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(160,92,0,0.12);font-size:12px;color:#a05c00;"><span style="font-size:10px;background:#e0b84022;border:1px solid #e0b840;color:#a05c00;padding:1px 7px;border-radius:10px;white-space:nowrap;">Em breve</span> <strong>Bônus Operacional</strong></div>
+      <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(160,92,0,0.12);font-size:12px;color:#a05c00;"><span style="font-size:10px;background:#e0b84022;border:1px solid #e0b840;color:#a05c00;padding:1px 7px;border-radius:10px;white-space:nowrap;">Em breve</span> <strong>Saídas por Insatisfação</strong></div>
+      <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(160,92,0,0.12);font-size:12px;color:#a05c00;"><span style="font-size:10px;background:#e0b84022;border:1px solid #e0b840;color:#a05c00;padding:1px 7px;border-radius:10px;white-space:nowrap;">Em breve</span> <strong>Comissão Legalização</strong></div>
+      <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(160,92,0,0.12);font-size:12px;color:#a05c00;"><span style="font-size:10px;background:#e0b84022;border:1px solid #e0b840;color:#a05c00;padding:1px 7px;border-radius:10px;white-space:nowrap;">Em breve</span> <strong>Venda de Automações</strong></div>
+      <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(160,92,0,0.12);font-size:12px;color:#a05c00;"><span style="font-size:10px;background:#e0b84022;border:1px solid #e0b840;color:#a05c00;padding:1px 7px;border-radius:10px;white-space:nowrap;">Em breve</span> <strong>Parceiros</strong></div>
+      <div style="display:flex;align-items:center;gap:8px;padding:5px 0;font-size:12px;color:#a05c00;"><span style="font-size:10px;background:#e0b84022;border:1px solid #e0b840;color:#a05c00;padding:1px 7px;border-radius:10px;white-space:nowrap;">💾 Salvo</span> <strong>Bônus Reunião Fabíola</strong> — salvo no navegador. Integração Agendor pendente.</div>
     </div>
   </div>
 
@@ -1218,10 +1224,16 @@ const TAXAS_FABIOLA = {
   'Parceria Leo Marconi': 0.80,
 };
 
-// Bônus de reunião manual (R$ 30 por reunião) — chave: deal.id, valor: qtd reuniões
-// Temporário até integração com Agendor
-const BONUS_REUNIAO = {};
+// Bônus de reunião manual — persiste no localStorage
 const VALOR_BONUS_REUNIAO = 30;
+let BONUS_REUNIAO = {};
+try {
+  const _saved = localStorage.getItem('lucralize_bonus_reuniao');
+  if (_saved) BONUS_REUNIAO = JSON.parse(_saved);
+} catch(e) { BONUS_REUNIAO = {}; }
+function saveBonusReuniao() {
+  try { localStorage.setItem('lucralize_bonus_reuniao', JSON.stringify(BONUS_REUNIAO)); } catch(e) {}
+}
 
 function openComissoes(btn) {
   if (isComissoesValido()) {
@@ -1336,6 +1348,10 @@ function renderComissoes() {
   const toVal = document.getElementById('com-dateTo').value;
   const ownerSel = document.getElementById('com-owner').value;
   const search = (document.getElementById('com-search')?.value || '').toLowerCase();
+  const detailOwner = document.getElementById('com-detail-owner')?.value || 'all';
+  const detailProduto = document.getElementById('com-detail-produto')?.value || 'all';
+  const detailCondicao = document.getElementById('com-detail-condicao')?.value || 'all';
+  const detailOrigem = document.getElementById('com-detail-origem')?.value || 'all';
 
   const from = fromVal ? new Date(fromVal + 'T00:00:00') : null;
   const to = toVal ? new Date(toVal + 'T23:59:59') : null;
@@ -1349,6 +1365,8 @@ function renderComissoes() {
   let deals = baseDeals.filter(d => {
     if (d.dealStatus?.id !== 2) return false;
     const wonAt = d.wonAt ? new Date(d.wonAt) : null;
+    // Exclui negócios sem wonAt quando há filtro de período
+    if ((from || to) && !wonAt) return false;
     if (from && wonAt && wonAt < from) return false;
     if (to && wonAt && wonAt > to) return false;
     if (ownerSel !== 'all' && d.owner?.name !== ownerSel) return false;
@@ -1358,6 +1376,18 @@ function renderComissoes() {
     }
     return true;
   });
+
+  // Popular selects do detalhamento
+  function refreshSelect(id, values, cur) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    const label = el.options[0].text;
+    el.innerHTML = '<option value="all">' + label + '</option>' + values.map(v => '<option value="' + v + '"' + (v===cur?' selected':'') + '>' + v + '</option>').join('');
+  }
+  refreshSelect('com-detail-owner', [...new Set(deals.map(d => d.owner && d.owner.name).filter(Boolean))].sort(), detailOwner);
+  refreshSelect('com-detail-produto', [...new Set(deals.map(d => getProdutoNome(d)).filter(v => v !== '—'))].sort(), detailProduto);
+  refreshSelect('com-detail-condicao', [...new Set(deals.map(d => getCondicao(d)).filter(Boolean))].sort(), detailCondicao);
+  refreshSelect('com-detail-origem', [...new Set(deals.map(d => d.customFields && d.customFields.origem_do_negocio && d.customFields.origem_do_negocio.value).filter(Boolean))].sort(), detailOrigem);
 
   // Regras de comissão:
   // - Ronaldo Junior → 100% para si
@@ -1372,7 +1402,14 @@ function renderComissoes() {
   let totalValor = 0, totalComissao = 0, pendentes = 0;
   const porResponsavel = {};
 
-  const rows = [...deals].sort((a,b) => new Date(b.wonAt||0) - new Date(a.wonAt||0)).map(d => {
+  // Aplicar filtros do detalhamento
+  let dealsDetail = deals;
+  if (detailOwner !== 'all') dealsDetail = dealsDetail.filter(d => (d.owner?.name||'') === detailOwner);
+  if (detailProduto !== 'all') dealsDetail = dealsDetail.filter(d => getProdutoNome(d) === detailProduto);
+  if (detailCondicao !== 'all') dealsDetail = dealsDetail.filter(d => getCondicao(d) === detailCondicao);
+  if (detailOrigem !== 'all') dealsDetail = dealsDetail.filter(d => (d.customFields?.origem_do_negocio?.value||'') === detailOrigem);
+
+  const rows = [...dealsDetail].sort((a,b) => new Date(b.wonAt||0) - new Date(a.wonAt||0)).map(d => {
     const condicao = getCondicao(d);
     const owner = d.owner?.name || '—';
     const produto = getProdutoNome(d);
@@ -1401,8 +1438,9 @@ function renderComissoes() {
     const reunioes = BONUS_REUNIAO[d.id] || 0;
     const bonusReuniao = reunioes * VALOR_BONUS_REUNIAO;
 
-    // Bônus do Ronaldo (1/3 da comissão de Everton ou Fabíola)
-    const bonusRonaldo = (comissao !== null && GERAM_BONUS_RONALDO.includes(owner)) ? comissao / 3 : 0;
+    // Bônus do Ronaldo (1/3 do total Fabíola/Everton incluindo bônus de reunião)
+    const totalParaRonaldo = (comissao || 0) + (GERAM_BONUS_RONALDO.includes(owner) ? bonusReuniao : 0);
+    const bonusRonaldo = (comissao !== null && GERAM_BONUS_RONALDO.includes(owner)) ? totalParaRonaldo / 3 : 0;
 
     totalValor += valor;
     if (comissao !== null) totalComissao += comissao;
@@ -1442,7 +1480,9 @@ function renderComissoes() {
     const bonusDisplay = bonusRonaldo > 0 ? `<span style="color:#0C7488;font-size:11px;">+${fmtBRL(bonusRonaldo)} Ronaldo</span>` : '';
 
     const reuniaoBtn = isFabiola
-      ? `<br><button onclick="addReuniao(${d.id})" style="background:none;border:1px dashed #0C7488;color:#0C7488;font-size:10px;padding:2px 6px;border-radius:4px;cursor:pointer;margin-top:2px;">+reunião (${reunioes})</button>`
+      ? `<br><span style="display:inline-flex;align-items:center;gap:4px;margin-top:3px;">
+          <span onclick="addReuniao(${d.id})" title="Adicionar reunião" style="display:inline-flex;align-items:center;gap:3px;background:#e0f5f7;border:1px solid #0C748840;color:#0C7488;border-radius:20px;padding:1px 8px;font-size:11px;cursor:pointer;">📅 +reunião${reunioes > 0 ? ' (' + reunioes + ')' : ''}</span>${reunioes > 0 ? '<span onclick="removeReuniao(' + d.id + ')" title="Remover" style="background:#fde8ec;border:1px solid #F6264240;color:#F62642;border-radius:50%;width:16px;height:16px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;cursor:pointer;">−</span>' : ''}
+        </span>`
       : '';
 
     return `<tr>
@@ -1461,26 +1501,20 @@ function renderComissoes() {
   document.getElementById('com-detail-body').innerHTML = rows || '<tr><td colspan="8" class="empty">Nenhum negócio no período</td></tr>';
 
   // Métricas
-  // Conta ganhos sem wonAt (visíveis no Agendor mas fora do filtro de período)
   const semWonAt = baseDeals.filter(d => d.dealStatus?.id === 2 && !d.wonAt).length;
-  const semWonAtPeriodo = (from || to)
-    ? baseDeals.filter(d => {
-        if (d.dealStatus?.id !== 2 || d.wonAt) return false;
-        return true;
-      }).length
-    : 0;
-
   document.getElementById('com-total').textContent = deals.length;
-  document.getElementById('com-total-sub').textContent = 'de ' + (deals.length + semWonAtPeriodo) + ' ganhos totais';
+  document.getElementById('com-total-sub').textContent = 'de ' + (deals.length + semWonAt) + ' ganhos totais';
   document.getElementById('com-valor').textContent = fmtBRL(totalValor);
   document.getElementById('com-comissao').textContent = fmtBRL(totalComissao);
   document.getElementById('com-pendentes').textContent = pendentes;
   if (pendentes > 0) document.getElementById('com-pendentes').style.color = '#F62642';
   else document.getElementById('com-pendentes').style.color = '';
   const semWonAtEl = document.getElementById('com-sem-wonat');
-  semWonAtEl.textContent = semWonAt;
-  semWonAtEl.style.color = semWonAt > 0 ? '#a05c00' : '#1e7e4a';
-  if (semWonAt === 0) { semWonAtEl.textContent = '0'; semWonAtEl.closest('.metric-card').style.borderColor = 'rgba(14,20,40,0.1)'; semWonAtEl.closest('.metric-card').style.background = 'white'; }
+  if (semWonAtEl) {
+    semWonAtEl.textContent = semWonAt;
+    semWonAtEl.style.color = semWonAt > 0 ? '#a05c00' : '#1e7e4a';
+    if (semWonAt === 0) { semWonAtEl.closest('.metric-card').style.borderColor = 'rgba(14,20,40,0.1)'; semWonAtEl.closest('.metric-card').style.background = 'white'; }
+  }
 
   // Responsáveis que são Diretoria (sem comissão, mas aparecem no resumo)
   const DIRETORIA_NOMES = ['Luiz Santos'];
@@ -1506,7 +1540,15 @@ function renderComissoes() {
         <td style="text-align:right;">${r.pendentes > 0 ? `<span style="color:#F62642;">${r.pendentes}</span>` : '0'}</td>
       </tr>`;
     }).join('');
-  document.getElementById('com-resumo-body').innerHTML = resumoRows || '<tr><td colspan="5" class="empty">—</td></tr>';
+  const totalComissaoResumo = Object.values(porResponsavel).reduce((s,r) => s + r.comissao + (r.bonusReuniao||0), 0);
+  const totalRow = `<tr class="total-row">
+    <td><strong>Total</strong></td>
+    <td style="text-align:right;"><strong>${deals.length}</strong></td>
+    <td style="text-align:right;"><strong>${fmtBRL(totalValorResumo)}</strong></td>
+    <td style="text-align:right;"><strong style="color:#0C7488;">${fmtBRL(totalComissaoResumo)}</strong></td>
+    <td style="text-align:right;"><strong>${pendentes > 0 ? '<span style="color:#F62642;">'+pendentes+'</span>' : '0'}</strong></td>
+  </tr>`;
+  document.getElementById('com-resumo-body').innerHTML = (resumoRows || '<tr><td colspan="5" class="empty">—</td></tr>') + totalRow;
 
   // Resumo por condição comercial
   const porCondicao = {};
@@ -1553,68 +1595,42 @@ function renderComissoes() {
 }
 
 function addReuniao(dealId) {
+  BONUS_REUNIAO[dealId] = (BONUS_REUNIAO[dealId] || 0) + 1;
+  saveBonusReuniao();
+  renderComissoes();
+}
+function removeReuniao(dealId) {
   const atual = BONUS_REUNIAO[dealId] || 0;
-  const novo = prompt(`Quantas reuniões para este negócio? (atual: ${atual})`, atual);
-  if (novo === null) return;
-  const qtd = parseInt(novo);
-  if (isNaN(qtd) || qtd < 0) { alert('Número inválido'); return; }
-  if (qtd === 0) {
-    delete BONUS_REUNIAO[dealId];
-  } else {
-    BONUS_REUNIAO[dealId] = qtd;
-  }
+  if (atual <= 1) { delete BONUS_REUNIAO[dealId]; }
+  else { BONUS_REUNIAO[dealId] = atual - 1; }
+  saveBonusReuniao();
   renderComissoes();
 }
 
 function exportarExcelComissoes() {
-  // Coleta os dados da tabela de detalhamento atual
   const rows = document.querySelectorAll('#com-detail-body tr');
-  if (!rows.length || rows[0].querySelector('.empty')) {
-    alert('Nenhum dado para exportar.'); return;
-  }
-
-  // Cabeçalho
+  if (!rows.length || rows[0].querySelector('.empty')) { alert('Nenhum dado para exportar.'); return; }
   const headers = ['Negócio','Responsável','Produto','Condição Comercial','Origem','Valor (R$)','% Comissão','Comissão (R$)','Data Ganho'];
-
-  // Extrai texto limpo de cada célula
-  function cellText(td) {
-    return (td ? td.innerText.replace(/
-/g,' ').trim() : '');
-  }
-
+  function cellText(td) { return td ? td.innerText.replace(/\n/g,' ').trim() : ''; }
   const data = [headers];
   rows.forEach(tr => {
     const tds = tr.querySelectorAll('td');
     if (tds.length < 8) return;
     data.push([
-      cellText(tds[0]),
-      cellText(tds[1]),
-      cellText(tds[2]),
-      cellText(tds[3]),
-      cellText(tds[4]),
+      cellText(tds[0]), cellText(tds[1]), cellText(tds[2]), cellText(tds[3]), cellText(tds[4]),
       cellText(tds[5]).replace('R$ ','').replace(/\./g,'').replace(',','.'),
       cellText(tds[6]),
       cellText(tds[7]).replace('R$ ','').replace(/\./g,'').replace(',','.'),
       cellText(tds[8]),
     ]);
   });
-
-  // Gera CSV com separador ; (compatível com Excel PT-BR)
-  const csv = data.map(row =>
-    row.map(v => '"' + String(v).replace(/"/g,'""') + '"').join(';')
-  ).join('
-');
-
-  // Período para nome do arquivo
+  const csv = data.map(row => row.map(v => '"' + String(v).replace(/"/g,'""') + '"').join(';')).join('\r\n');
   const from = document.getElementById('com-dateFrom').value || 'inicio';
   const to = document.getElementById('com-dateTo').value || 'fim';
-  const filename = `comissoes_${from}_${to}.csv`;
-
-  // Download
-  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
-  a.href = url; a.download = filename; a.click();
+  a.href = url; a.download = 'comissoes_' + from + '_' + to + '.csv'; a.click();
   URL.revokeObjectURL(url);
 }
 
