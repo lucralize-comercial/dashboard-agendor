@@ -540,21 +540,6 @@
     </div>
   </div>
 
-  <!-- Itens pendentes -->
-  <div style="background:#fef3e2;border:1px dashed #e0b840;border-radius:12px;padding:1rem 1.4rem;margin-bottom:1.5rem;">
-    <div style="font-size:12px;font-weight:700;color:#a05c00;font-family:'Comfortaa',cursive;margin-bottom:0.6rem;cursor:pointer;" onclick="var el=this.nextElementSibling;el.style.display=el.style.display==='none'?'block':'none'">
-      ⚠ Itens ainda não implementados nesta versão <span style="margin-left:8px;font-size:11px;font-weight:400;">▼</span>
-    </div>
-    <div>
-      <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(160,92,0,0.12);font-size:12px;color:#a05c00;"><span style="font-size:10px;background:#e0b84022;border:1px solid #e0b840;color:#a05c00;padding:1px 7px;border-radius:10px;white-space:nowrap;">Em breve</span> <strong>Bônus Operacional</strong></div>
-      <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(160,92,0,0.12);font-size:12px;color:#a05c00;"><span style="font-size:10px;background:#e0b84022;border:1px solid #e0b840;color:#a05c00;padding:1px 7px;border-radius:10px;white-space:nowrap;">Em breve</span> <strong>Saídas por Insatisfação</strong></div>
-      <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(160,92,0,0.12);font-size:12px;color:#a05c00;"><span style="font-size:10px;background:#e0b84022;border:1px solid #e0b840;color:#a05c00;padding:1px 7px;border-radius:10px;white-space:nowrap;">Em breve</span> <strong>Comissão Legalização</strong></div>
-      <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(160,92,0,0.12);font-size:12px;color:#a05c00;"><span style="font-size:10px;background:#e0b84022;border:1px solid #e0b840;color:#a05c00;padding:1px 7px;border-radius:10px;white-space:nowrap;">Em breve</span> <strong>Venda de Automações</strong></div>
-      <div style="display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(160,92,0,0.12);font-size:12px;color:#a05c00;"><span style="font-size:10px;background:#e0b84022;border:1px solid #e0b840;color:#a05c00;padding:1px 7px;border-radius:10px;white-space:nowrap;">Em breve</span> <strong>Parceiros</strong></div>
-      <div style="display:flex;align-items:center;gap:8px;padding:5px 0;font-size:12px;color:#a05c00;"><span style="font-size:10px;background:#e0b84022;border:1px solid #e0b840;color:#a05c00;padding:1px 7px;border-radius:10px;white-space:nowrap;">💾 Salvo</span> <strong>Bônus Reunião Fabíola</strong> — salvo no navegador. Integração Agendor pendente.</div>
-    </div>
-  </div>
-
   <!-- Resumo por responsável -->
   <div class="card" style="margin-bottom:1.5rem;">
     <div class="card-header"><span class="card-title">Resumo por responsável</span></div>
@@ -1118,7 +1103,7 @@ function renderContratos() {
   if (from && to) {
     const fd = new Date(from+'T00:00:00'), td = new Date(to+'T23:59:59');
     won = won.filter(d => {
-      const w = d.wonAt ? new Date(d.wonAt) : null;
+      const w = d.endTime ? new Date(d.endTime) : (d.wonAt ? new Date(d.wonAt) : null);
       return w && w >= fd && w <= td;
     });
   }
@@ -1155,13 +1140,13 @@ function renderContratos() {
   if (!deals.length) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:1rem;color:var(--muted);">Nenhum negócio ganho no período.</td></tr>'; return; }
 
   // Ordena por data de ganho (mais recente primeiro)
-  const sorted = [...deals].sort((a,b) => new Date(b.wonAt||b.updatedAt) - new Date(a.wonAt||a.updatedAt));
+  const sorted = [...deals].sort((a,b) => new Date(getWonDate(b)||b.updatedAt) - new Date(getWonDate(a)||a.updatedAt));
 
   tbody.innerHTML = sorted.map(d => {
     const name = d.title || d.person?.name || d.organization?.name || '—';
     const owner = d.owner?.name || '—';
     const funnel = d.dealStage?.funnel?.name || '—';
-    const wonDate = d.wonAt ? new Date(d.wonAt).toLocaleDateString('pt-BR') : (d.endTime ? new Date(d.endTime).toLocaleDateString('pt-BR') : '—');
+    const wonDate = getWonDate(d) ? new Date(getWonDate(d)).toLocaleDateString('pt-BR') : '—';
 
     // Produto — tenta vários campos
     let produto = '—';
@@ -1357,6 +1342,8 @@ function getProdutoNome(d) {
 
 function fmtBRL(v) { return 'R$ ' + Number(v).toLocaleString('pt-BR', {minimumFractionDigits:0, maximumFractionDigits:0}); }
 function fmtDate(s) { if (!s) return '—'; const d = new Date(s); return d.toLocaleDateString('pt-BR'); }
+// Data de conclusão real: endTime (preenchido pelo usuário) ou wonAt (quando clicou em Ganho)
+function getWonDate(d) { return d.endTime || d.wonAt || null; }
 
 function renderComissoes() {
   const fromVal = document.getElementById('com-dateFrom').value;
@@ -1379,8 +1366,8 @@ function renderComissoes() {
 
   let deals = baseDeals.filter(d => {
     if (d.dealStatus?.id !== 2) return false;
-    const wonAt = d.wonAt ? new Date(d.wonAt) : null;
-    // Exclui negócios sem wonAt quando há filtro de período
+    const wonAt = d.endTime ? new Date(d.endTime) : (d.wonAt ? new Date(d.wonAt) : null);
+    // Exclui negócios sem data de conclusão quando há filtro de período
     if ((from || to) && !wonAt) return false;
     if (from && wonAt && wonAt < from) return false;
     if (to && wonAt && wonAt > to) return false;
@@ -1417,14 +1404,51 @@ function renderComissoes() {
   let totalValor = 0, totalComissao = 0, pendentes = 0;
   const porResponsavel = {};
 
-  // Aplicar filtros do detalhamento
+  // Calcula métricas e resumo sobre TODOS os deals do período (sem filtros de detalhe)
+  deals.forEach(d => {
+    const condicao = getCondicao(d);
+    const owner = d.owner?.name || '—';
+    const origem = d.customFields?.origem_do_negocio?.value || '';
+    const isDiretoria = origem.toLowerCase().includes('relacionamento diretoria');
+    const isRegraOrigem = REGRA_ORIGEM.includes(owner);
+    const isFabiola = owner === 'Fabíola Carvalho';
+    let taxa;
+    if (isDiretoria) { taxa = null; }
+    else if (isRegraOrigem) { taxa = getComissaoEspecial(d); }
+    else if (isFabiola) { taxa = condicao ? (TAXAS_FABIOLA[condicao] ?? getTaxaComissao(condicao)) : null; }
+    else { taxa = getTaxaComissao(condicao); }
+    const valor = d.value || 0;
+    const isPendente = !isRegraOrigem && !isDiretoria && !condicao;
+    const comissao = taxa !== null ? valor * taxa : null;
+    const reunioes = BONUS_REUNIAO[d.id] || 0;
+    const bonusReuniao = reunioes * VALOR_BONUS_REUNIAO;
+    const totalParaRonaldo2 = (comissao || 0) + (GERAM_BONUS_RONALDO.includes(owner) ? bonusReuniao : 0);
+    const bonusRonaldo2 = (comissao !== null && GERAM_BONUS_RONALDO.includes(owner)) ? totalParaRonaldo2 / 3 : 0;
+    totalValor += valor;
+    if (comissao !== null) totalComissao += comissao;
+    if (bonusReuniao > 0) totalComissao += bonusReuniao;
+    if (isPendente) pendentes++;
+    if (!porResponsavel[owner]) porResponsavel[owner] = { negocios: 0, valor: 0, comissao: 0, pendentes: 0, bonusReuniao: 0 };
+    porResponsavel[owner].negocios++;
+    porResponsavel[owner].valor += valor;
+    if (comissao !== null) porResponsavel[owner].comissao += comissao;
+    if (bonusReuniao > 0) porResponsavel[owner].bonusReuniao += bonusReuniao;
+    if (isPendente) porResponsavel[owner].pendentes++;
+    if (bonusRonaldo2 > 0) {
+      if (!porResponsavel[NOME_RONALDO]) porResponsavel[NOME_RONALDO] = { negocios: 0, valor: 0, comissao: 0, pendentes: 0, bonusReuniao: 0 };
+      porResponsavel[NOME_RONALDO].comissao += bonusRonaldo2;
+      totalComissao += bonusRonaldo2;
+    }
+  });
+
+  // Filtros do detalhamento — só afetam a tabela de linhas
   let dealsDetail = deals;
   if (detailOwner !== 'all') dealsDetail = dealsDetail.filter(d => (d.owner?.name||'') === detailOwner);
   if (detailProduto !== 'all') dealsDetail = dealsDetail.filter(d => getProdutoNome(d) === detailProduto);
   if (detailCondicao !== 'all') dealsDetail = dealsDetail.filter(d => getCondicao(d) === detailCondicao);
   if (detailOrigem !== 'all') dealsDetail = dealsDetail.filter(d => (d.customFields?.origem_do_negocio?.value||'') === detailOrigem);
 
-  const rows = [...dealsDetail].sort((a,b) => new Date(b.wonAt||0) - new Date(a.wonAt||0)).map(d => {
+  const rows = [...dealsDetail].sort((a,b) => new Date(getWonDate(b)||0) - new Date(getWonDate(a)||0)).map(d => {
     const condicao = getCondicao(d);
     const owner = d.owner?.name || '—';
     const produto = getProdutoNome(d);
@@ -1457,25 +1481,7 @@ function renderComissoes() {
     const totalParaRonaldo = (comissao || 0) + (GERAM_BONUS_RONALDO.includes(owner) ? bonusReuniao : 0);
     const bonusRonaldo = (comissao !== null && GERAM_BONUS_RONALDO.includes(owner)) ? totalParaRonaldo / 3 : 0;
 
-    totalValor += valor;
-    if (comissao !== null) totalComissao += comissao;
-    if (bonusReuniao > 0) totalComissao += bonusReuniao;
-    if (isPendente) pendentes++;
-
-    // Acumula por responsável
-    if (!porResponsavel[owner]) porResponsavel[owner] = { negocios: 0, valor: 0, comissao: 0, pendentes: 0, bonusReuniao: 0 };
-    porResponsavel[owner].negocios++;
-    porResponsavel[owner].valor += valor;
-    if (comissao !== null) porResponsavel[owner].comissao += comissao;
-    if (bonusReuniao > 0) porResponsavel[owner].bonusReuniao += bonusReuniao;
-    if (isPendente) porResponsavel[owner].pendentes++;
-
-    // Acumula bônus do Ronaldo
-    if (bonusRonaldo > 0) {
-      if (!porResponsavel[NOME_RONALDO]) porResponsavel[NOME_RONALDO] = { negocios: 0, valor: 0, comissao: 0, pendentes: 0, bonusReuniao: 0 };
-      porResponsavel[NOME_RONALDO].comissao += bonusRonaldo;
-      totalComissao += bonusRonaldo;
-    }
+    // (métricas e resumo já calculados no forEach acima)
 
     const condDisplay = isDiretoria
       ? '<span style="background:#f5f5f5;color:#999;padding:2px 8px;border-radius:12px;font-size:11px;">Diretoria</span>'
@@ -1509,14 +1515,14 @@ function renderComissoes() {
       <td style="text-align:right;">${fmtBRL(valor)}</td>
       <td style="text-align:right;">${taxaDisplay}</td>
       <td style="text-align:right;">${comDisplay}${bonusDisplay ? '<br>'+bonusDisplay : ''}${reuniaoBtn}</td>
-      <td style="text-align:right;font-family:'DM Mono',monospace;font-size:12px;">${fmtDate(d.wonAt)}</td>
+      <td style="text-align:right;font-family:'DM Mono',monospace;font-size:12px;">${fmtDate(getWonDate(d))}</td>
     </tr>`;
   }).join('');
 
   document.getElementById('com-detail-body').innerHTML = rows || '<tr><td colspan="8" class="empty">Nenhum negócio no período</td></tr>';
 
   // Métricas
-  const semWonAt = baseDeals.filter(d => d.dealStatus?.id === 2 && !d.wonAt).length;
+  const semWonAt = baseDeals.filter(d => d.dealStatus?.id === 2 && !d.endTime && !d.wonAt).length;
   document.getElementById('com-total').textContent = deals.length;
   document.getElementById('com-total-sub').textContent = 'de ' + (deals.length + semWonAt) + ' ganhos totais';
   document.getElementById('com-valor').textContent = fmtBRL(totalValor);
