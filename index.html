@@ -520,15 +520,24 @@
     <select id="com-owner" onchange="renderComissoes()" style="font-size:12px;padding:5px 8px;border-radius:8px;border:1px solid rgba(14,20,40,0.1);font-family:'Poppins',sans-serif;">
       <option value="all">Todos responsáveis</option>
     </select>
+    <button onclick="exportarExcelComissoes()" style="background:#1e7e4a;color:white;font-size:12px;padding:6px 14px;display:inline-flex;align-items:center;gap:6px;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Exportar Excel
+    </button>
     <button onclick="sairComissoes()" style="margin-left:auto;background:#EBF0F3;color:#0E1428;font-size:12px;padding:6px 14px;">🔒 Sair</button>
   </div>
 
   <!-- Métricas resumo -->
   <div class="metrics" style="margin-bottom:1.5rem;" id="com-metrics">
-    <div class="metric-card"><div class="metric-label">Total ganhos</div><div class="metric-value" id="com-total">—</div></div>
+    <div class="metric-card"><div class="metric-label">Total ganhos</div><div class="metric-value" id="com-total">—</div><div class="metric-sub" id="com-total-sub">no período</div></div>
     <div class="metric-card"><div class="metric-label">Valor total contratos</div><div class="metric-value success" id="com-valor">—</div></div>
     <div class="metric-card"><div class="metric-label">Total comissões</div><div class="metric-value warning" id="com-comissao">—</div></div>
     <div class="metric-card"><div class="metric-label">Pendentes preenchimento</div><div class="metric-value danger" id="com-pendentes">—</div></div>
+    <div class="metric-card" style="border:1px dashed #e0b840;background:#fef9ee;" title="Negócios marcados como ganhos no Agendor mas sem data de conclusão preenchida — não entram no período filtrado">
+      <div class="metric-label" style="color:#a05c00;">⚠ Sem data de ganho</div>
+      <div class="metric-value" id="com-sem-wonat" style="color:#a05c00;">—</div>
+      <div class="metric-sub" style="color:#a05c00;">excluídos do filtro</div>
+    </div>
   </div>
 
   <!-- Itens pendentes -->
@@ -597,9 +606,15 @@
 
   <!-- Tabela detalhada -->
   <div class="card">
-    <div class="card-header">
+    <div class="card-header" style="flex-wrap:wrap;gap:8px;">
       <span class="card-title">Detalhamento por negócio</span>
-      <input type="text" id="com-search" placeholder="Buscar negócio..." oninput="renderComissoes()" style="padding:5px 10px;border-radius:8px;border:1px solid rgba(14,20,40,0.1);font-size:12px;font-family:'Poppins',sans-serif;background:#EBF0F3;width:200px;">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <input type="text" id="com-search" placeholder="Buscar negócio..." oninput="renderComissoes()" style="padding:5px 10px;border-radius:8px;border:1px solid rgba(14,20,40,0.1);font-size:12px;font-family:'Poppins',sans-serif;background:#EBF0F3;width:150px;">
+        <select id="com-detail-owner" onchange="renderComissoes()" style="font-size:12px;padding:5px 8px;border-radius:8px;border:1px solid rgba(14,20,40,0.1);font-family:'Poppins',sans-serif;background:#EBF0F3;"><option value="all">Todos responsáveis</option></select>
+        <select id="com-detail-produto" onchange="renderComissoes()" style="font-size:12px;padding:5px 8px;border-radius:8px;border:1px solid rgba(14,20,40,0.1);font-family:'Poppins',sans-serif;background:#EBF0F3;"><option value="all">Todos produtos</option></select>
+        <select id="com-detail-condicao" onchange="renderComissoes()" style="font-size:12px;padding:5px 8px;border-radius:8px;border:1px solid rgba(14,20,40,0.1);font-family:'Poppins',sans-serif;background:#EBF0F3;"><option value="all">Todas condições</option></select>
+        <select id="com-detail-origem" onchange="renderComissoes()" style="font-size:12px;padding:5px 8px;border-radius:8px;border:1px solid rgba(14,20,40,0.1);font-family:'Poppins',sans-serif;background:#EBF0F3;"><option value="all">Todas origens</option></select>
+      </div>
     </div>
     <div style="overflow-x:auto;">
       <table class="std-table">
