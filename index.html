@@ -639,6 +639,33 @@
       </table>
     </div>
   </div>
+
+  <!-- Fechamento Fabíola -->
+  <div class="card" id="card-fechamento-fabiola" style="margin-bottom:1.5rem;display:none;">
+    <div class="card-header" style="flex-wrap:wrap;gap:8px;">
+      <span class="card-title">Fechamento Fabíola Carvalho</span>
+      <button onclick="exportarFechamentoFabiola()" style="background:#1e7e4a;color:white;font-size:12px;padding:6px 14px;display:inline-flex;align-items:center;gap:6px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Exportar Excel
+      </button>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="std-table" id="fechamento-fabiola-table">
+        <thead>
+          <tr>
+            <th style="text-align:left;min-width:100px;">Data</th>
+            <th style="text-align:left;min-width:220px;">Negócio</th>
+            <th style="text-align:left;">Condição Comercial</th>
+            <th style="text-align:right;">Valor</th>
+            <th style="text-align:right;">Desconto</th>
+            <th style="text-align:right;">Reunião</th>
+            <th style="text-align:right;color:#0C7488;font-weight:700;">Comissão</th>
+          </tr>
+        </thead>
+        <tbody id="fechamento-fabiola-body"><tr><td colspan="7" class="empty">—</td></tr></tbody>
+      </table>
+    </div>
+  </div>
 </div>
 
 
@@ -1241,19 +1268,31 @@ const TAXAS_COMISSAO = {
   'Parceria Leo Marconi': 0.20,
 };
 
-// Taxas específicas da Fabíola (100% com descontos por condição)
-const TAXAS_FABIOLA = {
-  'Preço base': 1.00,
-  'IRPF grátis primeiro ano': 0.85,
-  'Isenção do primeiro mês': 0.82,
-  'Isenção primeiro mês': 0.82,
-  'Parceria Afiliados': 0.80,
-  'Gratuidade dois meses': 0.60,
-  '15% de desconto no primeiro ano': 0.60,
+// Descontos da Fabíola sobre a comissão (comissão = valor × (1 - desconto))
+const DESCONTOS_FABIOLA = {
+  'Preço base': 0.00,
+  'IRPF grátis primeiro ano': 0.15,
+  'Isenção do primeiro mês': 0.18,
+  'Isenção primeiro mês': 0.18,
+  'Parceria Afiliados': 0.20,
+  'Indicação de Amigo': 0.20,
+  'Parceria Leo Marconi': 0.20,
+  'Gratuidade dois meses': 0.40,
+  'Gratuidade de dois meses': 0.40,
+  '15% de desconto no primeiro ano': 0.40,
   'Gratuidade três meses': 0.50,
-  'Indicação de Amigo': 0.80,
-  'Parceria Leo Marconi': 0.80,
+  'Gratuidade de três meses': 0.50,
 };
+function getTaxaFabiola(condicao) {
+  if (!condicao) return null;
+  // busca exata
+  if (DESCONTOS_FABIOLA[condicao] !== undefined) return 1 - DESCONTOS_FABIOLA[condicao];
+  // busca parcial
+  const key = Object.keys(DESCONTOS_FABIOLA).find(k =>
+    k.toLowerCase().includes(condicao.toLowerCase()) || condicao.toLowerCase().includes(k.toLowerCase())
+  );
+  return key !== undefined ? 1 - DESCONTOS_FABIOLA[key] : null;
+}
 
 // Bônus de reunião manual — persiste no localStorage
 const VALOR_BONUS_REUNIAO = 30;
@@ -1469,13 +1508,13 @@ function renderComissoes() {
     let taxa;
     if (isDiretoria) { taxa = null; }
     else if (isRegraOrigem) { taxa = getComissaoEspecial(d); }
-    else if (isFabiola) { taxa = condicao ? (TAXAS_FABIOLA[condicao] ?? getTaxaComissao(condicao)) : null; }
+    else if (isFabiola) { taxa = getTaxaFabiola(condicao); }
     else { taxa = getTaxaComissao(condicao); }
     const valor = d.value || 0;
     const isPendente = !isRegraOrigem && !isDiretoria && !condicao;
     const comissao = taxa !== null ? valor * taxa : null;
     const reunioes = BONUS_REUNIAO[d.id] || 0;
-    const bonusReuniao = reunioes * VALOR_BONUS_REUNIAO;
+    const bonusReuniao = isFabiola ? reunioes * VALOR_BONUS_REUNIAO : 0;
     const totalParaRonaldo2 = (comissao || 0) + (GERAM_BONUS_RONALDO.includes(owner) ? bonusReuniao : 0);
     const bonusRonaldo2 = (comissao !== null && GERAM_BONUS_RONALDO.includes(owner)) ? totalParaRonaldo2 / 3 : 0;
     totalValor += valor;
@@ -1519,7 +1558,7 @@ function renderComissoes() {
     } else if (isRegraOrigem) {
       taxa = getComissaoEspecial(d);
     } else if (isFabiola) {
-      taxa = condicao ? (TAXAS_FABIOLA[condicao] ?? getTaxaComissao(condicao)) : null;
+      taxa = getTaxaFabiola(condicao);
     } else {
       taxa = getTaxaComissao(condicao);
     }
@@ -1528,9 +1567,9 @@ function renderComissoes() {
     const isPendente = !isRegraOrigem && !isDiretoria && !condicao;
     const comissao = taxa !== null ? valor * taxa : null;
 
-    // Bônus de reunião manual (Fabíola)
+    // Bônus de reunião manual (apenas Fabíola)
     const reunioes = BONUS_REUNIAO[d.id] || 0;
-    const bonusReuniao = reunioes * VALOR_BONUS_REUNIAO;
+    const bonusReuniao = isFabiola ? reunioes * VALOR_BONUS_REUNIAO : 0;
 
     // Bônus do Ronaldo (1/3 do total Fabíola/Everton incluindo bônus de reunião)
     const totalParaRonaldo = (comissao || 0) + (GERAM_BONUS_RONALDO.includes(owner) ? bonusReuniao : 0);
@@ -1550,7 +1589,7 @@ function renderComissoes() {
       ? `<span style="font-size:11px;color:#657786;">${origem}</span>`
       : '—';
 
-    const taxaDisplay = taxa !== null ? `${(taxa*100).toFixed(0)}%` : '<span style="color:#999;">—</span>';
+    const taxaDisplay = taxa !== null ? (isFabiola ? `${(taxa*100).toFixed(0)}%<span style="font-size:10px;color:#999;"> (desc. ${(100-(taxa*100)).toFixed(0)}%)</span>` : `${(taxa*100).toFixed(0)}%`) : '<span style="color:#999;">—</span>';
     const comTotal = (comissao || 0) + bonusReuniao;
     const comDisplay = comTotal > 0 ? `<strong>${fmtBRL(comTotal)}</strong>${bonusReuniao > 0 ? `<br><span style="font-size:10px;color:#657786;">incl. ${reunioes}x reunião</span>` : ''}` : '<span style="color:#999;">—</span>';
     const bonusDisplay = bonusRonaldo > 0 ? `<span style="color:#0C7488;font-size:11px;">+${fmtBRL(bonusRonaldo)} Ronaldo</span>` : '';
@@ -1578,6 +1617,7 @@ function renderComissoes() {
   }).join('');
 
   document.getElementById('com-detail-body').innerHTML = rows || '<tr><td colspan="8" class="empty">Nenhum negócio no período</td></tr>';
+  renderFechamentoFabiola(deals);
 
   // Métricas
   const semWonAt = baseDeals.filter(d => d.dealStatus?.id === 2 && !d.endTime && !d.wonAt).length;
@@ -1684,6 +1724,99 @@ function removeReuniao(dealId) {
   else { BONUS_REUNIAO[dealId] = atual - 1; }
   saveBonusReuniao();
   renderComissoes();
+}
+
+function renderFechamentoFabiola(deals) {
+  // Filtra apenas negócios da Fabíola com data de ganho
+  const fabDeals = deals.filter(d => d.owner?.name === 'Fabíola Carvalho');
+  const card = document.getElementById('card-fechamento-fabiola');
+  const tbody = document.getElementById('fechamento-fabiola-body');
+
+  if (!fabDeals.length) {
+    card.style.display = 'none';
+    tbody.innerHTML = '<tr><td colspan="7" class="empty">Nenhum negócio da Fabíola no período</td></tr>';
+    return;
+  }
+  card.style.display = '';
+
+  let totalComissao = 0;
+
+  const rows = [...fabDeals]
+    .sort((a,b) => new Date(getWonDate(a)||0) - new Date(getWonDate(b)||0))
+    .map(d => {
+      const condicao = getCondicao(d);
+      const taxa = getTaxaFabiola(condicao);
+      const valor = d.value || 0;
+      const descEntry = condicao ? Object.entries(DESCONTOS_FABIOLA).find(([k]) =>
+        k === condicao || k.toLowerCase().includes(condicao.toLowerCase()) || condicao.toLowerCase().includes(k.toLowerCase())
+      ) : null;
+      const descPct = descEntry ? descEntry[1] : (taxa !== null ? 1 - taxa : null);
+      const comissaoBase = taxa !== null ? valor * taxa : 0;
+      const reunioes = BONUS_REUNIAO[d.id] || 0;
+      const bonusReuniao = reunioes * VALOR_BONUS_REUNIAO;
+      const comissaoTotal = comissaoBase + bonusReuniao;
+      totalComissao += comissaoTotal;
+
+      const dataStr = fmtDate(getWonDate(d));
+      const titulo = d.title || d.person?.name || '—';
+      const condDisplay = condicao
+        ? `<span style="background:#e0f5f7;color:#0C7488;padding:2px 8px;border-radius:12px;font-size:11px;">${condicao}</span>`
+        : '<span style="color:#F62642;font-size:11px;">⚠ Pendente</span>';
+      const descDisplay = descPct !== null
+        ? `<span style="color:#657786;">${(descPct*100).toFixed(0)}%</span>`
+        : '—';
+      const reuniaoDisplay = bonusReuniao > 0
+        ? `<span style="color:#0C7488;">${fmtBRL(bonusReuniao)}</span>`
+        : '<span style="color:#999;">—</span>';
+
+      return `<tr>
+        <td style="white-space:nowrap;font-family:'DM Mono',monospace;font-size:12px;">${dataStr}</td>
+        <td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${titulo}">${titulo}</td>
+        <td>${condDisplay}</td>
+        <td style="text-align:right;font-family:'DM Mono',monospace;">${fmtBRL(valor)}</td>
+        <td style="text-align:right;">${descDisplay}</td>
+        <td style="text-align:right;">${reuniaoDisplay}</td>
+        <td style="text-align:right;font-weight:700;color:#0C7488;font-family:'DM Mono',monospace;">${fmtBRL(comissaoTotal)}</td>
+      </tr>`;
+    }).join('');
+
+  const totalRow = `<tr class="total-row">
+    <td colspan="6" style="text-align:right;font-weight:700;">Total</td>
+    <td style="text-align:right;font-weight:700;color:#0C7488;font-family:'DM Mono',monospace;">${fmtBRL(totalComissao)}</td>
+  </tr>`;
+
+  tbody.innerHTML = rows + totalRow;
+}
+
+function exportarFechamentoFabiola() {
+  const rows = document.querySelectorAll('#fechamento-fabiola-body tr');
+  if (!rows.length || rows[0].querySelector('.empty')) { alert('Nenhum dado para exportar.'); return; }
+  const headers = ['Data','Negócio','Condição Comercial','Valor (R$)','Desconto','Reunião (R$)','Comissão (R$)'];
+  function cellText(td) { return td ? td.innerText.replace(/
+/g,' ').trim() : ''; }
+  const data = [headers];
+  rows.forEach(tr => {
+    const tds = tr.querySelectorAll('td');
+    if (tds.length < 7) return;
+    data.push([
+      cellText(tds[0]),
+      cellText(tds[1]),
+      cellText(tds[2]),
+      cellText(tds[3]).replace('R$ ','').replace(/\./g,'').replace(',','.'),
+      cellText(tds[4]),
+      cellText(tds[5]).replace('R$ ','').replace(/\./g,'').replace(',','.'),
+      cellText(tds[6]).replace('R$ ','').replace(/\./g,'').replace(',','.'),
+    ]);
+  });
+  const csv = data.map(row => row.map(v => '"' + String(v).replace(/"/g,'""') + '"').join(';')).join('
+');
+  const from = document.getElementById('com-dateFrom').value || 'inicio';
+  const to = document.getElementById('com-dateTo').value || 'fim';
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'fechamento_fabiola_' + from + '_' + to + '.csv'; a.click();
+  URL.revokeObjectURL(url);
 }
 
 function exportarExcelComissoes() {
@@ -1809,20 +1942,20 @@ setInterval(()=>{fetch(PROXY+'/').catch(()=>{});}, 10*60*1000);
     <div class="rules-section">
       <div class="rules-section-title">Tabela Fabíola Carvalho</div>
       <table class="rules-table">
-        <thead><tr><th>Condição Comercial</th><th style="text-align:right;">% Comissão</th><th style="text-align:right;">Desconto s/ comissão</th></tr></thead>
+        <thead><tr><th>Condição Comercial</th><th style="text-align:right;">Desconto s/ comissão</th><th style="text-align:right;">% Comissão efetiva</th></tr></thead>
         <tbody>
-          <tr><td>Preço base (sem promoção)</td><td style="text-align:right;font-weight:600;color:#0C7488;">100%</td><td style="text-align:right;color:#657786;">0%</td></tr>
-          <tr><td>IRPF grátis no primeiro ano</td><td style="text-align:right;font-weight:600;color:#0C7488;">85%</td><td style="text-align:right;color:#657786;">15%</td></tr>
-          <tr><td>Isenção do primeiro mês / Isenção primeiro mês</td><td style="text-align:right;font-weight:600;color:#0C7488;">82%</td><td style="text-align:right;color:#657786;">18%</td></tr>
-          <tr><td>Parceria Afiliados</td><td style="text-align:right;font-weight:600;color:#0C7488;">80%</td><td style="text-align:right;color:#657786;">20%</td></tr>
-          <tr><td>Indicação de Amigo</td><td style="text-align:right;font-weight:600;color:#0C7488;">80%</td><td style="text-align:right;color:#657786;">20%</td></tr>
-          <tr><td>Parceria Leo Marconi</td><td style="text-align:right;font-weight:600;color:#0C7488;">80%</td><td style="text-align:right;color:#657786;">20%</td></tr>
-          <tr><td>Gratuidade de dois meses</td><td style="text-align:right;font-weight:600;color:#0C7488;">60%</td><td style="text-align:right;color:#657786;">40%</td></tr>
-          <tr><td>15% de desconto no primeiro ano</td><td style="text-align:right;font-weight:600;color:#0C7488;">60%</td><td style="text-align:right;color:#657786;">40%</td></tr>
-          <tr><td>Gratuidade de três meses</td><td style="text-align:right;font-weight:600;color:#0C7488;">50%</td><td style="text-align:right;color:#657786;">50%</td></tr>
+          <tr><td>Preço base (sem promoção)</td><td style="text-align:right;color:#657786;">0%</td><td style="text-align:right;font-weight:600;color:#0C7488;">100%</td></tr>
+          <tr><td>IRPF grátis no primeiro ano</td><td style="text-align:right;color:#657786;">15%</td><td style="text-align:right;font-weight:600;color:#0C7488;">85%</td></tr>
+          <tr><td>Isenção do primeiro mês</td><td style="text-align:right;color:#657786;">18%</td><td style="text-align:right;font-weight:600;color:#0C7488;">82%</td></tr>
+          <tr><td>Parceria Afiliados</td><td style="text-align:right;color:#657786;">20%</td><td style="text-align:right;font-weight:600;color:#0C7488;">80%</td></tr>
+          <tr><td>Indicação de Amigo</td><td style="text-align:right;color:#657786;">20%</td><td style="text-align:right;font-weight:600;color:#0C7488;">80%</td></tr>
+          <tr><td>Parceria Leo Marconi</td><td style="text-align:right;color:#657786;">20%</td><td style="text-align:right;font-weight:600;color:#0C7488;">80%</td></tr>
+          <tr><td>Gratuidade dois meses</td><td style="text-align:right;color:#657786;">40%</td><td style="text-align:right;font-weight:600;color:#0C7488;">60%</td></tr>
+          <tr><td>15% de desconto no primeiro ano</td><td style="text-align:right;color:#657786;">40%</td><td style="text-align:right;font-weight:600;color:#0C7488;">60%</td></tr>
+          <tr><td>Gratuidade de três meses</td><td style="text-align:right;color:#657786;">50%</td><td style="text-align:right;font-weight:600;color:#0C7488;">50%</td></tr>
         </tbody>
       </table>
-      <div style="font-size:11px;color:#657786;margin-top:6px;">+ Bônus de R$30 por reunião agendada (campo manual)</div>
+      <div style="font-size:11px;color:#657786;margin-top:6px;">Comissão = Valor × (1 − desconto) + R$30 por reunião agendada (campo manual)</div>
     </div>
 
     <div class="rules-section">
