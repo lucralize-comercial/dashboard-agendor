@@ -1792,8 +1792,7 @@ function exportarFechamentoFabiola() {
   const rows = document.querySelectorAll('#fechamento-fabiola-body tr');
   if (!rows.length || rows[0].querySelector('.empty')) { alert('Nenhum dado para exportar.'); return; }
   const headers = ['Data','Negócio','Condição Comercial','Valor (R$)','Desconto','Reunião (R$)','Comissão (R$)'];
-  function cellText(td) { return td ? td.innerText.replace(/
-/g,' ').trim() : ''; }
+  function cellText(td) { return td ? td.innerText.replace(/\n/g,' ').trim() : ''; }
   const data = [headers];
   rows.forEach(tr => {
     const tds = tr.querySelectorAll('td');
@@ -1808,8 +1807,7 @@ function exportarFechamentoFabiola() {
       cellText(tds[6]).replace('R$ ','').replace(/\./g,'').replace(',','.'),
     ]);
   });
-  const csv = data.map(row => row.map(v => '"' + String(v).replace(/"/g,'""') + '"').join(';')).join('
-');
+  const csv = data.map(row => row.map(v => '"' + String(v).replace(/"/g,'""') + '"').join(';')).join('\r\n');
   const from = document.getElementById('com-dateFrom').value || 'inicio';
   const to = document.getElementById('com-dateTo').value || 'fim';
   const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
