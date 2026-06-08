@@ -612,6 +612,7 @@
     <div class="card-header" style="flex-wrap:wrap;gap:8px;">
       <span class="card-title">Detalhamento por negócio</span>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <button onclick="exportarExcelComissoes()" style="background:#1e7e4a;color:white;font-size:12px;padding:6px 14px;display:inline-flex;align-items:center;gap:6px;border-radius:8px;border:none;cursor:pointer;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>Exportar Excel</button>
         <input type="text" id="com-search" placeholder="Buscar negócio..." oninput="renderComissoes()" style="padding:5px 10px;border-radius:8px;border:1px solid rgba(14,20,40,0.1);font-size:12px;font-family:'Poppins',sans-serif;background:#EBF0F3;width:150px;">
         <select id="com-detail-owner" onchange="renderComissoes()" style="font-size:12px;padding:5px 8px;border-radius:8px;border:1px solid rgba(14,20,40,0.1);font-family:'Poppins',sans-serif;background:#EBF0F3;"><option value="all">Todos responsáveis</option></select>
         <select id="com-detail-produto" onchange="renderComissoes()" style="font-size:12px;padding:5px 8px;border-radius:8px;border:1px solid rgba(14,20,40,0.1);font-family:'Poppins',sans-serif;background:#EBF0F3;"><option value="all">Todos produtos</option></select>
@@ -630,12 +631,13 @@
           <th style="text-align:right;">Valor</th>
           <th style="text-align:right;">% Comissão</th>
           <th style="text-align:right;">Comissão</th>
+          <th style="text-align:center;">Reunião</th>
           <th style="text-align:right;color:#0C7488;">% Com. Ronaldo</th>
           <th style="text-align:right;color:#0C7488;">Com. Ronaldo</th>
           <th style="text-align:right;">Data Ganho</th>
           <th style="text-align:right;color:#657786;">Reg. Ganho</th>
         </tr></thead>
-        <tbody id="com-detail-body"><tr><td colspan="9" class="empty">—</td></tr></tbody>
+        <tbody id="com-detail-body"><tr><td colspan="13" class="empty">—</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -644,25 +646,35 @@
   <div class="card" id="card-fechamento-fabiola" style="margin-bottom:1.5rem;display:none;">
     <div class="card-header" style="flex-wrap:wrap;gap:8px;">
       <span class="card-title">Fechamento Fabíola Carvalho</span>
-      <button onclick="exportarFechamentoFabiola()" style="background:#1e7e4a;color:white;font-size:12px;padding:6px 14px;display:inline-flex;align-items:center;gap:6px;">
-        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        Exportar Excel
-      </button>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <select id="fab-filter-produto" onchange="renderFechamentoFabiola(window._lastDeals||[])" style="font-size:12px;padding:5px 8px;border-radius:8px;border:1px solid rgba(14,20,40,0.1);font-family:'Poppins',sans-serif;background:#EBF0F3;"><option value="all">Todos produtos</option></select>
+        <select id="fab-filter-condicao" onchange="renderFechamentoFabiola(window._lastDeals||[])" style="font-size:12px;padding:5px 8px;border-radius:8px;border:1px solid rgba(14,20,40,0.1);font-family:'Poppins',sans-serif;background:#EBF0F3;"><option value="all">Todas condições</option></select>
+        <button onclick="exportarFechamentoFabiola()" style="background:#1e7e4a;color:white;font-size:12px;padding:6px 14px;display:inline-flex;align-items:center;gap:6px;border-radius:8px;border:none;cursor:pointer;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Exportar Excel
+        </button>
+      </div>
     </div>
     <div style="overflow-x:auto;">
       <table class="std-table" id="fechamento-fabiola-table">
         <thead>
           <tr>
             <th style="text-align:left;min-width:100px;">Data</th>
-            <th style="text-align:left;min-width:220px;">Negócio</th>
+            <th style="text-align:left;min-width:200px;">Negócio</th>
+            <th style="text-align:left;min-width:160px;">Produto</th>
             <th style="text-align:left;">Condição Comercial</th>
+            <th style="text-align:left;min-width:140px;">Origem</th>
             <th style="text-align:right;">Valor</th>
             <th style="text-align:right;">Desconto</th>
             <th style="text-align:right;">Reunião</th>
             <th style="text-align:right;color:#0C7488;font-weight:700;">Comissão</th>
+            <th style="text-align:center;color:#185FA5;">% Com. Ronaldo</th>
+            <th style="text-align:right;color:#185FA5;">Com. Ronaldo</th>
+            <th style="text-align:center;min-width:100px;">Data Ganho</th>
+            <th style="text-align:center;min-width:100px;color:#999;">Reg. Ganho</th>
           </tr>
         </thead>
-        <tbody id="fechamento-fabiola-body"><tr><td colspan="7" class="empty">—</td></tr></tbody>
+        <tbody id="fechamento-fabiola-body"><tr><td colspan="13" class="empty">—</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -1590,15 +1602,16 @@ function renderComissoes() {
       : '—';
 
     const taxaDisplay = taxa !== null ? (isFabiola ? `${(taxa*100).toFixed(0)}%<span style="font-size:10px;color:#999;"> (desc. ${(100-(taxa*100)).toFixed(0)}%)</span>` : `${(taxa*100).toFixed(0)}%`) : '<span style="color:#999;">—</span>';
-    const comTotal = (comissao || 0) + bonusReuniao;
-    const comDisplay = comTotal > 0 ? `<strong>${fmtBRL(comTotal)}</strong>${bonusReuniao > 0 ? `<br><span style="font-size:10px;color:#657786;">incl. ${reunioes}x reunião</span>` : ''}` : '<span style="color:#999;">—</span>';
-    const bonusDisplay = bonusRonaldo > 0 ? `<span style="color:#0C7488;font-size:11px;">+${fmtBRL(bonusRonaldo)} Ronaldo</span>` : '';
+    const comBase = comissao !== null ? fmtBRL(comissao) : '—';
+    const comDisplay = comissao !== null ? `<strong>${fmtBRL(comissao)}</strong>` : '<span style="color:#999;">—</span>';
 
-    const reuniaoBtn = isFabiola
-      ? `<br><span style="display:inline-flex;align-items:center;gap:4px;margin-top:3px;">
-          <span onclick="addReuniao(${d.id})" title="Adicionar reunião" style="display:inline-flex;align-items:center;gap:3px;background:#e0f5f7;border:1px solid #0C748840;color:#0C7488;border-radius:20px;padding:1px 8px;font-size:11px;cursor:pointer;">📅 +reunião${reunioes > 0 ? ' (' + reunioes + ')' : ''}</span>${reunioes > 0 ? '<span onclick="removeReuniao(' + d.id + ')" title="Remover" style="background:#fde8ec;border:1px solid #F6264240;color:#F62642;border-radius:50%;width:16px;height:16px;display:inline-flex;align-items:center;justify-content:center;font-size:11px;cursor:pointer;">−</span>' : ''}
-        </span>`
-      : '';
+    // Checkbox de reunião (apenas Fabíola)
+    const temReuniao = reunioes > 0;
+    const reuniaoCell = isFabiola
+      ? `<span onclick="toggleReuniao(${d.id})" title="${temReuniao ? 'Remover reunião' : 'Marcar reunião'}" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:4px;border:1.5px solid ${temReuniao ? '#0C7488' : 'rgba(14,20,40,0.2)'};background:${temReuniao ? '#e0f5f7' : 'transparent'};cursor:pointer;font-size:11px;color:#0C7488;">${temReuniao ? '✓' : ''}</span>`
+      : '<span style="color:#ccc;font-size:11px;">—</span>';
+
+    const comTotal = (comissao || 0) + bonusReuniao;
 
     return `<tr>
       <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${d.title||''}">${d.title || d.person?.name || '—'}</td>
@@ -1608,7 +1621,8 @@ function renderComissoes() {
       <td>${origemDisplay}</td>
       <td style="text-align:right;">${fmtBRL(valor)}</td>
       <td style="text-align:right;">${taxaDisplay}</td>
-      <td style="text-align:right;">${comDisplay}${reuniaoBtn}</td>
+      <td style="text-align:right;">${comissao !== null ? '<strong>'+fmtBRL(comTotal)+'</strong>' : '<span style="color:#999;">—</span>'}</td>
+      <td style="text-align:center;">${reuniaoCell}</td>
       <td style="text-align:right;color:#0C7488;">${bonusRonaldo > 0 ? (totalParaRonaldo > 0 ? Math.round((bonusRonaldo/totalParaRonaldo)*100)+'%' : '—') : '<span style="color:#999;">—</span>'}</td>
       <td style="text-align:right;color:#0C7488;">${bonusRonaldo > 0 ? '<strong>'+fmtBRL(bonusRonaldo)+'</strong>' : '<span style="color:#999;">—</span>'}</td>
       <td style="text-align:right;font-family:'DM Mono',monospace;font-size:12px;">${fmtDate(getWonDate(d))}</td>
@@ -1713,30 +1727,106 @@ function renderComissoes() {
   document.getElementById('com-origem-body').innerHTML = origemRows || '<tr><td colspan="4" class="empty">—</td></tr>';
 }
 
-function addReuniao(dealId) {
-  BONUS_REUNIAO[dealId] = (BONUS_REUNIAO[dealId] || 0) + 1;
+function toggleReuniao(dealId) {
+  if (BONUS_REUNIAO[dealId] > 0) { delete BONUS_REUNIAO[dealId]; }
+  else { BONUS_REUNIAO[dealId] = 1; }
   saveBonusReuniao();
   renderComissoes();
 }
-function removeReuniao(dealId) {
-  const atual = BONUS_REUNIAO[dealId] || 0;
-  if (atual <= 1) { delete BONUS_REUNIAO[dealId]; }
-  else { BONUS_REUNIAO[dealId] = atual - 1; }
-  saveBonusReuniao();
-  renderComissoes();
-}
+function addReuniao(dealId) { BONUS_REUNIAO[dealId] = (BONUS_REUNIAO[dealId]||0)+1; saveBonusReuniao(); renderComissoes(); }
+function removeReuniao(dealId) { const a=BONUS_REUNIAO[dealId]||0; if(a<=1){delete BONUS_REUNIAO[dealId];}else{BONUS_REUNIAO[dealId]=a-1;} saveBonusReuniao(); renderComissoes(); }
 
 function renderFechamentoFabiola(deals) {
-  // Filtra apenas negócios da Fabíola com data de ganho
-  const fabDeals = deals.filter(d => d.owner?.name === 'Fabíola Carvalho');
+  window._lastDeals = deals;
+  const allFab = deals.filter(d => d.owner?.name === 'Fabíola Carvalho');
   const card = document.getElementById('card-fechamento-fabiola');
   const tbody = document.getElementById('fechamento-fabiola-body');
 
-  if (!fabDeals.length) {
-    card.style.display = 'none';
-    tbody.innerHTML = '<tr><td colspan="7" class="empty">Nenhum negócio da Fabíola no período</td></tr>';
-    return;
+  if (!allFab.length) { card.style.display = 'none'; return; }
+  card.style.display = '';
+
+  // Popular filtros
+  const selProd = document.getElementById('fab-filter-produto');
+  const selCond = document.getElementById('fab-filter-condicao');
+  const curProd = selProd?.value || 'all';
+  const curCond = selCond?.value || 'all';
+
+  if (selProd) {
+    const prods = [...new Set(allFab.map(d => getProdutoNome(d)).filter(Boolean))].sort();
+    selProd.innerHTML = '<option value="all">Todos produtos</option>' + prods.map(p => `<option value="${p}" ${p===curProd?'selected':''}>${p}</option>`).join('');
   }
+  if (selCond) {
+    const conds = [...new Set(allFab.map(d => getCondicao(d)).filter(Boolean))].sort();
+    selCond.innerHTML = '<option value="all">Todas condições</option>' + conds.map(c => `<option value="${c}" ${c===curCond?'selected':''}>${c}</option>`).join('');
+  }
+
+  // Aplicar filtros
+  const fabDeals = allFab.filter(d => {
+    if (curProd !== 'all' && getProdutoNome(d) !== curProd) return false;
+    if (curCond !== 'all' && getCondicao(d) !== curCond) return false;
+    return true;
+  });
+
+  let totalComissao = 0, totalRonaldo = 0;
+
+  const rows = [...fabDeals]
+    .sort((a,b) => new Date(getWonDate(a)||0) - new Date(getWonDate(b)||0))
+    .map(d => {
+      const condicao = getCondicao(d);
+      const taxa = getTaxaFabiola(condicao);
+      const valor = d.value || 0;
+      const produto = getProdutoNome(d);
+      const origem = d.customFields?.origem_do_negocio?.value || '—';
+      const descEntry = condicao ? Object.entries(DESCONTOS_FABIOLA).find(([k]) =>
+        k === condicao || k.toLowerCase().includes(condicao.toLowerCase()) || condicao.toLowerCase().includes(k.toLowerCase())
+      ) : null;
+      const descPct = descEntry ? descEntry[1] : (taxa !== null ? 1 - taxa : null);
+      const comissaoBase = taxa !== null ? valor * taxa : 0;
+      const reunioes = BONUS_REUNIAO[d.id] || 0;
+      const bonusReuniao = reunioes * VALOR_BONUS_REUNIAO;
+      const comissaoTotal = comissaoBase + bonusReuniao;
+      const comRonaldo = comissaoTotal / 3;
+      totalComissao += comissaoTotal;
+      totalRonaldo += comRonaldo;
+
+      const dataStr = fmtDate(getWonDate(d));
+      const titulo = d.title || d.person?.name || '—';
+      const condDisplay = condicao
+        ? `<span style="background:#e0f5f7;color:#0C7488;padding:2px 8px;border-radius:12px;font-size:11px;">${condicao}</span>`
+        : '<span style="color:#F62642;font-size:11px;">⚠ Pendente</span>';
+      const descDisplay = descPct !== null ? `${(descPct*100).toFixed(0)}%` : '—';
+      const reuniaoDisplay = bonusReuniao > 0
+        ? `<span style="color:#0C7488;">${fmtBRL(bonusReuniao)}</span>`
+        : '<span style="color:#999;">—</span>';
+
+      return `<tr>
+        <td style="white-space:nowrap;font-family:'DM Mono',monospace;font-size:12px;">${dataStr}</td>
+        <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${titulo}">${titulo}</td>
+        <td style="color:#0C7488;font-size:12px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${produto}</td>
+        <td>${condDisplay}</td>
+        <td style="font-size:11px;color:#657786;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${origem}</td>
+        <td style="text-align:right;font-family:'DM Mono',monospace;">${fmtBRL(valor)}</td>
+        <td style="text-align:right;color:#657786;">${descDisplay}</td>
+        <td style="text-align:right;">${reuniaoDisplay}</td>
+        <td style="text-align:right;font-weight:700;color:#0C7488;font-family:'DM Mono',monospace;">${fmtBRL(comissaoTotal)}</td>
+        <td style="text-align:center;color:#185FA5;font-size:12px;">33%</td>
+        <td style="text-align:right;color:#185FA5;font-weight:700;font-family:'DM Mono',monospace;">${fmtBRL(comRonaldo)}</td>
+        <td style="text-align:center;font-family:'DM Mono',monospace;font-size:12px;">${fmtDate(getWonDate(d))}</td>
+        <td style="text-align:center;font-family:'DM Mono',monospace;font-size:12px;color:#999;">${fmtDate(d.wonAt)}</td>
+      </tr>`;
+    }).join('');
+
+  const totalRow = `<tr class="total-row">
+    <td colspan="8" style="text-align:right;font-weight:700;">Total</td>
+    <td style="text-align:right;font-weight:700;color:#0C7488;font-family:'DM Mono',monospace;">${fmtBRL(totalComissao)}</td>
+    <td></td>
+    <td style="text-align:right;font-weight:700;color:#185FA5;font-family:'DM Mono',monospace;">${fmtBRL(totalRonaldo)}</td>
+    <td colspan="2"></td>
+  </tr>`;
+
+  tbody.innerHTML = rows + totalRow;
+}
+
   card.style.display = '';
 
   let totalComissao = 0;
@@ -1791,12 +1881,12 @@ function renderFechamentoFabiola(deals) {
 function exportarFechamentoFabiola() {
   const rows = document.querySelectorAll('#fechamento-fabiola-body tr');
   if (!rows.length || rows[0].querySelector('.empty')) { alert('Nenhum dado para exportar.'); return; }
-  const headers = ['Data','Negócio','Condição Comercial','Valor (R$)','Desconto','Reunião (R$)','Comissão (R$)'];
+  const headers = ['Data','Negócio','Produto','Condição Comercial','Origem','Valor (R$)','Desconto','Reunião (R$)','Comissão (R$)','% Com. Ronaldo','Com. Ronaldo (R$)','Data Ganho','Reg. Ganho'];
   function cellText(td) { return td ? td.innerText.replace(/\n/g,' ').trim() : ''; }
   const data = [headers];
   rows.forEach(tr => {
     const tds = tr.querySelectorAll('td');
-    if (tds.length < 7) return;
+    if (tds.length < 9) return;
     data.push([
       cellText(tds[0]),
       cellText(tds[1]),
