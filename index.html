@@ -1827,57 +1827,6 @@ function renderFechamentoFabiola(deals) {
   tbody.innerHTML = rows + totalRow;
 }
 
-  card.style.display = '';
-
-  let totalComissao = 0;
-
-  const rows = [...fabDeals]
-    .sort((a,b) => new Date(getWonDate(a)||0) - new Date(getWonDate(b)||0))
-    .map(d => {
-      const condicao = getCondicao(d);
-      const taxa = getTaxaFabiola(condicao);
-      const valor = d.value || 0;
-      const descEntry = condicao ? Object.entries(DESCONTOS_FABIOLA).find(([k]) =>
-        k === condicao || k.toLowerCase().includes(condicao.toLowerCase()) || condicao.toLowerCase().includes(k.toLowerCase())
-      ) : null;
-      const descPct = descEntry ? descEntry[1] : (taxa !== null ? 1 - taxa : null);
-      const comissaoBase = taxa !== null ? valor * taxa : 0;
-      const reunioes = BONUS_REUNIAO[d.id] || 0;
-      const bonusReuniao = reunioes * VALOR_BONUS_REUNIAO;
-      const comissaoTotal = comissaoBase + bonusReuniao;
-      totalComissao += comissaoTotal;
-
-      const dataStr = fmtDate(getWonDate(d));
-      const titulo = d.title || d.person?.name || '—';
-      const condDisplay = condicao
-        ? `<span style="background:#e0f5f7;color:#0C7488;padding:2px 8px;border-radius:12px;font-size:11px;">${condicao}</span>`
-        : '<span style="color:#F62642;font-size:11px;">⚠ Pendente</span>';
-      const descDisplay = descPct !== null
-        ? `<span style="color:#657786;">${(descPct*100).toFixed(0)}%</span>`
-        : '—';
-      const reuniaoDisplay = bonusReuniao > 0
-        ? `<span style="color:#0C7488;">${fmtBRL(bonusReuniao)}</span>`
-        : '<span style="color:#999;">—</span>';
-
-      return `<tr>
-        <td style="white-space:nowrap;font-family:'DM Mono',monospace;font-size:12px;">${dataStr}</td>
-        <td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${titulo}">${titulo}</td>
-        <td>${condDisplay}</td>
-        <td style="text-align:right;font-family:'DM Mono',monospace;">${fmtBRL(valor)}</td>
-        <td style="text-align:right;">${descDisplay}</td>
-        <td style="text-align:right;">${reuniaoDisplay}</td>
-        <td style="text-align:right;font-weight:700;color:#0C7488;font-family:'DM Mono',monospace;">${fmtBRL(comissaoTotal)}</td>
-      </tr>`;
-    }).join('');
-
-  const totalRow = `<tr class="total-row">
-    <td colspan="6" style="text-align:right;font-weight:700;">Total</td>
-    <td style="text-align:right;font-weight:700;color:#0C7488;font-family:'DM Mono',monospace;">${fmtBRL(totalComissao)}</td>
-  </tr>`;
-
-  tbody.innerHTML = rows + totalRow;
-}
-
 function exportarFechamentoFabiola() {
   const rows = document.querySelectorAll('#fechamento-fabiola-body tr');
   if (!rows.length || rows[0].querySelector('.empty')) { alert('Nenhum dado para exportar.'); return; }
