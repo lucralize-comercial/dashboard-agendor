@@ -623,38 +623,58 @@
     <div class="metric-card" style="border-color:rgba(246,38,66,0.3);"><div class="metric-label" style="color:#F62642;">Sem atividade</div><div class="metric-value danger" id="atv-sem-count-card">—</div><div class="metric-sub">negócios em andamento</div></div>
   </div>
 
-  <!-- Tabela por responsável -->
+  <!-- Tabela por responsável — duas tabelas lado a lado -->
   <div class="card" style="margin-bottom:1.5rem;">
     <div class="card-header"><span class="card-title">Por responsável</span></div>
-    <div style="overflow-x:auto;">
-      <table class="std-table">
-        <thead><tr>
-          <th style="text-align:left;">Responsável</th>
-          <th>Total</th>
-          <th>Concluídas</th>
-          <th>Pendentes</th>
-          <th>Atrasadas</th>
-          <th>% Conclusão</th>
-        </tr></thead>
-        <tbody id="atv-owner-body"><tr><td colspan="6" class="empty" style="text-align:center;">Carregando...</td></tr></tbody>
-      </table>
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;">
+      <!-- Tipos de atividade -->
+      <div style="overflow-x:auto;">
+        <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,0.4);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;">Tipos de atividade</div>
+        <table style="width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed;">
+          <colgroup><col style="width:26%"><col style="width:17%"><col style="width:15%"><col style="width:15%"><col style="width:13%"><col style="width:14%"></colgroup>
+          <thead><tr style="border-bottom:0.5px solid rgba(255,255,255,0.12);">
+            <th style="padding:6px;text-align:left;color:rgba(255,255,255,0.4);font-weight:500;">Responsável</th>
+            <th style="padding:6px;text-align:right;color:#5DCAA5;font-weight:500;">WhatsApp</th>
+            <th style="padding:6px;text-align:right;color:#91DBE4;font-weight:500;">Ligação</th>
+            <th style="padding:6px;text-align:right;color:#EF9F27;font-weight:500;">Reunião</th>
+            <th style="padding:6px;text-align:right;color:rgba(255,255,255,0.4);font-weight:500;">Outros</th>
+            <th style="padding:6px;text-align:right;color:rgba(255,255,255,0.7);font-weight:500;">Total</th>
+          </tr></thead>
+          <tbody id="atv-owner-tipos"></tbody>
+        </table>
+      </div>
+      <!-- Status -->
+      <div style="overflow-x:auto;border-left:0.5px solid rgba(255,255,255,0.08);padding-left:12px;">
+        <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,0.4);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;">Status</div>
+        <table style="width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed;">
+          <colgroup><col style="width:26%"><col style="width:19%"><col style="width:18%"><col style="width:18%"><col style="width:19%"></colgroup>
+          <thead><tr style="border-bottom:0.5px solid rgba(255,255,255,0.12);">
+            <th style="padding:6px;text-align:left;color:rgba(255,255,255,0.4);font-weight:500;">Responsável</th>
+            <th style="padding:6px;text-align:right;color:#5DCAA5;font-weight:500;">Concluídas</th>
+            <th style="padding:6px;text-align:right;color:#EF9F27;font-weight:500;">Pendentes</th>
+            <th style="padding:6px;text-align:right;color:#F62642;font-weight:500;">Atrasadas</th>
+            <th style="padding:6px;text-align:right;color:rgba(255,255,255,0.7);font-weight:500;">Total</th>
+          </tr></thead>
+          <tbody id="atv-owner-status"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
+  <!-- Visão por tipo de última atividade -->
+  <div class="card" style="margin-bottom:1.5rem;">
+    <div class="card-header"><span class="card-title">Negócios por tipo de última atividade</span></div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:1.2rem;" id="atv-tipo-cards"></div>
+    <div id="atv-tipo-bars" style="display:flex;flex-direction:column;gap:8px;"></div>
+  </div>
+
   <!-- Lista de atividades -->
-  <div class="card">
+  <div class="card" style="margin-bottom:1.5rem;">
     <div class="card-header">
       <span class="card-title">Lista de atividades</span>
       <span id="atv-count-label" style="font-size:12px;color:rgba(255,255,255,0.4);white-space:nowrap;"></span>
     </div>
     <div id="atv-list"><p class="empty">Carregando atividades...</p></div>
-  </div>
-
-  <!-- Visão por tipo de última atividade -->
-  <div class="card" style="margin-top:1.5rem;">
-    <div class="card-header"><span class="card-title">Negócios por tipo de última atividade</span></div>
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:1.2rem;" id="atv-tipo-cards"></div>
-    <div id="atv-tipo-bars" style="display:flex;flex-direction:column;gap:8px;"></div>
   </div>
 
   <!-- Negócios em andamento sem atividades -->
@@ -1529,28 +1549,79 @@ function renderAtividades() {
   document.getElementById('atv-pending-pct').textContent = pendPct + '%';
   document.getElementById('atv-pending-bar').style.width = pendPct + '%';
 
-  // Tabela por responsável
+  // Tabelas por responsável — tipos e status
+  const TIPO_COLS = ['WhatsApp', 'Ligação', 'Reunião', 'Outros'];
+  const TIPO_CORES_MAP = {
+    'WhatsApp': '#5DCAA5', 'Ligação': '#91DBE4', 'Reunião': '#EF9F27', 'Outros': 'rgba(255,255,255,0.6)'
+  };
+  const TIPO_CORES_PCT = {
+    'WhatsApp': 'rgba(92,202,165,0.5)', 'Ligação': 'rgba(145,219,228,0.5)', 'Reunião': 'rgba(239,159,39,0.5)', 'Outros': 'rgba(255,255,255,0.25)'
+  };
+
+  // Usa todas as tasks (não só filtered) para os tipos — filtradas pelo responsável/status selecionado
+  const allTasksForOwner = atvTasksCache || baseTasks || [];
   const ownerMap = {};
-  filtered.forEach(t => {
+  allTasksForOwner.forEach(t => {
+    // respeita filtro de período global
+    const ref = t.dueDate || t.createdAt;
+    if (from && ref && new Date(ref) < from) return;
+    if (to && ref && new Date(ref) > to) return;
     const name = getTaskOwner(t) || 'Sem responsável';
-    if (!ownerMap[name]) ownerMap[name] = { total: 0, done: 0, pending: 0, overdue: 0 };
+    if (!ownerMap[name]) ownerMap[name] = { total: 0, done: 0, pending: 0, overdue: 0, tipos: { WhatsApp: 0, Ligação: 0, Reunião: 0, Outros: 0 } };
     ownerMap[name].total++;
+    const tipo = t.type || '';
+    if (tipo === 'WhatsApp') ownerMap[name].tipos.WhatsApp++;
+    else if (tipo === 'Ligação' || tipo.toLowerCase().includes('lig') || tipo.toLowerCase().includes('call') || tipo.toLowerCase().includes('phone')) ownerMap[name].tipos.Ligação++;
+    else if (tipo === 'Reunião' || tipo.toLowerCase().includes('reun') || tipo.toLowerCase().includes('meet')) ownerMap[name].tipos.Reunião++;
+    else ownerMap[name].tipos.Outros++;
     if (isDone(t)) ownerMap[name].done++; else ownerMap[name].pending++;
     if (isOverdue(t)) ownerMap[name].overdue++;
   });
-  const ownerRows = Object.entries(ownerMap).sort((a,b) => b[1].total - a[1].total).map(([name, s]) => {
-    const txPct = s.total > 0 ? Math.round((s.done / s.total) * 100) : 0;
-    const color = txPct >= 70 ? 'var(--success)' : txPct >= 40 ? 'var(--warning)' : 'var(--danger)';
+
+  const ownerEntries = Object.entries(ownerMap).sort((a,b) => b[1].total - a[1].total);
+  const EMPTY_ROW_TIPOS = '<tr><td colspan="6" class="empty" style="text-align:center;">Nenhum dado</td></tr>';
+  const EMPTY_ROW_STATUS = '<tr><td colspan="5" class="empty" style="text-align:center;">Nenhum dado</td></tr>';
+
+  const rowsTipos = ownerEntries.map(([name, s]) => {
+    const t = s.tipos;
+    const cols = TIPO_COLS.map(c => {
+      const v = t[c] || 0;
+      const pct = s.total > 0 ? Math.round((v / s.total) * 100) : 0;
+      return `<td style="padding:5px 6px 1px;text-align:right;color:${TIPO_CORES_MAP[c]};border-top:0.5px solid rgba(255,255,255,0.08);">${v}</td>
+              <td_pct style="padding:1px 6px 6px;text-align:right;font-size:10px;color:${TIPO_CORES_PCT[c]};">${pct}%</td_pct>`;
+    });
     return `<tr>
-      <td>${name}</td>
-      <td>${s.total}</td>
-      <td style="color:var(--success);">${s.done}</td>
-      <td style="color:var(--warning);">${s.pending}</td>
-      <td style="color:${s.overdue > 0 ? 'var(--danger)' : 'var(--muted)'};">${s.overdue}</td>
-      <td style="color:${color};font-weight:500;">${txPct}%<div style="height:3px;background:var(--bg);border-radius:2px;margin-top:3px;overflow:hidden;"><div style="height:100%;width:${txPct}%;background:${color};border-radius:2px;"></div></div></td>
+      <td rowspan="2" style="padding:6px;color:white;font-weight:500;vertical-align:middle;border-top:0.5px solid rgba(255,255,255,0.08);">${name}</td>
+      ${cols.map(c => c.split('
+')[0].replace('<td_pct', '<td').replace('</td_pct>', '</td>')).join('')}
+      <td rowspan="2" style="padding:6px;text-align:right;vertical-align:middle;color:white;font-weight:600;border-top:0.5px solid rgba(255,255,255,0.08);">${s.total}</td>
+    </tr>
+    <tr style="border-bottom:0.5px solid rgba(255,255,255,0.08);">
+      ${cols.map(c => c.split('
+')[1].trim().replace('<td_pct', '<td').replace('</td_pct>', '</td>')).join('')}
     </tr>`;
   }).join('');
-  document.getElementById('atv-owner-body').innerHTML = ownerRows || '<tr><td colspan="6" class="empty">Nenhum dado</td></tr>';
+
+  const rowsStatus = ownerEntries.map(([name, s]) => {
+    const donePct = s.total > 0 ? Math.round((s.done / s.total) * 100) : 0;
+    const pendPct2 = s.total > 0 ? Math.round((s.pending / s.total) * 100) : 0;
+    const latePct = s.total > 0 ? Math.round((s.overdue / s.total) * 100) : 0;
+    return `<tr>
+      <td rowspan="2" style="padding:6px;color:white;font-weight:500;vertical-align:middle;border-top:0.5px solid rgba(255,255,255,0.08);">${name}</td>
+      <td style="padding:5px 6px 1px;text-align:right;color:#5DCAA5;border-top:0.5px solid rgba(255,255,255,0.08);">${s.done}</td>
+      <td style="padding:5px 6px 1px;text-align:right;color:#EF9F27;border-top:0.5px solid rgba(255,255,255,0.08);">${s.pending}</td>
+      <td style="padding:5px 6px 1px;text-align:right;color:${s.overdue > 0 ? '#F62642' : 'rgba(255,255,255,0.4)'};border-top:0.5px solid rgba(255,255,255,0.08);">${s.overdue}</td>
+      <td rowspan="2" style="padding:6px;text-align:right;vertical-align:middle;color:white;font-weight:600;border-top:0.5px solid rgba(255,255,255,0.08);">${s.total}</td>
+    </tr>
+    <tr style="border-bottom:0.5px solid rgba(255,255,255,0.08);">
+      <td style="padding:1px 6px 6px;text-align:right;font-size:10px;color:rgba(92,202,165,0.5);">${donePct}%</td>
+      <td style="padding:1px 6px 6px;text-align:right;font-size:10px;color:rgba(239,159,39,0.5);">${pendPct2}%</td>
+      <td style="padding:1px 6px 6px;text-align:right;font-size:10px;color:rgba(246,38,66,0.5);">${latePct}%</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('atv-owner-tipos').innerHTML = rowsTipos || EMPTY_ROW_TIPOS;
+  document.getElementById('atv-owner-status').innerHTML = rowsStatus || EMPTY_ROW_STATUS;
 
   // Lista de atividades
   document.getElementById('atv-count-label').textContent = total + ' atividade' + (total !== 1 ? 's' : '');
