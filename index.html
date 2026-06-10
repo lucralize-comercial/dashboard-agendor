@@ -277,6 +277,24 @@
     <input type="date" id="dateTo" onchange="clearActive();applyFilter();">
   </div>
   <!-- analise-extra-filters moved into tab-analise -->
+  <!-- Filtros extras — visíveis só na aba Análise -->
+  <div id="analise-extra-filters" style="display:none;contents;">
+    <div class="filter-sep"></div>
+    <div class="filter-group">
+      <span class="filter-label">Canal:</span>
+      <select id="funil-canal-select" onchange="renderFunilEtapas()" style="font-size:12px;padding:5px 8px;border-radius:8px;border:0.5px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.08);color:white;font-family:'Poppins',sans-serif;min-width:130px;">
+        <option value="">Todos os canais</option>
+      </select>
+    </div>
+    <button onclick="abrirModalCanais()" style="background:rgba(255,255,255,0.07);color:white;border:0.5px solid rgba(255,255,255,0.15);font-size:12px;padding:5px 10px;border-radius:8px;display:inline-flex;align-items:center;gap:5px;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Configurar canais
+    </button>
+    <button onclick="abrirModalGerenciarCanais()" style="background:rgba(255,255,255,0.07);color:white;border:0.5px solid rgba(255,255,255,0.15);font-size:12px;padding:5px 10px;border-radius:8px;display:inline-flex;align-items:center;gap:5px;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      + Canal
+    </button>
+  </div>
   <!-- Filtros extras — visíveis só na aba Atividades -->
   <div id="atv-extra-filters" style="display:none;contents;">
     <div class="filter-sep"></div>
@@ -397,41 +415,6 @@
 
 <!-- ===== ABA 2: ANÁLISE DE CONVERSÃO ===== -->
 <div id="tab-analise" class="tab-content">
-
-  <!-- Filtros do funil de etapas — próprios desta aba -->
-  <div class="filters" style="margin-bottom:1.5rem;">
-    <div class="filter-group">
-      <span class="filter-label">Funil:</span>
-      <select id="funil-etapas-select" onchange="renderFunilEtapas()" style="font-size:12px;padding:5px 8px;border-radius:8px;border:0.5px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.08);color:white;font-family:'Poppins',sans-serif;min-width:160px;">
-        <option value="">Selecione um funil...</option>
-      </select>
-    </div>
-    <div class="filter-sep"></div>
-    <div class="filter-group">
-      <span class="filter-label">Canal:</span>
-      <select id="funil-canal-select" onchange="renderFunilEtapas()" style="font-size:12px;padding:5px 8px;border-radius:8px;border:0.5px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.08);color:white;font-family:'Poppins',sans-serif;min-width:120px;">
-        <option value="">Todos os canais</option>
-      </select>
-    </div>
-    <div class="filter-sep"></div>
-    <div class="filter-group">
-      <span class="filter-label">Início do negócio:</span>
-      <div class="date-range">
-        <input type="date" id="funil-date-from" onchange="renderFunilEtapas()" style="padding:5px 8px;border-radius:8px;border:0.5px solid rgba(255,255,255,0.15);font-size:12px;font-family:'Poppins',sans-serif;background:rgba(255,255,255,0.08);color:white;color-scheme:dark;">
-        <span class="date-sep">→</span>
-        <input type="date" id="funil-date-to" onchange="renderFunilEtapas()" style="padding:5px 8px;border-radius:8px;border:0.5px solid rgba(255,255,255,0.15);font-size:12px;font-family:'Poppins',sans-serif;background:rgba(255,255,255,0.08);color:white;color-scheme:dark;">
-      </div>
-    </div>
-    <div class="filter-sep"></div>
-    <button onclick="abrirModalCanais()" style="background:rgba(255,255,255,0.07);color:white;border:0.5px solid rgba(255,255,255,0.15);font-size:12px;padding:5px 12px;border-radius:8px;display:inline-flex;align-items:center;gap:5px;">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-      Configurar canais
-    </button>
-    <button onclick="abrirModalGerenciarCanais()" style="background:rgba(255,255,255,0.07);color:white;border:0.5px solid rgba(255,255,255,0.15);font-size:12px;padding:5px 12px;border-radius:8px;display:inline-flex;align-items:center;gap:5px;">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      + Canal
-    </button>
-  </div>
 
   <!-- Funil de etapas -->
   <div class="card" style="margin-bottom:1.5rem;">
@@ -920,6 +903,8 @@ function switchTab(id, btn) {
   // Mostrar filtros extras por aba
   const atvExtra = document.getElementById('atv-extra-filters');
   if (atvExtra) atvExtra.style.display = id === 'atividades' ? 'contents' : 'none';
+  const analiseExtra = document.getElementById('analise-extra-filters');
+  if (analiseExtra) analiseExtra.style.display = id === 'analise' ? 'contents' : 'none';
 
   if (id === 'contratos') fetchProductsForDeals(baseDeals).then(() => renderContratos());
   if (id === 'analise') initFunilEtapas();
@@ -1087,6 +1072,8 @@ function applyFilter() {
   renderLossReasons(); renderOwners(); renderDeals(); renderAnalise(); renderAcompanhamento(); renderContratos();
   // Atualiza atividades com novo período global
   if (atvTasksCache) renderAtividades();
+  // Atualiza funil de etapas se aba analise estiver ativa
+  if (document.getElementById('tab-analise')?.classList.contains('active')) renderFunilEtapas();
   document.getElementById('infoMsg').textContent='Mostrando '+filteredDeals.length.toLocaleString('pt-BR')+' de '+baseDeals.length.toLocaleString('pt-BR')+' negócios';
   document.getElementById('infoMsg').style.display='block';
 }
@@ -1270,32 +1257,40 @@ function atualizarSelectCanais() {
     (disponiveis.length ? disponiveis : canais).map(c => `<option value="${c}" ${c===cur?'selected':''}>${c}</option>`).join('');
 }
 function initFunilEtapas() {
-  const sel = document.getElementById('funil-etapas-select');
-  if (!sel) return;
-  const funis = [...new Set(baseDeals.map(d => d.dealStage?.funnel?.name).filter(Boolean))].sort();
-  const DEFAULT_FUNIL = 'Funil Comercial';
-  sel.innerHTML = '<option value="">Selecione um funil...</option>' +
-    funis.map(f => `<option value="${f}" ${f===DEFAULT_FUNIL?'selected':''}>${f}</option>`).join('');
   atualizarSelectCanais();
-  if (funis.includes(DEFAULT_FUNIL)) renderFunilEtapas();
+  renderFunilEtapas();
 }
 
 // ===== ALTERAÇÃO 3: Funil de etapas — sem % e setas entre barras =====
 function renderFunilEtapas() {
-  const sel = document.getElementById('funil-etapas-select');
   const body = document.getElementById('funil-etapas-body');
-  const funilName = sel?.value;
   const canalFiltro = document.getElementById('funil-canal-select')?.value || '';
-  const dateFrom = document.getElementById('funil-date-from')?.value || '';
-  const dateTo = document.getElementById('funil-date-to')?.value || '';
+
+  // Usa funil e período do filtro global
+  const funisSelecionados = getSelectedFunnels();
+  const dateFrom = document.getElementById('dateFrom')?.value || '';
+  const dateTo = document.getElementById('dateTo')?.value || '';
+
+  // Funil único: se só 1 selecionado usa ele, senão pega o Funil Comercial ou o primeiro
+  let funilName = '';
+  if (funisSelecionados.length === 1) {
+    funilName = funisSelecionados[0];
+  } else {
+    const pref = funisSelecionados.find(f => f === 'Funil Comercial') || funisSelecionados[0] || '';
+    funilName = pref;
+  }
+
+  // Atualiza label do card
+  const periodTag = document.getElementById('funil-period-tag');
+  if (periodTag && funilName) periodTag.textContent = funilName;
 
   if (!funilName) {
-    body.innerHTML = '<p class="empty" style="padding:1.5rem;">Selecione um funil para visualizar as etapas.</p>';
+    body.innerHTML = '<p class="empty" style="padding:1.5rem;">Selecione um funil no filtro global para visualizar as etapas.</p>';
     return;
   }
 
   const map = loadCanalMap();
-  const tsFrom = dateFrom ? new Date(dateFrom).getTime() : null;
+  const tsFrom = dateFrom ? new Date(dateFrom + 'T00:00:00').getTime() : null;
   const tsTo = dateTo ? new Date(dateTo + 'T23:59:59').getTime() : null;
 
   const dealsDoFunil = baseDeals.filter(d => {
@@ -1305,7 +1300,8 @@ function renderFunilEtapas() {
       if ((map[origem] || '') !== canalFiltro) return false;
     }
     if (tsFrom || tsTo) {
-      const start = d.startTime ? new Date(d.startTime).getTime() : null;
+      const startVal = d.startTime || d.createdAt;
+      const start = startVal ? new Date(startVal).getTime() : null;
       if (!start) return false;
       if (tsFrom && start < tsFrom) return false;
       if (tsTo && start > tsTo) return false;
