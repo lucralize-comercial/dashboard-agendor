@@ -1329,24 +1329,39 @@ function renderFunilEtapas() {
   const nGanhos = ganhos.length;
   const barHGanhos = Math.max(12, Math.round((nGanhos / maxCount) * 100));
 
-  // ALTERAÇÃO: só barras + nome + quantidade, sem setas/% entre elas
+  // Barras + nome + quantidade + percentual sobre total
+  const totalDeals = dealsDoFunil.length || 1;
   let html = '';
   etapas.forEach((stage) => {
     const barH = Math.max(12, Math.round((stage.count / maxCount) * 100));
-    html += `<div style="display:flex;flex-direction:column;align-items:center;flex:1;min-width:90px;padding:0 4px;">
-      <span style="font-size:11px;font-weight:500;color:#91DBE4;text-align:center;margin-bottom:4px;padding:0 4px;">${stage.name}</span>
-      <span style="font-size:14px;font-weight:600;color:white;margin-bottom:6px;">${stage.count}</span>
-      <div style="height:${barH}px;width:48px;background:#534AB7;border-radius:4px 4px 0 0;"></div>
-    </div>`;
+    const pctStage = Math.round((stage.count / totalDeals) * 100);
+    html += '<div style="display:flex;flex-direction:column;align-items:center;flex:1;min-width:90px;padding:0 4px;">'
+      + '<span style="font-size:11px;font-weight:500;color:#91DBE4;text-align:center;margin-bottom:4px;padding:0 4px;">'+stage.name+'</span>'
+      + '<div style="display:flex;align-items:baseline;gap:5px;margin-bottom:6px;">'
+      +   '<span style="font-size:14px;font-weight:600;color:white;">'+stage.count+'</span>'
+      +   '<span style="font-size:10px;color:rgba(255,255,255,0.35);">'+pctStage+'%</span>'
+      + '</div>'
+      + '<div style="height:'+barH+'px;width:48px;background:#534AB7;border-radius:4px 4px 0 0;"></div>'
+      + '</div>';
   });
 
-  // Etapa Ganhos no final (separada visualmente)
-  html += `<div style="width:1px;background:rgba(255,255,255,0.1);align-self:stretch;margin:0 8px;flex-shrink:0;"></div>
-  <div style="display:flex;flex-direction:column;align-items:center;flex:1;min-width:90px;padding:0 4px;">
-    <span style="font-size:11px;font-weight:500;color:#5DCAA5;text-align:center;margin-bottom:4px;">Ganhos</span>
-    <span style="font-size:14px;font-weight:600;color:#5DCAA5;margin-bottom:6px;">${nGanhos}</span>
-    <div style="height:${barHGanhos}px;width:48px;background:#0C7488;border-radius:4px 4px 0 0;"></div>
-  </div>`;
+  // Etapa Ganhos + total de leads gerados (separados)
+  const pctGanhos = Math.round((nGanhos / totalDeals) * 100);
+  html += '<div style="width:1px;background:rgba(255,255,255,0.1);align-self:stretch;margin:0 8px;flex-shrink:0;"></div>'
+    + '<div style="display:flex;flex-direction:column;align-items:center;flex:1;min-width:80px;padding:0 4px;">'
+    +   '<span style="font-size:11px;font-weight:500;color:#5DCAA5;text-align:center;margin-bottom:4px;">Ganhos</span>'
+    +   '<div style="display:flex;align-items:baseline;gap:5px;margin-bottom:6px;">'
+    +     '<span style="font-size:14px;font-weight:600;color:#5DCAA5;">'+nGanhos+'</span>'
+    +     '<span style="font-size:10px;color:rgba(92,202,165,0.5);">'+pctGanhos+'%</span>'
+    +   '</div>'
+    +   '<div style="height:'+barHGanhos+'px;width:48px;background:#0C7488;border-radius:4px 4px 0 0;"></div>'
+    + '</div>'
+    + '<div style="width:1px;background:rgba(255,255,255,0.1);align-self:stretch;margin:0 8px;flex-shrink:0;"></div>'
+    + '<div style="display:flex;flex-direction:column;align-items:center;justify-content:center;min-width:80px;padding:0 4px;">'
+    +   '<span style="font-size:10px;color:rgba(255,255,255,0.4);text-align:center;margin-bottom:6px;text-transform:uppercase;letter-spacing:.4px;">Total gerados</span>'
+    +   '<span style="font-size:26px;font-weight:600;color:white;line-height:1;">'+totalDeals.toLocaleString('pt-BR')+'</span>'
+    +   '<span style="font-size:10px;color:rgba(255,255,255,0.35);margin-top:3px;">no período</span>'
+    + '</div>';
 
   body.innerHTML = html;
 }
