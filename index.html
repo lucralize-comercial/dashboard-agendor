@@ -670,6 +670,23 @@
     </div>
     <div id="atv-list"><p class="empty">Carregando atividades...</p></div>
   </div>
+
+  <!-- Negócios em andamento sem atividades -->
+  <div class="card" style="margin-top:1.5rem;">
+    <div class="card-header" style="flex-wrap:wrap;gap:8px;">
+      <span class="card-title">⚠ Negócios em andamento sem atividades</span>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+        <select id="atv-sem-owner" onchange="renderSemAtividades()" style="font-size:12px;padding:5px 8px;border-radius:8px;border:1px solid rgba(14,20,40,0.1);font-family:'Poppins',sans-serif;">
+          <option value="all">Todos responsáveis</option>
+        </select>
+        <select id="atv-sem-funil" onchange="renderSemAtividades()" style="font-size:12px;padding:5px 8px;border-radius:8px;border:1px solid rgba(14,20,40,0.1);font-family:'Poppins',sans-serif;">
+          <option value="all">Todos os funis</option>
+        </select>
+        <span id="atv-sem-count" style="font-size:12px;color:var(--muted);"></span>
+      </div>
+    </div>
+    <div id="atv-sem-list"><p class="empty">Carregando...</p></div>
+  </div>
 </div>
 
 <!-- ===== MODAL SENHA COMISSÕES ===== -->
@@ -1611,6 +1628,87 @@ function renderAtividades() {
 
   if (filtered.length > 50) {
     listEl.innerHTML += `<p style="font-size:12px;color:var(--muted);padding:8px 0;text-align:center;">Mostrando 50 de ${filtered.length} atividades. Use os filtros para refinar.</p>`;
+  }
+
+  renderSemAtividades();
+}
+
+// ===== NEGÓCIOS SEM ATIVIDADES =====
+function renderSemAtividades() {
+  const tasks = atvTasksCache || baseTasks || [];
+  const ownerFilter = document.getElementById('atv-sem-owner')?.value || 'all';
+  const funilFilter = document.getElementById('atv-sem-funil')?.value || 'all';
+
+  // IDs de deals que têm pelo menos 1 task
+  const dealIdsComTask = new Set(tasks.map(t => t.deal?.id).filter(Boolean));
+
+  // Negócios em andamento dos filtros globais ativos
+  let candidatos = filteredDeals.filter(d => d.dealStatus?.id === 1);
+
+  // Popula selects
+  const semOwnerSel = document.getElementById('atv-sem-owner');
+  const semFunilSel = document.getElementById('atv-sem-funil');
+  if (semOwnerSel) {
+    const cur = semOwnerSel.value;
+    const owners = [...new Set(candidatos.map(d => d.owner?.name || 'Sem responsável'))].sort();
+    semOwnerSel.innerHTML = '<option value="all">Todos responsáveis</option>' + owners.map(o => `<option value="${o}" ${o===cur?'selected':''}>${o}</option>`).join('');
+  }
+  if (semFunilSel) {
+    const cur = semFunilSel.value;
+    const funis = [...new Set(candidatos.map(d => d.dealStage?.funnel?.name).filter(Boolean))].sort();
+    semFunilSel.innerHTML = '<option value="all">Todos os funis</option>' + funis.map(f => `<option value="${f}" ${f===cur?'selected':''}>${f}</option>`).join('');
+  }
+
+  // Filtra sem atividade
+  let semAtividade = candidatos.filter(d => !dealIdsComTask.has(d.id));
+
+  // Aplica filtros de owner e funil
+  if (ownerFilter !== 'all') semAtividade = semAtividade.filter(d => (d.owner?.name || 'Sem responsável') === ownerFilter);
+  if (funilFilter !== 'all') semAtividade = semAtividade.filter(d => d.dealStage?.funnel?.name === funilFilter);
+
+  // Ordena por data de criação (mais antigos primeiro — maior risco)
+  semAtividade.sort((a, b) => new Date(a.startTime || a.createdAt) - new Date(b.startTime || b.createdAt));
+
+  const countEl = document.getElementById('atv-sem-count');
+  if (countEl) countEl.textContent = semAtividade.length + ' negócio' + (semAtividade.length !== 1 ? 's' : '');
+
+  const el = document.getElementById('atv-sem-list');
+  if (!el) return;
+
+  if (!tasks.length) {
+    el.innerHTML = '<p class="empty">Carregue as atividades primeiro clicando em "Recarregar".</p>';
+    return;
+  }
+  if (!semAtividade.length) {
+    el.innerHTML = '<p class="empty" style="color:var(--success);">✓ Todos os negócios em andamento têm pelo menos uma atividade.</p>';
+    return;
+  }
+
+  const hoje = new Date();
+  el.innerHTML = semAtividade.slice(0, 50).map(d => {
+    const name = d.title || d.person?.name || d.organization?.name || '—';
+    const owner = d.owner?.name || '—';
+    const funil = d.dealStage?.funnel?.name || '—';
+    const etapa = d.dealStage?.name || '—';
+    const origem = d.customFields?.origem_do_negocio?.value || '';
+    const iniDate = new Date(d.startTime || d.createdAt);
+    const dias = Math.round((hoje - iniDate) / (1000 * 60 * 60 * 24));
+    const diasColor = dias >= 30 ? 'var(--danger)' : dias >= 14 ? 'var(--warning)' : 'var(--muted)';
+    return `<div class="row">
+      <div style="min-width:0;flex:1;">
+        <div class="row-name">${name}</div>
+        <div class="row-sub">${etapa} · ${owner}${origem ? ' · ' + origem : ''}</div>
+        <div style="font-size:11px;color:var(--muted);margin-top:2px;">${funil}</div>
+      </div>
+      <div class="row-right" style="text-align:right;">
+        <div style="font-size:13px;font-weight:600;color:${diasColor};">${dias}d sem atividade</div>
+        <div style="font-size:11px;color:var(--muted);">${fmt(d.value)}</div>
+      </div>
+    </div>`;
+  }).join('');
+
+  if (semAtividade.length > 50) {
+    el.innerHTML += `<p style="font-size:12px;color:var(--muted);padding:8px 0;text-align:center;">Mostrando 50 de ${semAtividade.length}. Use os filtros para refinar.</p>`;
   }
 }
 
