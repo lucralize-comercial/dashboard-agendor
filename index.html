@@ -276,28 +276,7 @@
     <span class="date-sep">→</span>
     <input type="date" id="dateTo" onchange="clearActive();applyFilter();">
   </div>
-  <!-- Filtros extras — visíveis só na aba Análise de Conversão -->
-  <div id="analise-extra-filters" style="display:none;contents;">
-    <div class="filter-sep"></div>
-    <select id="funil-etapas-select" onchange="renderFunilEtapas()" style="font-size:12px;padding:5px 8px;border-radius:8px;border:0.5px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.08);color:white;font-family:'Poppins',sans-serif;min-width:160px;">
-      <option value="">Selecione um funil...</option>
-    </select>
-    <select id="funil-canal-select" onchange="renderFunilEtapas()" style="font-size:12px;padding:5px 8px;border-radius:8px;border:0.5px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.08);color:white;font-family:'Poppins',sans-serif;min-width:120px;">
-      <option value="">Todos os canais</option>
-    </select>
-    <input type="date" id="funil-date-from" onchange="renderFunilEtapas()" style="padding:5px 8px;border-radius:8px;border:0.5px solid rgba(255,255,255,0.15);font-size:12px;font-family:'Poppins',sans-serif;background:rgba(255,255,255,0.08);color:white;color-scheme:dark;">
-    <span class="date-sep">→</span>
-    <input type="date" id="funil-date-to" onchange="renderFunilEtapas()" style="padding:5px 8px;border-radius:8px;border:0.5px solid rgba(255,255,255,0.15);font-size:12px;font-family:'Poppins',sans-serif;background:rgba(255,255,255,0.08);color:white;color-scheme:dark;">
-    <div class="filter-sep"></div>
-    <button onclick="abrirModalCanais()" style="background:rgba(255,255,255,0.07);color:white;border:0.5px solid rgba(255,255,255,0.15);font-size:12px;padding:5px 12px;border-radius:8px;display:inline-flex;align-items:center;gap:5px;">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-      Canais
-    </button>
-    <button onclick="abrirModalGerenciarCanais()" style="background:rgba(255,255,255,0.07);color:white;border:0.5px solid rgba(255,255,255,0.15);font-size:12px;padding:5px 12px;border-radius:8px;display:inline-flex;align-items:center;gap:5px;">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-      + Canal
-    </button>
-  </div>
+  <!-- analise-extra-filters moved into tab-analise -->
   <!-- Filtros extras — visíveis só na aba Atividades -->
   <div id="atv-extra-filters" style="display:none;contents;">
     <div class="filter-sep"></div>
@@ -419,6 +398,41 @@
 <!-- ===== ABA 2: ANÁLISE DE CONVERSÃO ===== -->
 <div id="tab-analise" class="tab-content">
 
+  <!-- Filtros do funil de etapas — próprios desta aba -->
+  <div class="filters" style="margin-bottom:1.5rem;">
+    <div class="filter-group">
+      <span class="filter-label">Funil:</span>
+      <select id="funil-etapas-select" onchange="renderFunilEtapas()" style="font-size:12px;padding:5px 8px;border-radius:8px;border:0.5px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.08);color:white;font-family:'Poppins',sans-serif;min-width:160px;">
+        <option value="">Selecione um funil...</option>
+      </select>
+    </div>
+    <div class="filter-sep"></div>
+    <div class="filter-group">
+      <span class="filter-label">Canal:</span>
+      <select id="funil-canal-select" onchange="renderFunilEtapas()" style="font-size:12px;padding:5px 8px;border-radius:8px;border:0.5px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.08);color:white;font-family:'Poppins',sans-serif;min-width:120px;">
+        <option value="">Todos os canais</option>
+      </select>
+    </div>
+    <div class="filter-sep"></div>
+    <div class="filter-group">
+      <span class="filter-label">Início do negócio:</span>
+      <div class="date-range">
+        <input type="date" id="funil-date-from" onchange="renderFunilEtapas()" style="padding:5px 8px;border-radius:8px;border:0.5px solid rgba(255,255,255,0.15);font-size:12px;font-family:'Poppins',sans-serif;background:rgba(255,255,255,0.08);color:white;color-scheme:dark;">
+        <span class="date-sep">→</span>
+        <input type="date" id="funil-date-to" onchange="renderFunilEtapas()" style="padding:5px 8px;border-radius:8px;border:0.5px solid rgba(255,255,255,0.15);font-size:12px;font-family:'Poppins',sans-serif;background:rgba(255,255,255,0.08);color:white;color-scheme:dark;">
+      </div>
+    </div>
+    <div class="filter-sep"></div>
+    <button onclick="abrirModalCanais()" style="background:rgba(255,255,255,0.07);color:white;border:0.5px solid rgba(255,255,255,0.15);font-size:12px;padding:5px 12px;border-radius:8px;display:inline-flex;align-items:center;gap:5px;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Configurar canais
+    </button>
+    <button onclick="abrirModalGerenciarCanais()" style="background:rgba(255,255,255,0.07);color:white;border:0.5px solid rgba(255,255,255,0.15);font-size:12px;padding:5px 12px;border-radius:8px;display:inline-flex;align-items:center;gap:5px;">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      + Canal
+    </button>
+  </div>
+
   <!-- Funil de etapas -->
   <div class="card" style="margin-bottom:1.5rem;">
     <div class="card-header">
@@ -478,9 +492,30 @@
 
   <div class="metrics" style="margin-bottom:1.5rem;">
     <div class="metric-card"><div class="metric-label">Origens únicas</div><div class="metric-value" id="a2-origens">—</div></div>
-    <div class="metric-card"><div class="metric-label">Melhor conversão</div><div class="metric-value success" id="a2-bestConv" style="font-size:15px;margin-top:4px;">—</div><div class="metric-sub" id="a2-bestConvSub">—</div></div>
-    <div class="metric-card"><div class="metric-label">Maior volume</div><div class="metric-value info" id="a2-bestVol" style="font-size:15px;margin-top:4px;">—</div><div class="metric-sub" id="a2-bestVolSub">—</div></div>
-    <div class="metric-card"><div class="metric-label">Maior perda</div><div class="metric-value danger" id="a2-worstLoss" style="font-size:15px;margin-top:4px;">—</div><div class="metric-sub" id="a2-worstLossSub">—</div></div>
+    <div class="metric-card">
+      <div class="metric-label">Melhor conversão</div>
+      <div class="metric-value success" id="a2-bestConv" style="font-size:15px;margin-top:4px;">—</div>
+      <div style="display:flex;align-items:baseline;gap:8px;margin-top:4px;">
+        <span style="font-size:20px;font-weight:600;color:#5DCAA5;" id="a2-bestConvPct">—</span>
+        <span style="font-size:11px;color:rgba(255,255,255,0.4);" id="a2-bestConvSub">—</span>
+      </div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Maior volume</div>
+      <div class="metric-value info" id="a2-bestVol" style="font-size:15px;margin-top:4px;">—</div>
+      <div style="display:flex;align-items:baseline;gap:8px;margin-top:4px;">
+        <span style="font-size:20px;font-weight:600;color:#91DBE4;" id="a2-bestVolNum">—</span>
+        <span style="font-size:11px;color:rgba(255,255,255,0.4);" id="a2-bestVolSub">leads</span>
+      </div>
+    </div>
+    <div class="metric-card">
+      <div class="metric-label">Maior perda</div>
+      <div class="metric-value danger" id="a2-worstLoss" style="font-size:15px;margin-top:4px;">—</div>
+      <div style="display:flex;align-items:baseline;gap:8px;margin-top:4px;">
+        <span style="font-size:20px;font-weight:600;color:#F62642;" id="a2-worstLossPct">—</span>
+        <span style="font-size:11px;color:rgba(255,255,255,0.4);" id="a2-worstLossSub">—</span>
+      </div>
+    </div>
   </div>
 
   <div class="card">
@@ -885,8 +920,7 @@ function switchTab(id, btn) {
   // Mostrar filtros extras por aba
   const atvExtra = document.getElementById('atv-extra-filters');
   if (atvExtra) atvExtra.style.display = id === 'atividades' ? 'contents' : 'none';
-  const analiseExtra = document.getElementById('analise-extra-filters');
-  if (analiseExtra) analiseExtra.style.display = id === 'analise' ? 'contents' : 'none';
+
   if (id === 'contratos') fetchProductsForDeals(baseDeals).then(() => renderContratos());
   if (id === 'analise') initFunilEtapas();
   if (id === 'atividades') renderAtividades();
@@ -1329,11 +1363,25 @@ function renderAnalise() {
   const oTotal=origemSorted.reduce((acc,[,s])=>({total:acc.total+s.total,open:acc.open+s.open,won:acc.won+s.won,lost:acc.lost+s.lost,value:acc.value+s.value}),{total:0,open:0,won:0,lost:0,value:0});
   document.getElementById('a2-origens').textContent=origemSorted.length;
   const bestConv=[...origemSorted].filter(([,s])=>s.won+s.lost>=5).sort((a,b)=>pct(b[1].won,b[1].won+b[1].lost)-pct(a[1].won,a[1].won+a[1].lost))[0];
-  if(bestConv){document.getElementById('a2-bestConv').textContent=bestConv[0].length>20?bestConv[0].substring(0,18)+'…':bestConv[0];document.getElementById('a2-bestConvSub').textContent=pct(bestConv[1].won,bestConv[1].won+bestConv[1].lost)+'% conversão';}
+  if(bestConv){
+    const bcPct=pct(bestConv[1].won,bestConv[1].won+bestConv[1].lost);
+    document.getElementById('a2-bestConv').textContent=bestConv[0].length>20?bestConv[0].substring(0,18)+'…':bestConv[0];
+    document.getElementById('a2-bestConvPct').textContent=bcPct+'%';
+    document.getElementById('a2-bestConvSub').textContent=bestConv[1].won+' ganhos de '+(bestConv[1].won+bestConv[1].lost);
+  }
   const bestVol=origemSorted[0];
-  if(bestVol){document.getElementById('a2-bestVol').textContent=bestVol[0].length>20?bestVol[0].substring(0,18)+'…':bestVol[0];document.getElementById('a2-bestVolSub').textContent=bestVol[1].total.toLocaleString('pt-BR')+' leads';}
+  if(bestVol){
+    document.getElementById('a2-bestVol').textContent=bestVol[0].length>20?bestVol[0].substring(0,18)+'…':bestVol[0];
+    document.getElementById('a2-bestVolNum').textContent=bestVol[1].total.toLocaleString('pt-BR');
+    document.getElementById('a2-bestVolSub').textContent='leads · '+pct(bestVol[1].won,bestVol[1].won+bestVol[1].lost)+'% conv.';
+  }
   const worstLoss=[...origemSorted].filter(([,s])=>s.total>=5).sort((a,b)=>pct(b[1].lost,b[1].total)-pct(a[1].lost,a[1].total))[0];
-  if(worstLoss){document.getElementById('a2-worstLoss').textContent=worstLoss[0].length>20?worstLoss[0].substring(0,18)+'…':worstLoss[0];document.getElementById('a2-worstLossSub').textContent=pct(worstLoss[1].lost,worstLoss[1].total)+'% perda';}
+  if(worstLoss){
+    const wlPct=pct(worstLoss[1].lost,worstLoss[1].total);
+    document.getElementById('a2-worstLoss').textContent=worstLoss[0].length>20?worstLoss[0].substring(0,18)+'…':worstLoss[0];
+    document.getElementById('a2-worstLossPct').textContent=wlPct+'%';
+    document.getElementById('a2-worstLossSub').textContent='perda · '+worstLoss[1].lost+' de '+worstLoss[1].total;
+  }
   const fromStr=document.getElementById('dateFrom').value, toStr=document.getElementById('dateTo').value;
   const diasPeriodo=(fromStr&&toStr)?Math.max(1,Math.round((new Date(toStr+'T23:59:59')-new Date(fromStr+'T00:00:00'))/(1000*60*60*24))):30;
   document.getElementById('origensTableBody').innerHTML=buildStdTable(origemSorted.slice(0,20),oTotal,diasPeriodo);
