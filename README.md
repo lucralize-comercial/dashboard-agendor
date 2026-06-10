@@ -1,164 +1,261 @@
-# Dashboard Lucralize · CRM (Agendor)
+# Dashboard Lucralize · Vendas
 
-Dashboard comercial interno da Lucralize Contabilidade, integrado ao Agendor CRM via proxy Railway.
-
-**URL de produção:** [lucralize-comercial.github.io/dashboard-agendor](https://lucralize-comercial.github.io/dashboard-agendor/)
+Dashboard comercial da Lucralize integrado ao CRM Agendor. Arquivo único HTML/CSS/JS, hospedado via GitHub Pages.
 
 ---
 
-## Stack
+## Acesso
 
-| Camada | Tecnologia |
-|--------|-----------|
-| Frontend | HTML + CSS + JS puro (arquivo único `index.html`) |
-| Gráficos | Chart.js 4.4.1 via CDN |
-| Fontes | Comfortaa, Poppins, DM Mono (Google Fonts) |
-| Hospedagem | GitHub Pages — repositório `lucralize-comercial/dashboard-agendor` |
-| Proxy API | Railway — `agendo-proxy-production.up.railway.app` |
-| Proxy código | `ronaldocassimiro/agendo-proxy` (`app.py`) |
+| Ambiente | URL |
+|---|---|
+| Dashboard | https://lucralize-comercial.github.io/dashboard-agendor/ |
+| Proxy Railway | https://agendo-proxy-production.up.railway.app |
 
 ---
 
-## Proxy Railway
+## Arquitetura
 
-O proxy centraliza o acesso à API do Agendor e mantém um cache em memória dos negócios.
+```
+GitHub Pages          Railway (Proxy Python)       Agendor API
+index.html     →      agendo-proxy (app.py)   →    api.agendor.com.br/v3
+               ←      /deals, /tasks          ←
+```
 
-| Endpoint | Método | Descrição |
-|----------|--------|-----------|
-| `/` | GET | Status do proxy: negócios em cache e timestamp |
-| `/deals` | GET | Retorna todos os negócios com `customFields` e produtos |
-| `/refresh` | POST | Força atualização do cache |
+O dashboard não chama a API do Agendor diretamente — todas as requisições passam pelo proxy Railway, que faz o cache dos dados e serve ao frontend.
 
-**Cache:** atualizado automaticamente a cada 1 hora. Os negócios são buscados com `order_by: updatedAt, order_dir: desc`, 100 por página.
+### Repositórios
 
-**Campo de data de ganho:** `endTime` (preenchido manualmente no Agendor) como principal, `wonAt` como fallback.
-
----
-
-## Abas do dashboard
-
-### 1. Visão Geral
-- Métricas do período: total de negócios, valor total, taxa de conversão, ticket médio, em andamento, ganhos, perdidos
-- Gráfico de evolução mensal (últimos 12 meses)
-- Leads por semana e por mês por origem
-- Gráfico por etapa do funil e por origem
-- Motivos de perda, responsáveis e lista de negócios
-
-### 2. Análise de Conversão
-- **Funil de conversão por etapa** — select de funil (dados do cache), filtro de canal, filtro de data por início do negócio, % de avanço e quantidade que avançou entre etapas
-- Cards: origens únicas, melhor conversão, maior volume, maior perda
-- Tabelas: desempenho por origem e por funil (total, média/dia, ganhos, perdidos, % conversão, % perda, ticket médio, valor ganho)
-- Gráficos: top origens por volume e por conversão
-- Cruzamento Origem × Responsável
-- Responsável por conversão e principais motivos de perda
-
-### 3. Acompanhamento
-- Cards no topo: leads parados, valor em pipeline, tempo médio ganho, tempo médio perda
-- Leads parados em andamento (padrão: sem atualização há mais de **7 dias**, configurável)
-- Pipeline por responsável
-- Tempo médio por funil
-
-### 4. Contratos Ganhos
-- Tabela de negócios ganhos no período com produto, valor, responsável e data
-
-### 5. 💰 Comissões
-- Protegido por senha: `GestaoComercial` (expira em 2h)
-- Ciclo: dia 26 do mês anterior ao dia 25 do mês atual
+| Repositório | Conteúdo |
+|---|---|
+| `lucralize-comercial/dashboard-agendor` | Este arquivo (`index.html`) |
+| `lucralize-comercial/agendo-proxy` | Proxy Python (`app.py`) |
 
 ---
 
-## Regras de Comissão
+## Proxy — Endpoints
+
+| Método | Endpoint | Descrição |
+|---|---|---|
+| `GET` | `/` | Status do proxy e metadados do cache |
+| `GET` | `/deals` | Cache de negócios do Agendor |
+| `POST` | `/refresh` | Dispara atualização do cache de deals |
+| `POST` | `/refresh-tasks` | Atualiza só o cache de tasks (sem refazer deals) |
+| `GET` | `/tasks` | Cache de tarefas (últimos 90 dias) |
+| `GET` | `/history-cache` | Histórico de movimentação de etapas (Funil Comercial, últimos 30 dias) |
+
+**Observação:** O endpoint `/deals/{id}/history` da API v3 do Agendor retorna 404 — histórico de movimentação de etapas não está disponível na API pública. Os `events` no history-cache ficam sempre vazios. Consulta aberta ao suporte do Agendor sobre endpoint não documentado.
+
+O cache de tasks é populado automaticamente ~10s após o fetch de deals terminar, e também roda a cada 2h de forma independente.
+
+---
+
+## Estrutura do Dashboard
+
+### Abas
+
+| Aba | Descrição |
+|---|---|
+| **Visão Geral** | Métricas consolidadas, evolução mensal, gráficos por etapa e origem |
+| **Análise de Conversão** | Funil de etapas por canal, desempenho por origem e funil, cruzamento Origem × Responsável |
+| **Acompanhamento** | Leads parados, pipeline por responsável, tempo médio |
+| **Contratos Ganhos** | Listagem de negócios ganhos no período |
+| **📋 Atividades** | Produtividade do time por tipo de atividade e status |
+| **💰 Comissões** | Cálculo de comissões por responsável — acesso por senha |
+
+### Filtro Global
+
+A barra de filtros no topo é compartilhada por todas as abas:
+
+- **Funil** — seleção múltipla com siglas (COM, PAT, LGL, etc.)
+- **Período** — atalhos 7d / 30d / 90d / 1 ano / Todos + datas manuais
+- **Análise de Conversão** — exibe também: Canal, Configurar canais, Adicionar/Remover canal
+- **Atividades** — exibe também: Responsável, Status, Busca, Recarregar
+
+---
+
+## Aba Análise de Conversão
+
+### Funil de etapas
+
+Mostra os negócios **na etapa atual**, filtrados pelo período de **entrada** no funil (startTime ou createdAt). Cada etapa exibe:
+
+- Número de negócios
+- % de representatividade sobre o total do período
+- Coluna Ganhos com % próprio
+- Total de leads gerados no período (separado no final)
+
+**Limitação conhecida:** não é possível saber onde um lead estava numa data específica no passado — a API v3 do Agendor não expõe histórico de movimentação.
+
+### Canal
+
+Configurado via modal "Configurar canais de origem". Associa cada origem de lead a um canal (ex: Meta Ads, Google, Indicação). Persistido em `localStorage`.
+
+---
+
+## Aba Atividades
+
+Consome o endpoint `/tasks` do proxy. Estrutura real da API Agendor:
+
+```json
+{
+  "assignedUsers": [{ "name": "Everton Silva" }],
+  "user": { "name": "Everton Silva" },
+  "text": "Mensagem enviada...",
+  "type": "WhatsApp",
+  "dueDate": "2026-06-10T...",
+  "finishedAt": "2026-06-10T...",
+  "deal": { "id": 123, "title": "Nome do negócio" }
+}
+```
+
+Mapeamento de campos:
+
+| Campo API | Uso |
+|---|---|
+| `assignedUsers[0].name` ou `user.name` | Responsável |
+| `finishedAt !== null` | Concluída |
+| `dueDate` | Prazo |
+| `text` | Texto da atividade |
+| `type` | Tipo (normalizado para pt-BR no proxy) |
+
+### Seções da aba
+
+1. **Cards de métricas** — Total · Concluídas · Pendentes · Taxa de conclusão · Atrasadas · Sem atividade
+2. **Por responsável** — duas tabelas lado a lado:
+   - Tipos (WhatsApp / Ligação / Reunião / Outros / Total) com % na segunda linha
+   - Status (Concluídas → Pendentes → Atrasadas → Total) com % na segunda linha
+3. **Negócios por tipo de última atividade** — cards + barras de distribuição
+4. **Lista de atividades** — ordenada por pendentes primeiro, depois por prazo
+5. **Negócios sem atividade** — negócios em andamento sem nenhuma task associada
+
+---
+
+## Aba Comissões
+
+Protegida por senha. Senha armazenada em variável JS no `index.html` (`SENHA_COMISSOES`). Sessão expira em 2h.
+
+### Regras por responsável
+
+| Responsável | Regra |
+|---|---|
+| Ronaldo Junior | Tabela padrão — 100% próprios + 1/3 dos deals de Everton e Fabíola |
+| Everton Silva | Tabela padrão — Ronaldo recebe 1/3 |
+| Fabíola Carvalho | Tabela Fabíola (desconto sobre honorário) + R$30/reunião — Ronaldo recebe 1/3 |
+| Brenda Medeiros | Regra por origem: 80% indicação colaborador · 15% demais · 0% diretoria |
+| Diogo Vieira | Legado até 01/06/2026 — mesma regra da Brenda |
+| Luiz Santos | Diretoria — sem comissão |
 
 ### Tabela padrão
 
-| Condição Comercial | % Comissão |
-|--------------------|-----------|
+| Condição Comercial | Taxa |
+|---|---|
 | Preço base | 30% |
 | Indicação de Amigo | 80% |
 | IRPF grátis primeiro ano | 28% |
-| Isenção primeiro mês | 25% |
-| 15% desconto | 22% |
+| Isenção do primeiro mês | 25% |
+| 15% de desconto no primeiro ano | 22% |
 | Gratuidade dois meses | 20% |
 | Parceria Leo Marconi | 20% |
 | Gratuidade três meses | 15% |
 
-### Tabela Fabíola Carvalho
+### Tabela Fabíola
 
-A comissão é calculada como `Valor × (1 − desconto) + bônus reunião`.
+Fórmula: `Comissão = Valor × (1 − desconto) + R$30 × reuniões`
 
-| Condição Comercial | Desconto | % Efetiva |
-|--------------------|----------|-----------|
+| Condição | Desconto | % Efetiva |
+|---|---|---|
 | Preço base | 0% | 100% |
-| IRPF grátis no primeiro ano | 15% | 85% |
-| Isenção do primeiro mês | 18% | 82% |
-| Parceria Afiliados | 20% | 80% |
-| Indicação de Amigo | 20% | 80% |
-| Parceria Leo Marconi | 20% | 80% |
+| IRPF grátis | 15% | 85% |
+| Isenção primeiro mês | 18% | 82% |
+| Indicação de Amigo / Parceria | 20% | 80% |
 | Gratuidade dois meses | 40% | 60% |
-| 15% de desconto no primeiro ano | 40% | 60% |
-| Gratuidade de três meses | 50% | 50% |
+| 15% desconto primeiro ano | 40% | 60% |
+| Gratuidade três meses | 50% | 50% |
 
-**Bônus reunião:** R$ 30,00 por reunião agendada (marcado manualmente via checkbox no detalhamento).
-
-### Regras por responsável
-
-| Responsável | Regra | Ronaldo recebe |
-|-------------|-------|----------------|
-| Ronaldo Junior | Tabela padrão | 100% para si |
-| Everton Silva | Tabela padrão | 1/3 do total |
-| Fabíola Carvalho | Tabela própria + bônus reunião | 1/3 do total (comissão + reunião) |
-| Brenda Medeiros | 80% indicação colaborador · 15% demais · 0% diretoria | — |
-| Diogo Vieira | Igual Brenda (legado) | — |
-| Matheus Augusto | Antes de 01/06/2026: exibe como Diogo Vieira e segue regra do Diogo. Após: não aparece | — |
-| Luiz Santos | Diretoria, sem comissão | — |
+**Ciclo de comissão:** dia 26 do mês anterior ao dia 25 do mês atual.
 
 ---
 
-## Fechamento Fabíola
+## Identidade Visual
 
-Seção abaixo do detalhamento, visível quando há negócios da Fabíola no período. Colunas: Data, Negócio, Produto, Condição Comercial, Origem, Valor, Desconto, Reunião, Comissão, % Com. Ronaldo, Com. Ronaldo, Data Ganho, Reg. Ganho. Filtros por produto e condição. Botão Exportar Excel.
+Segue o manual da marca Lucralize:
+
+| Token | Valor |
+|---|---|
+| Fundo da página | `#0E1428` |
+| Superfície (cards) | `rgba(255,255,255,0.07)` |
+| Teal principal | `#0C7488` |
+| Teal claro | `#91DBE4` |
+| Vermelho | `#F62642` |
+| Fonte títulos | Comfortaa (bold) |
+| Fonte corpo | Poppins |
+| Fonte mono | DM Mono |
 
 ---
 
-## Filtros de Canal (Funil de Etapas)
+## Canais de Origem
 
-Sistema de mapeamento Origem → Canal, salvo em `localStorage`.
-
-- **Adic/Remov canais:** gerencia a lista de canais disponíveis (campo editável + 🗑 para remover)
-- **Configurar canais:** associa cada origem a um canal via select
-- **Select "Todos os canais":** filtra as etapas do funil pelo canal selecionado
-- O mapeamento persiste entre sessões via `localStorage` (chaves: `lucralize_canal_map`, `lucralize_canais_lista`)
-
----
-
-## localStorage
+Configurados via modal na aba Análise de Conversão. Persistidos em `localStorage`:
 
 | Chave | Conteúdo |
-|-------|----------|
-| `lucralize_bonus_reuniao` | `{ [dealId]: quantidade }` — bônus de reunião da Fabíola |
-| `lucralize_canal_map` | `{ [origem]: canal }` — mapeamento origem → canal |
-| `lucralize_canais_lista` | `["Meta Ads", "Orgânico", ...]` — lista de canais cadastrados |
+|---|---|
+| `lucralize_canais_lista` | Array com os nomes dos canais cadastrados |
+| `lucralize_canal_map` | Objeto `{ "origem": "canal" }` |
 
 ---
 
-## Pendências abertas
+## localStorage — outras chaves
 
-- Bônus Operacional — regras não definidas
-- Saídas por Insatisfação — regras não definidas
-- Comissão Legalização — regras não definidas
-- Venda de Automações — regras não definidas
-- Parceiros — regras não definidas
-- Bônus Reunião Fabíola: integração com Agendor pendente (por ora campo manual via checkbox)
-- Negócios sem `condicao_comercial` no cache aparecem como pendentes — resolvem quando o proxy atualiza
+| Chave | Conteúdo |
+|---|---|
+| `lucralize_bonus_reuniao` | Objeto `{ dealId: qtd }` — reuniões marcadas manualmente na Fabíola |
 
 ---
 
 ## Deploy
 
-O dashboard é um arquivo único sem build. Para publicar:
+### Dashboard (index.html)
 
-1. Edite o `index.html`
-2. Faça upload direto no repositório `lucralize-comercial/dashboard-agendor` via GitHub (Add file → Upload files)
-3. O GitHub Pages publica automaticamente em ~1 minuto
+```bash
+git add index.html
+git commit -m "feat: descrição da alteração"
+git push origin main
+```
 
-> **Atenção:** não use copiar/colar do HTML — sempre faça upload do arquivo para evitar corrupção de caracteres especiais.
+GitHub Pages publica automaticamente em ~1min.
+
+### Proxy (app.py)
+
+```bash
+git add app.py
+git commit -m "feat: descrição da alteração"
+git push origin main
+```
+
+Railway faz o redeploy automaticamente ao detectar o push.
+
+---
+
+## Normalização de tipos de atividade (proxy)
+
+O `app.py` normaliza o campo `type` das tasks para português antes de servir ao frontend:
+
+| API Agendor | Normalizado |
+|---|---|
+| `whatsapp` | WhatsApp |
+| `call` / `phone` | Ligação |
+| `meeting` | Reunião |
+| `email` | E-mail |
+| `task` | Tarefa |
+| Outros | mantém original |
+
+---
+
+## Dependências externas
+
+| Biblioteca | Versão | Uso |
+|---|---|---|
+| Chart.js | 4.4.1 | Gráficos de linha e barra |
+| Google Fonts | — | Comfortaa, Poppins, DM Mono |
+
+Carregadas via CDN — sem build step, sem node_modules.
