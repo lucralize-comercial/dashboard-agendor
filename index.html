@@ -1488,14 +1488,27 @@ function renderAtividades() {
   const hoje = new Date();
 
   // Popula select de responsáveis
-  const owners = [...new Set(tasks.map(t => t.owner?.name || t.ownerName || '').filter(Boolean))].sort();
+  // Campos reais da API Agendor:
+  // responsável: assignedUsers[0].name ou user.name
+  // concluída: finishedAt !== null
+  // prazo: dueDate
+  // texto: text
+  const getTaskOwner = t => (t.assignedUsers?.[0]?.name) || t.user?.name || '';
+  const isDone = t => !!(t.finishedAt);
+  const isOverdue = t => {
+    if (isDone(t)) return false;
+    const due = t.dueDate;
+    return due && new Date(due) < hoje;
+  };
+
+  const owners = [...new Set(tasks.map(t => getTaskOwner(t)).filter(Boolean))].sort();
   const ownerSel = document.getElementById('atv-owner');
   const curOwner = ownerSel.value;
   ownerSel.innerHTML = '<option value="all">Todos responsáveis</option>' + owners.map(o => `<option value="${o}" ${o===curOwner?'selected':''}>${o}</option>`).join('');
 
-  // Filtra por período (usa dueAt ou createdAt)
+  // Filtra por período (usa dueDate ou createdAt)
   let filtered = tasks.filter(t => {
-    const ref = t.dueAt || t.createdAt || t.updatedAt;
+    const ref = t.dueDate || t.createdAt || t.updatedAt;
     if (from && to && ref) {
       const d = new Date(ref);
       if (d < from || d > to) return false;
@@ -1504,17 +1517,10 @@ function renderAtividades() {
   });
 
   // Aplica outros filtros
-  if (ownerFilter !== 'all') filtered = filtered.filter(t => (t.owner?.name || t.ownerName || '') === ownerFilter);
-  if (statusFilter === 'done') filtered = filtered.filter(t => t.completed || t.isDone || t.status === 'done');
-  if (statusFilter === 'pending') filtered = filtered.filter(t => !t.completed && !t.isDone && t.status !== 'done');
-  if (search) filtered = filtered.filter(t => (t.text || t.title || t.description || '').toLowerCase().includes(search));
-
-  const isDone = t => !!(t.completed || t.isDone || t.status === 'done');
-  const isOverdue = t => {
-    if (isDone(t)) return false;
-    const due = t.dueAt || t.dueDatetime;
-    return due && new Date(due) < hoje;
-  };
+  if (ownerFilter !== 'all') filtered = filtered.filter(t => getTaskOwner(t) === ownerFilter);
+  if (statusFilter === 'done') filtered = filtered.filter(t => isDone(t));
+  if (statusFilter === 'pending') filtered = filtered.filter(t => !isDone(t));
+  if (search) filtered = filtered.filter(t => (t.text || '').toLowerCase().includes(search));
 
   const total = filtered.length;
   const done = filtered.filter(isDone).length;
@@ -1536,7 +1542,7 @@ function renderAtividades() {
   // Tabela por responsável
   const ownerMap = {};
   filtered.forEach(t => {
-    const name = t.owner?.name || t.ownerName || 'Sem responsável';
+    const name = getTaskOwner(t) || 'Sem responsável';
     if (!ownerMap[name]) ownerMap[name] = { total: 0, done: 0, pending: 0, overdue: 0 };
     ownerMap[name].total++;
     if (isDone(t)) ownerMap[name].done++; else ownerMap[name].pending++;
@@ -1562,11 +1568,10 @@ function renderAtividades() {
   if (!filtered.length) { listEl.innerHTML = '<p class="empty">Nenhuma atividade no período com os filtros selecionados.</p>'; return; }
 
   const sorted = [...filtered].sort((a, b) => {
-    // Pendentes primeiro, depois por prazo
     const aDone = isDone(a), bDone = isDone(b);
     if (aDone !== bDone) return aDone ? 1 : -1;
-    const aDate = new Date(a.dueAt || a.createdAt || 0);
-    const bDate = new Date(b.dueAt || b.createdAt || 0);
+    const aDate = new Date(a.dueDate || a.createdAt || 0);
+    const bDate = new Date(b.dueDate || b.createdAt || 0);
     return aDate - bDate;
   });
 
@@ -1575,21 +1580,24 @@ function renderAtividades() {
     const over = isOverdue(t);
     const iconClass = done_ ? 'done' : (over ? 'overdue' : 'pending');
     const icon = done_ ? '✓' : (over ? '!' : '○');
-    const titulo = t.text || t.title || t.description || '(sem descrição)';
-    const owner = t.owner?.name || t.ownerName || '—';
-    const dealTitle = t.deal?.title || t.dealTitle || '';
-    const dueDate = t.dueAt || t.dueDatetime;
+    const titulo = t.text || '(sem descrição)';
+    const owner = getTaskOwner(t) || '—';
+    const dealTitle = t.deal?.title || '';
+    const dueDate = t.dueDate;
     const dueStr = dueDate ? new Date(dueDate).toLocaleDateString('pt-BR') : '—';
-    const concluStr = done_ ? (t.concludedAt ? new Date(t.concludedAt).toLocaleDateString('pt-BR') : '✓') : '';
+    const concluStr = done_ ? (t.finishedAt ? new Date(t.finishedAt).toLocaleDateString('pt-BR') : '✓') : '';
+    const tipoTag = t.type ? `<span style="font-size:10px;background:#f0f0f0;color:#666;padding:1px 6px;border-radius:10px;">${t.type}</span>` : '';
     const statusBadge = done_
       ? `<span class="badge won">Concluída</span>`
       : over
         ? `<span class="badge lost">Atrasada</span>`
         : `<span class="badge warn">Pendente</span>`;
+    // Trunca texto longo (mensagens de WhatsApp são longas)
+    const tituloDisplay = titulo.length > 120 ? titulo.substring(0, 118) + '…' : titulo;
     return `<div class="task-row">
       <div class="task-check-icon ${iconClass}">${icon}</div>
       <div class="task-info">
-        <div class="task-title" style="${done_ ? 'text-decoration:line-through;color:var(--muted);' : ''}">${titulo}</div>
+        <div class="task-title" style="${done_ ? 'text-decoration:line-through;color:var(--muted);' : ''}">${tituloDisplay} ${tipoTag}</div>
         <div class="task-meta">
           <span>👤 ${owner}</span>
           ${dealTitle ? `<span>🔗 ${dealTitle}</span>` : ''}
