@@ -1584,22 +1584,26 @@ function renderAtividades() {
 
   const rowsTipos = ownerEntries.map(([name, s]) => {
     const t = s.tipos;
-    const cols = TIPO_COLS.map(c => {
-      const v = t[c] || 0;
-      const pct = s.total > 0 ? Math.round((v / s.total) * 100) : 0;
-      return `<td style="padding:5px 6px 1px;text-align:right;color:${TIPO_CORES_MAP[c]};border-top:0.5px solid rgba(255,255,255,0.08);">${v}</td>
-              <td_pct style="padding:1px 6px 6px;text-align:right;font-size:10px;color:${TIPO_CORES_PCT[c]};">${pct}%</td_pct>`;
-    });
-    return `<tr>
-      <td rowspan="2" style="padding:6px;color:white;font-weight:500;vertical-align:middle;border-top:0.5px solid rgba(255,255,255,0.08);">${name}</td>
-      ${cols.map(c => c.split('
-')[0].replace('<td_pct', '<td').replace('</td_pct>', '</td>')).join('')}
-      <td rowspan="2" style="padding:6px;text-align:right;vertical-align:middle;color:white;font-weight:600;border-top:0.5px solid rgba(255,255,255,0.08);">${s.total}</td>
-    </tr>
-    <tr style="border-bottom:0.5px solid rgba(255,255,255,0.08);">
-      ${cols.map(c => c.split('
-')[1].trim().replace('<td_pct', '<td').replace('</td_pct>', '</td>')).join('')}
-    </tr>`;
+    const tot = s.total || 1;
+    const waV = t['WhatsApp']||0, callV = t['Ligação']||0, meetV = t['Reunião']||0, otherV = t['Outros']||0;
+    const waPct = Math.round(waV/tot*100), callPct = Math.round(callV/tot*100);
+    const meetPct = Math.round(meetV/tot*100), otherPct = Math.round(otherV/tot*100);
+    const bTop = 'border-top:0.5px solid rgba(255,255,255,0.08);';
+    const bBot = 'border-bottom:0.5px solid rgba(255,255,255,0.08);';
+    return '<tr>'
+      + '<td rowspan="2" style="padding:6px;color:white;font-weight:500;vertical-align:middle;'+bTop+'">'+name+'</td>'
+      + '<td style="padding:5px 6px 1px;text-align:right;color:#5DCAA5;'+bTop+'">'+waV+'</td>'
+      + '<td style="padding:5px 6px 1px;text-align:right;color:#91DBE4;'+bTop+'">'+callV+'</td>'
+      + '<td style="padding:5px 6px 1px;text-align:right;color:#EF9F27;'+bTop+'">'+meetV+'</td>'
+      + '<td style="padding:5px 6px 1px;text-align:right;color:rgba(255,255,255,0.6);'+bTop+'">'+otherV+'</td>'
+      + '<td rowspan="2" style="padding:6px;text-align:right;vertical-align:middle;color:white;font-weight:600;'+bTop+'">'+s.total+'</td>'
+      + '</tr>'
+      + '<tr style="'+bBot+'">'
+      + '<td style="padding:1px 6px 6px;text-align:right;font-size:10px;color:rgba(92,202,165,0.5);">'+waPct+'%</td>'
+      + '<td style="padding:1px 6px 6px;text-align:right;font-size:10px;color:rgba(145,219,228,0.5);">'+callPct+'%</td>'
+      + '<td style="padding:1px 6px 6px;text-align:right;font-size:10px;color:rgba(239,159,39,0.5);">'+meetPct+'%</td>'
+      + '<td style="padding:1px 6px 6px;text-align:right;font-size:10px;color:rgba(255,255,255,0.25);">'+otherPct+'%</td>'
+      + '</tr>';
   }).join('');
 
   const rowsStatus = ownerEntries.map(([name, s]) => {
