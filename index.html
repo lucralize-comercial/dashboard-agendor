@@ -30,7 +30,7 @@
   button:disabled { opacity: 0.5; cursor: not-allowed; }
 
   /* Abas */
-  .tabs { display: flex; gap: 4px; margin-bottom: 1.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 4px; width: fit-content; }
+  .tabs { display: flex; gap: 4px; margin-bottom: 1.5rem; background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 4px; width: fit-content; flex-wrap: wrap; }
   .tab-btn { padding: 7px 20px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; font-family: 'DM Sans', sans-serif; cursor: pointer; border: none; background: transparent; color: var(--muted); transition: all .15s; }
   .tab-btn:hover { color: var(--text); }
   .tab-btn.active { background: var(--navy); color: white; }
@@ -187,6 +187,18 @@
   .three-col { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 1.5rem; }
   @media (max-width: 1000px) { .three-col { grid-template-columns: 1fr 1fr; } }
   @media (max-width: 700px) { .two-col, .three-col { grid-template-columns: 1fr; } body { padding: 1rem; } }
+
+  /* Atividades */
+  .task-row { display: flex; align-items: flex-start; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .task-row:last-child { border-bottom: none; }
+  .task-check-icon { width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0; margin-top: 2px; display: flex; align-items: center; justify-content: center; font-size: 11px; }
+  .task-check-icon.done { background: var(--success-bg); color: var(--success); }
+  .task-check-icon.pending { background: var(--warning-bg); color: var(--warning); }
+  .task-check-icon.overdue { background: var(--danger-bg); color: var(--danger); }
+  .task-info { flex: 1; min-width: 0; }
+  .task-title { font-size: 13px; font-weight: 500; line-height: 1.4; }
+  .task-meta { font-size: 11px; color: var(--muted); margin-top: 3px; display: flex; flex-wrap: wrap; gap: 8px; }
+  .task-right { text-align: right; flex-shrink: 0; margin-left: 12px; }
 </style>
 </head>
 <body>
@@ -214,6 +226,7 @@
     <button class="tab-btn" onclick="switchTab('analise',this)">Análise de Conversão</button>
     <button class="tab-btn" onclick="switchTab('acompanhamento',this)">Acompanhamento</button>
     <button class="tab-btn" onclick="switchTab('contratos',this)">Contratos Ganhos</button>
+    <button class="tab-btn" onclick="switchTab('atividades',this)">📋 Atividades</button>
     <button class="tab-btn comissoes-tab" onclick="openComissoes(this)">💰 Comissões</button>
   </div>
   <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
@@ -295,8 +308,6 @@
 
   <!-- Cards de leads por origem -->
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
-
-    <!-- Semanal -->
     <div class="card" style="margin-bottom:0;">
       <div class="card-header">
         <span class="card-title">Leads por semana — por origem</span>
@@ -305,8 +316,6 @@
       <div id="origem-semanal-legend" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:8px;font-size:11px;color:var(--muted);"></div>
       <div class="chart-wrap h200"><canvas id="origemSemanalChart" role="img" aria-label="Leads por semana e origem"></canvas></div>
     </div>
-
-    <!-- Mensal -->
     <div class="card" style="margin-bottom:0;">
       <div class="card-header">
         <span class="card-title">Leads por mês — por origem</span>
@@ -315,7 +324,6 @@
       <div id="origem-mensal-legend" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:8px;font-size:11px;color:var(--muted);"></div>
       <div class="chart-wrap h200"><canvas id="origemMensalChart" role="img" aria-label="Leads por mês e origem"></canvas></div>
     </div>
-
   </div>
 
   <!-- Anual -->
@@ -419,7 +427,7 @@
     </div>
   </div>
 
-  <!-- Modal gerenciar canais (adicionar/remover) -->
+  <!-- Modal gerenciar canais -->
   <div id="modal-gerenciar-canais" style="display:none;position:fixed;inset:0;background:rgba(14,20,40,0.5);z-index:9999;align-items:center;justify-content:center;">
     <div style="background:#fff;border-radius:16px;padding:1.5rem;max-width:400px;width:90%;display:flex;flex-direction:column;gap:1rem;">
       <div style="display:flex;justify-content:space-between;align-items:center;">
@@ -524,7 +532,6 @@
     <div class="metric-card"><div class="metric-label">Tempo médio — perda</div><div class="metric-value danger" id="a3-tempoPerda">—</div><div class="metric-sub">dias do lead à perda</div></div>
   </div>
 
-  <!-- Leads parados -->
   <div class="card">
     <div class="card-header">
       <span class="card-title">Leads parados em andamento</span>
@@ -537,7 +544,6 @@
     <div id="a3-paradosList"><p class="empty">—</p></div>
   </div>
 
-  <!-- Pipeline por responsável -->
   <div class="two-col">
     <div class="card" style="margin-bottom:0;">
       <div class="card-header"><span class="card-title">Pipeline por responsável</span></div>
@@ -598,6 +604,74 @@
   </div>
 </div>
 
+<!-- ===== ABA 5: ATIVIDADES ===== -->
+<div id="tab-atividades" class="tab-content">
+  <!-- Filtros próprios -->
+  <div style="background:white;border:1px solid rgba(14,20,40,0.1);border-radius:12px;padding:1rem 1.4rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+    <span style="font-size:13px;font-weight:500;color:#657786;">Período:</span>
+    <button class="period-btn active" id="atv-btn-7" onclick="setAtvPeriod(7,this)">7d</button>
+    <button class="period-btn" id="atv-btn-30" onclick="setAtvPeriod(30,this)">30d</button>
+    <button class="period-btn" id="atv-btn-90" onclick="setAtvPeriod(90,this)">90d</button>
+    <button class="period-btn" id="atv-btn-todos" onclick="setAtvPeriod(0,this)">Todos</button>
+    <span style="width:1px;height:24px;background:rgba(14,20,40,0.1);"></span>
+    <input type="date" id="atv-dateFrom" onchange="clearAtvBtns();renderAtividades()" style="padding:5px 8px;border-radius:8px;border:1px solid rgba(14,20,40,0.1);font-size:12px;font-family:'Poppins',sans-serif;">
+    <span style="font-size:12px;color:#657786;">→</span>
+    <input type="date" id="atv-dateTo" onchange="clearAtvBtns();renderAtividades()" style="padding:5px 8px;border-radius:8px;border:1px solid rgba(14,20,40,0.1);font-size:12px;font-family:'Poppins',sans-serif;">
+    <span style="width:1px;height:24px;background:rgba(14,20,40,0.1);"></span>
+    <select id="atv-owner" onchange="renderAtividades()" style="font-size:12px;padding:5px 8px;border-radius:8px;border:1px solid rgba(14,20,40,0.1);font-family:'Poppins',sans-serif;">
+      <option value="all">Todos responsáveis</option>
+    </select>
+    <select id="atv-status" onchange="renderAtividades()" style="font-size:12px;padding:5px 8px;border-radius:8px;border:1px solid rgba(14,20,40,0.1);font-family:'Poppins',sans-serif;">
+      <option value="all">Todos os status</option>
+      <option value="done">Concluídas</option>
+      <option value="pending">Pendentes</option>
+    </select>
+    <button onclick="fetchTasks(true)" style="background:#EBF0F3;color:#0E1428;border:1px solid rgba(14,20,40,0.15);font-size:12px;padding:6px 14px;margin-left:auto;" id="atv-refresh-btn">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+      Recarregar
+    </button>
+  </div>
+
+  <!-- Métricas -->
+  <div class="metrics" style="margin-bottom:1.5rem;">
+    <div class="metric-card"><div class="metric-label">Total de atividades</div><div class="metric-value" id="atv-total">—</div></div>
+    <div class="metric-card"><div class="metric-label">Concluídas</div><div class="metric-value success" id="atv-done">—</div><div class="metric-footer"><div class="metric-pct success" id="atv-done-pct">—</div><div class="progress-bar"><div class="progress-fill success" id="atv-done-bar" style="width:0%"></div></div></div></div>
+    <div class="metric-card"><div class="metric-label">Pendentes</div><div class="metric-value warning" id="atv-pending">—</div><div class="metric-footer"><div class="metric-pct warning" id="atv-pending-pct">—</div><div class="progress-bar"><div class="progress-fill" id="atv-pending-bar" style="width:0%;background:var(--warning)"></div></div></div></div>
+    <div class="metric-card"><div class="metric-label">Taxa de conclusão</div><div class="metric-value success" id="atv-taxa">—</div></div>
+    <div class="metric-card"><div class="metric-label">Atrasadas</div><div class="metric-value danger" id="atv-overdue">—</div><div class="metric-sub">pendentes com prazo vencido</div></div>
+  </div>
+
+  <!-- Tabela por responsável -->
+  <div class="card" style="margin-bottom:1.5rem;">
+    <div class="card-header"><span class="card-title">Por responsável</span></div>
+    <div style="overflow-x:auto;">
+      <table class="std-table">
+        <thead><tr>
+          <th style="text-align:left;">Responsável</th>
+          <th>Total</th>
+          <th>Concluídas</th>
+          <th>Pendentes</th>
+          <th>Atrasadas</th>
+          <th>% Conclusão</th>
+        </tr></thead>
+        <tbody id="atv-owner-body"><tr><td colspan="6" class="empty" style="text-align:center;">Carregando...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Lista de atividades -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Lista de atividades</span>
+      <div style="display:flex;gap:8px;align-items:center;">
+        <input type="text" id="atv-search" placeholder="Buscar..." oninput="renderAtividades()" style="padding:5px 10px;border-radius:8px;border:1px solid rgba(14,20,40,0.1);font-size:12px;font-family:'Poppins',sans-serif;background:#EBF0F3;width:160px;">
+        <span id="atv-count-label" style="font-size:12px;color:var(--muted);white-space:nowrap;"></span>
+      </div>
+    </div>
+    <div id="atv-list"><p class="empty">Carregando atividades...</p></div>
+  </div>
+</div>
+
 <!-- ===== MODAL SENHA COMISSÕES ===== -->
 <div id="modal-senha" style="display:none;position:fixed;inset:0;background:rgba(14,20,40,0.7);z-index:1000;align-items:center;justify-content:center;">
   <div style="background:white;border-radius:16px;padding:2rem;width:360px;box-shadow:0 20px 60px rgba(0,0,0,0.3);">
@@ -615,9 +689,8 @@
   </div>
 </div>
 
-<!-- ===== ABA 5: COMISSÕES ===== -->
+<!-- ===== ABA 6: COMISSÕES ===== -->
 <div id="tab-comissoes" class="tab-content">
-  <!-- Filtro de período próprio -->
   <div style="background:white;border:1px solid rgba(14,20,40,0.1);border-radius:12px;padding:1rem 1.4rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
     <span style="font-size:13px;font-weight:500;color:#657786;">Período:</span>
     <button class="period-btn active" id="com-btn-atual" onclick="setComCiclo(0,this)" style="font-size:12px;">Mês atual</button>
@@ -637,7 +710,6 @@
     <button onclick="sairComissoes()" style="margin-left:auto;background:#EBF0F3;color:#0E1428;font-size:12px;padding:6px 14px;">🔒 Sair</button>
   </div>
 
-  <!-- Métricas resumo -->
   <div class="metrics" style="margin-bottom:1.5rem;" id="com-metrics">
     <div class="metric-card"><div class="metric-label">Total ganhos</div><div class="metric-value" id="com-total">—</div><div class="metric-sub" id="com-total-sub">no período</div></div>
     <div class="metric-card"><div class="metric-label">Valor total contratos</div><div class="metric-value success" id="com-valor">—</div></div>
@@ -650,7 +722,6 @@
     </div>
   </div>
 
-  <!-- Resumo por responsável -->
   <div class="card" style="margin-bottom:1.5rem;">
     <div class="card-header"><span class="card-title">Resumo por responsável</span></div>
     <div style="overflow-x:auto;">
@@ -667,7 +738,6 @@
     </div>
   </div>
 
-  <!-- Resumo condição comercial + origem -->
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-bottom:1.5rem;">
     <div class="card" style="margin-bottom:0;">
       <div class="card-header"><span class="card-title">Por condição comercial</span></div>
@@ -699,7 +769,6 @@
     </div>
   </div>
 
-  <!-- Tabela detalhada -->
   <div class="card">
     <div class="card-header" style="flex-wrap:wrap;gap:8px;">
       <span class="card-title">Detalhamento por negócio</span>
@@ -734,7 +803,6 @@
     </div>
   </div>
 
-  <!-- Fechamento Fabíola -->
   <div class="card" id="card-fechamento-fabiola" style="margin-bottom:1.5rem;display:none;">
     <div class="card-header" style="flex-wrap:wrap;gap:8px;">
       <span class="card-title">Fechamento Fabíola Carvalho</span>
@@ -772,20 +840,16 @@
   </div>
 </div>
 
-
 <script>
 const PROXY = 'https://agendo-proxy-production.up.railway.app';
 const AGENDOR_TOKEN = 'a89b0def-fd5e-45ed-981f-efe89f20159a';
 const AGENDOR_BASE = 'https://api.agendor.com.br/v3';
 
-async function fetchProductsForDeals(deals) {
-  // Produtos já vêm do proxy — não precisa buscar separadamente
-  return;
-}
+async function fetchProductsForDeals(deals) { return; }
 const COLORS = ['#1a5fb4','#1e7e4a','#a05c00','#8b3a8b','#c0392b','#16697a','#d35400','#2c3e50','#b32d2d','#1d6b4a','#5c7a2e','#6b3a7d','#2e7d8b','#8b6914','#4a7c59'];
 const MONTHS_PT = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
 
-let baseDeals = [], filteredDeals = [];
+let baseDeals = [], filteredDeals = [], baseTasks = [];
 let funnelChart = null, originChart = null, trendChart = null, a2VolChart = null, a2ConvChart = null;
 let chartStatus = { funnel:{open:true,won:true,lost:true}, origin:{open:true,won:true,lost:true} };
 
@@ -795,12 +859,9 @@ function switchTab(id, btn) {
   btn.classList.add('active');
   document.getElementById('tab-'+id).classList.add('active');
   document.getElementById('helpBtn').classList.toggle('visible', id === 'comissoes');
-  if (id === 'contratos') {
-    fetchProductsForDeals(baseDeals).then(() => renderContratos());
-  }
-  if (id === 'analise') {
-    initFunilEtapas();
-  }
+  if (id === 'contratos') fetchProductsForDeals(baseDeals).then(() => renderContratos());
+  if (id === 'analise') initFunilEtapas();
+  if (id === 'atividades') renderAtividades();
 }
 
 function toggleFunnelMenu(e) { e.stopPropagation(); document.getElementById('funnelMenu').classList.toggle('open'); document.getElementById('funnelBtn').classList.toggle('open'); }
@@ -847,16 +908,12 @@ function setMsg(type, msg) {
 const ORIGEM_CORES = ['#1D9E75','#378ADD','#EF9F27','#E24B4A','#7F77DD','#D4537E','#639922','#BA7517','#185FA5','#993C1D'];
 let origemSemanalChart = null, origemMensalChart = null, origemAnualChart = null;
 
-function getOrigemLabel(d) {
-  return d.customFields?.origem_do_negocio?.value || 'Não informado';
-}
-
+function getOrigemLabel(d) { return d.customFields?.origem_do_negocio?.value || 'Não informado'; }
 function getTopOrigens(deals, max) {
   const freq = {};
   deals.forEach(d => { const o = getOrigemLabel(d); freq[o] = (freq[o]||0) + 1; });
   return Object.entries(freq).sort((a,b) => b[1]-a[1]).slice(0, max||8).map(e => e[0]);
 }
-
 function buildOrigemLegend(origens, elId) {
   const el = document.getElementById(elId);
   if (!el) return;
@@ -866,12 +923,10 @@ function buildOrigemLegend(origens, elId) {
 function initLeadsOrigem() {
   const anos = [...new Set(baseDeals.map(d => new Date(d.createdAt).getFullYear()))].sort((a,b) => b-a);
   const anoAtual = new Date().getFullYear();
-
   ['origem-ano-select','origem-anual-ano-select'].forEach(id => {
     const sel = document.getElementById(id);
     if (sel) sel.innerHTML = anos.map(a => `<option value="${a}" ${a===anoAtual?'selected':''}>${a}</option>`).join('');
   });
-
   const mesesDisp = [];
   const now = new Date();
   for (let i = 0; i < 12; i++) {
@@ -880,10 +935,7 @@ function initLeadsOrigem() {
   }
   const selMes = document.getElementById('origem-mes-select');
   if (selMes) selMes.innerHTML = mesesDisp.map((m,i) => `<option value="${i}">${m.label}</option>`).join('');
-
-  renderLeadsSemanal();
-  renderLeadsMensal();
-  renderLeadsAnual();
+  renderLeadsSemanal(); renderLeadsMensal(); renderLeadsAnual();
 }
 
 function renderLeadsSemanal() {
@@ -892,27 +944,18 @@ function renderLeadsSemanal() {
   const target = new Date(now.getFullYear(), now.getMonth() - selIdx, 1);
   const ano = target.getFullYear(), mes = target.getMonth();
   const diasNoMes = new Date(ano, mes+1, 0).getDate();
-
   const semanas = [];
   let d = 1;
-  while (d <= diasNoMes) {
-    const fim = Math.min(d+6, diasNoMes);
-    semanas.push({ label: `${d}-${fim}`, de: d, ate: fim });
-    d = fim + 1;
-  }
-
+  while (d <= diasNoMes) { const fim = Math.min(d+6, diasNoMes); semanas.push({ label: `${d}-${fim}`, de: d, ate: fim }); d = fim + 1; }
   const deals = baseDeals.filter(x => { const dt = new Date(x.createdAt); return dt.getFullYear()===ano && dt.getMonth()===mes; });
   const origens = getTopOrigens(deals, 8);
   buildOrigemLegend(origens, 'origem-semanal-legend');
-
   const datasets = origens.map((o,i) => ({
     label: o,
     data: semanas.map(s => deals.filter(x => { const dia = new Date(x.createdAt).getDate(); return getOrigemLabel(x)===o && dia>=s.de && dia<=s.ate; }).length),
-    borderColor: ORIGEM_CORES[i%ORIGEM_CORES.length],
-    borderWidth: 2, pointRadius: 4, tension: 0.3, fill: false,
+    borderColor: ORIGEM_CORES[i%ORIGEM_CORES.length], borderWidth: 2, pointRadius: 4, tension: 0.3, fill: false,
     pointBackgroundColor: ORIGEM_CORES[i%ORIGEM_CORES.length],
   }));
-
   if (origemSemanalChart) origemSemanalChart.destroy();
   origemSemanalChart = new Chart(document.getElementById('origemSemanalChart'), {
     type: 'line', data: { labels: semanas.map(s=>s.label), datasets },
@@ -927,15 +970,12 @@ function renderLeadsMensal() {
   const origens = getTopOrigens(deals, 8);
   buildOrigemLegend(origens, 'origem-mensal-legend');
   const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-
   const datasets = origens.map((o,i) => ({
     label: o,
     data: Array.from({length:12}, (_,m) => deals.filter(x => new Date(x.createdAt).getMonth()===m && getOrigemLabel(x)===o).length),
-    borderColor: ORIGEM_CORES[i%ORIGEM_CORES.length],
-    borderWidth: 2, pointRadius: 4, tension: 0.3, fill: false,
+    borderColor: ORIGEM_CORES[i%ORIGEM_CORES.length], borderWidth: 2, pointRadius: 4, tension: 0.3, fill: false,
     pointBackgroundColor: ORIGEM_CORES[i%ORIGEM_CORES.length],
   }));
-
   if (origemMensalChart) origemMensalChart.destroy();
   origemMensalChart = new Chart(document.getElementById('origemMensalChart'), {
     type: 'line', data: { labels: meses, datasets },
@@ -950,7 +990,6 @@ function renderLeadsAnual() {
   const origens = getTopOrigens(deals, 8);
   buildOrigemLegend(origens, 'origem-anual-legend');
   const meses = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
-
   const datasets = origens.map((o,i) => ({
     label: o,
     data: Array.from({length:12}, (_,m) => deals.filter(x => new Date(x.createdAt).getMonth()===m && getOrigemLabel(x)===o).length),
@@ -959,7 +998,6 @@ function renderLeadsAnual() {
     borderWidth: 2, pointRadius: 3, tension: 0.3, fill: true,
     pointBackgroundColor: ORIGEM_CORES[i%ORIGEM_CORES.length],
   }));
-
   if (origemAnualChart) origemAnualChart.destroy();
   origemAnualChart = new Chart(document.getElementById('origemAnualChart'), {
     type: 'line', data: { labels: meses, datasets },
@@ -968,6 +1006,7 @@ function renderLeadsAnual() {
   });
 }
 
+// ===== ALTERAÇÃO 1: applyFilter usa startTime || createdAt =====
 function applyFilter() {
   const from=document.getElementById('dateFrom').value, to=document.getElementById('dateTo').value;
   const funis=getSelectedFunnels();
@@ -976,7 +1015,8 @@ function applyFilter() {
   else if(funis.length===0) deals=[];
   if(from&&to) {
     const fd=new Date(from+'T00:00:00'),td=new Date(to+'T23:59:59');
-    deals=deals.filter(d=>{const c=new Date(d.createdAt);return c>=fd&&c<=td;});
+    // ALTERAÇÃO: usa startTime || createdAt como data de referência
+    deals=deals.filter(d=>{const c=new Date(d.startTime||d.createdAt);return c>=fd&&c<=td;});
     const f=s=>new Date(s+'T00:00:00').toLocaleDateString('pt-BR');
     ['periodTag','a2-periodTag','a2-funnelPeriodTag'].forEach(id=>document.getElementById(id).textContent=f(from)+' → '+f(to));
   } else { ['periodTag','a2-periodTag','a2-funnelPeriodTag'].forEach(id=>document.getElementById(id).textContent='todos os períodos'); }
@@ -1003,16 +1043,18 @@ function updateMetrics() {
   document.getElementById('openBar').style.width=openP+'%'; document.getElementById('wonBar').style.width=wonP+'%'; document.getElementById('lostBar').style.width=lostP+'%';
 }
 
+// ===== ALTERAÇÃO 1 (continuação): updateTrendChart usa startTime || createdAt =====
 function updateTrendChart() {
   const now=new Date(), months=[];
   for(let i=11;i>=0;i--){const d=new Date(now.getFullYear(),now.getMonth()-i,1);months.push({year:d.getFullYear(),month:d.getMonth(),label:MONTHS_PT[d.getMonth()]+'/'+String(d.getFullYear()).slice(2)});}
   const funis=getSelectedFunnels(); let deals=baseDeals;
   if(funis.length>0&&funis.length<document.querySelectorAll('.funnel-option').length) deals=deals.filter(d=>funis.includes(d.dealStage?.funnel?.name));
   else if(funis.length===0) deals=[];
-  const totais=months.map(m=>deals.filter(d=>{const c=new Date(d.createdAt);return c.getFullYear()===m.year&&c.getMonth()===m.month;}).length);
-  const abertos=months.map(m=>deals.filter(d=>{const c=new Date(d.createdAt);return c.getFullYear()===m.year&&c.getMonth()===m.month&&d.dealStatus?.id===1;}).length);
-  const ganhos=months.map(m=>deals.filter(d=>{const c=new Date(d.createdAt);return c.getFullYear()===m.year&&c.getMonth()===m.month&&d.dealStatus?.id===2;}).length);
-  const perdidos=months.map(m=>deals.filter(d=>{const c=new Date(d.createdAt);return c.getFullYear()===m.year&&c.getMonth()===m.month&&d.dealStatus?.id===3;}).length);
+  // ALTERAÇÃO: usa startTime || createdAt nos filtros mensais
+  const totais=months.map(m=>deals.filter(d=>{const c=new Date(d.startTime||d.createdAt);return c.getFullYear()===m.year&&c.getMonth()===m.month;}).length);
+  const abertos=months.map(m=>deals.filter(d=>{const c=new Date(d.startTime||d.createdAt);return c.getFullYear()===m.year&&c.getMonth()===m.month&&d.dealStatus?.id===1;}).length);
+  const ganhos=months.map(m=>deals.filter(d=>{const c=new Date(d.startTime||d.createdAt);return c.getFullYear()===m.year&&c.getMonth()===m.month&&d.dealStatus?.id===2;}).length);
+  const perdidos=months.map(m=>deals.filter(d=>{const c=new Date(d.startTime||d.createdAt);return c.getFullYear()===m.year&&c.getMonth()===m.month&&d.dealStatus?.id===3;}).length);
   if(trendChart) trendChart.destroy();
   trendChart=new Chart(document.getElementById('trendChart'),{type:'line',data:{labels:months.map(m=>m.label),datasets:[
     {label:'Total',data:totais,borderColor:'#6366f1',borderWidth:2,pointRadius:3,tension:0.3,fill:false},
@@ -1047,10 +1089,7 @@ function buildHBar(canvasId, statusRef, deals, keyFn, topN=15) {
   return new Chart(document.getElementById(canvasId),{type:'bar',plugins:[plugin],data:{labels,datasets:[{data:counts,backgroundColor:colors,borderRadius:4,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,layout:{padding:{right:80}},plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+ctx.parsed.x+' negócios'}}},scales:{x:{ticks:{font:{size:11},color:'#6b6a66'},grid:{color:'rgba(0,0,0,0.04)'},border:{display:false}},y:{ticks:{font:{size:11},color:'#1a1a18'},grid:{display:false},border:{display:false}}}}});
 }
 
-function updateFunnelChart() {
-  if(funnelChart) funnelChart.destroy();
-  funnelChart=buildHBar('funnelChart',chartStatus.funnel,[...filteredDeals].sort((a,b)=>(a.dealStage?.sequence||99)-(b.dealStage?.sequence||99)),d=>d.dealStage?.name,12);
-}
+function updateFunnelChart() { if(funnelChart) funnelChart.destroy(); funnelChart=buildHBar('funnelChart',chartStatus.funnel,[...filteredDeals].sort((a,b)=>(a.dealStage?.sequence||99)-(b.dealStage?.sequence||99)),d=>d.dealStage?.name,12); }
 function updateOriginChart() { if(originChart) originChart.destroy(); originChart=buildHBar('originChart',chartStatus.origin,filteredDeals,getOrigem,15); }
 
 function renderLossReasons() {
@@ -1105,100 +1144,60 @@ let _funilStagesCache = {};
 // ── Mapeamento Canal ──────────────────────────────
 const CANAL_MAP_KEY = 'lucralize_canal_map';
 const CANAL_LISTA_KEY = 'lucralize_canais_lista';
-
 function loadCanalMap() { try { return JSON.parse(localStorage.getItem(CANAL_MAP_KEY)||'{}'); } catch { return {}; } }
 function saveCanalMap(map) { localStorage.setItem(CANAL_MAP_KEY, JSON.stringify(map)); }
 function loadCanaisLista() { try { return JSON.parse(localStorage.getItem(CANAL_LISTA_KEY)||'[]'); } catch { return []; } }
 function saveCanaisLista(lista) { localStorage.setItem(CANAL_LISTA_KEY, JSON.stringify(lista)); }
 
-// ── Modal Gerenciar Canais (adicionar/remover) ──
 function abrirModalGerenciarCanais() {
   renderListaCanaisGerenciar();
   document.getElementById('modal-gerenciar-canais').style.display = 'flex';
   document.getElementById('novo-canal-input').value = '';
   document.getElementById('novo-canal-input').focus();
 }
-
 function renderListaCanaisGerenciar() {
   const lista = loadCanaisLista();
   const el = document.getElementById('lista-canais-gerenciar');
-  if (!lista.length) {
-    el.innerHTML = '<p style="font-size:12px;color:#657786;padding:4px 0;">Nenhum canal cadastrado ainda.</p>';
-    return;
-  }
-  el.innerHTML = lista.map(c => `
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#EBF0F3;border-radius:8px;">
-      <span style="font-size:13px;color:#0E1428;">${c}</span>
-      <button onclick="removerCanal('${c.replace(/'/g,"\'")}') " style="background:#fde8ec;color:#F62642;border:1px solid #F6264230;border-radius:6px;padding:2px 8px;font-size:11px;cursor:pointer;">✕ remover</button>
-    </div>`).join('');
+  if (!lista.length) { el.innerHTML = '<p style="font-size:12px;color:#657786;padding:4px 0;">Nenhum canal cadastrado ainda.</p>'; return; }
+  el.innerHTML = lista.map(c => `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:#EBF0F3;border-radius:8px;"><span style="font-size:13px;color:#0E1428;">${c}</span><button onclick="removerCanal('${c.replace(/'/g,"\\'")}') " style="background:#fde8ec;color:#F62642;border:1px solid #F6264230;border-radius:6px;padding:2px 8px;font-size:11px;cursor:pointer;">✕ remover</button></div>`).join('');
 }
-
 function adicionarCanal() {
   const inp = document.getElementById('novo-canal-input');
   const nome = inp.value.trim();
   if (!nome) return;
   const lista = loadCanaisLista();
   if (lista.includes(nome)) { inp.value=''; return; }
-  lista.push(nome);
-  lista.sort();
-  saveCanaisLista(lista);
-  inp.value = '';
+  lista.push(nome); lista.sort(); saveCanaisLista(lista); inp.value = '';
   renderListaCanaisGerenciar();
 }
-
 function removerCanal(nome) {
   const lista = loadCanaisLista().filter(c => c !== nome);
   saveCanaisLista(lista);
-  // Remove do mapa também
   const map = loadCanalMap();
   Object.keys(map).forEach(k => { if (map[k] === nome) delete map[k]; });
   saveCanalMap(map);
   renderListaCanaisGerenciar();
 }
-
-// ── Modal Configurar Canais (origens × select) ──
 function abrirModalCanais() {
   const canais = loadCanaisLista();
-  if (!canais.length) {
-    alert('Adicione canais primeiro usando o botão "Adic/Remov canais".');
-    return;
-  }
+  if (!canais.length) { alert('Adicione canais primeiro usando o botão "Adic/Remov canais".'); return; }
   const origens = [...new Set(baseDeals.map(d => d.customFields?.origem_do_negocio?.value).filter(Boolean))].sort();
   const map = loadCanalMap();
   const opts = '<option value="">— sem canal —</option>' + canais.map(c => `<option value="${c}">${c}</option>`).join('');
   const tbody = document.getElementById('canais-tbody');
-  tbody.innerHTML = origens.map(o => `
-    <tr>
-      <td style="padding:6px 8px;border-bottom:0.5px solid rgba(14,20,40,0.07);color:#0E1428;font-size:12px;">${o}</td>
-      <td style="padding:6px 8px;border-bottom:0.5px solid rgba(14,20,40,0.07);">
-        <select data-origem="${o}" style="width:100%;padding:4px 8px;border:1px solid rgba(14,20,40,0.15);border-radius:6px;font-size:12px;font-family:'Poppins',sans-serif;background:#EBF0F3;">
-          ${opts.replace(`value="${map[o]||''}"`,`value="${map[o]||''}" selected`)}
-        </select>
-      </td>
-    </tr>`).join('');
+  tbody.innerHTML = origens.map(o => `<tr><td style="padding:6px 8px;border-bottom:0.5px solid rgba(14,20,40,0.07);color:#0E1428;font-size:12px;">${o}</td><td style="padding:6px 8px;border-bottom:0.5px solid rgba(14,20,40,0.07);"><select data-origem="${o}" style="width:100%;padding:4px 8px;border:1px solid rgba(14,20,40,0.15);border-radius:6px;font-size:12px;font-family:'Poppins',sans-serif;background:#EBF0F3;">${opts.replace(`value="${map[o]||''}"`,`value="${map[o]||''}" selected`)}</select></td></tr>`).join('');
   document.getElementById('modal-canais').style.display = 'flex';
 }
-
-function fecharModalCanais() {
-  document.getElementById('modal-canais').style.display = 'none';
-}
-
+function fecharModalCanais() { document.getElementById('modal-canais').style.display = 'none'; }
 function salvarCanais() {
   const map = {};
-  document.querySelectorAll('#canais-tbody select[data-origem]').forEach(sel => {
-    if (sel.value) map[sel.dataset.origem] = sel.value;
-  });
-  saveCanalMap(map);
-  fecharModalCanais();
-  atualizarSelectCanais();
-  renderFunilEtapas();
+  document.querySelectorAll('#canais-tbody select[data-origem]').forEach(sel => { if (sel.value) map[sel.dataset.origem] = sel.value; });
+  saveCanalMap(map); fecharModalCanais(); atualizarSelectCanais(); renderFunilEtapas();
 }
-
 function atualizarSelectCanais() {
   const canais = loadCanaisLista();
   const map = loadCanalMap();
   const usados = [...new Set(Object.values(map).filter(Boolean))];
-  // Mostra canais que estão na lista e têm ao menos uma origem mapeada
   const disponiveis = canais.filter(c => usados.includes(c));
   const sel = document.getElementById('funil-canal-select');
   if (!sel) return;
@@ -1206,7 +1205,6 @@ function atualizarSelectCanais() {
   sel.innerHTML = '<option value="">Todos os canais</option>' +
     (disponiveis.length ? disponiveis : canais).map(c => `<option value="${c}" ${c===cur?'selected':''}>${c}</option>`).join('');
 }
-
 function initFunilEtapas() {
   const sel = document.getElementById('funil-etapas-select');
   if (!sel) return;
@@ -1218,6 +1216,7 @@ function initFunilEtapas() {
   if (funis.includes(DEFAULT_FUNIL)) renderFunilEtapas();
 }
 
+// ===== ALTERAÇÃO 3: Funil de etapas — sem % e setas entre barras =====
 function renderFunilEtapas() {
   const sel = document.getElementById('funil-etapas-select');
   const body = document.getElementById('funil-etapas-body');
@@ -1235,7 +1234,6 @@ function renderFunilEtapas() {
   const tsFrom = dateFrom ? new Date(dateFrom).getTime() : null;
   const tsTo = dateTo ? new Date(dateTo + 'T23:59:59').getTime() : null;
 
-  // Filtra por funil, canal e data de início
   const dealsDoFunil = baseDeals.filter(d => {
     if (d.dealStage?.funnel?.name !== funilName) return false;
     if (canalFiltro) {
@@ -1251,7 +1249,6 @@ function renderFunilEtapas() {
     return true;
   });
 
-  // Agrupa por etapa
   const stageMap = {};
   dealsDoFunil.forEach(d => {
     const s = d.dealStage;
@@ -1267,49 +1264,27 @@ function renderFunilEtapas() {
     return;
   }
 
-  const base = etapas[0]?.count || 1;
   const maxCount = Math.max(...etapas.map(s => s.count), 1);
-
-  // Conta ganhos do funil no mesmo filtro
   const ganhos = dealsDoFunil.filter(d => d.dealStatus?.id === 2);
   const nGanhos = ganhos.length;
-  const pctGanhos = base > 0 ? ((nGanhos / base) * 100).toFixed(1) : 0;
   const barHGanhos = Math.max(12, Math.round((nGanhos / maxCount) * 100));
 
+  // ALTERAÇÃO: só barras + nome + quantidade, sem setas/% entre elas
   let html = '';
-
-  etapas.forEach((stage, i) => {
+  etapas.forEach((stage) => {
     const barH = Math.max(12, Math.round((stage.count / maxCount) * 100));
-    const nextCount = i < etapas.length - 1 ? etapas[i+1].count : null;
-    const rawPct = nextCount !== null ? (nextCount / base) * 100 : null;
-    const pctCapped = rawPct !== null ? Math.min(rawPct, 100).toFixed(1) : null;
-    const isCapped = rawPct !== null && rawPct > 100;
-    const avanc = nextCount !== null ? nextCount : null;
-
-    html += `<div style="display:flex;flex-direction:column;align-items:center;flex:1;min-width:100px;">
+    html += `<div style="display:flex;flex-direction:column;align-items:center;flex:1;min-width:90px;padding:0 4px;">
       <span style="font-size:11px;font-weight:500;color:#534AB7;text-align:center;margin-bottom:4px;padding:0 4px;">${stage.name}</span>
-      <span style="font-size:11px;color:var(--muted);margin-bottom:4px;">${stage.count} neg.</span>
+      <span style="font-size:13px;font-weight:600;color:#0E1428;margin-bottom:6px;">${stage.count}</span>
       <div style="height:${barH}px;width:48px;background:#534AB7;border-radius:4px 4px 0 0;"></div>
     </div>`;
-
-    if (i < etapas.length - 1) {
-      html += `<div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:0 4px 8px;min-width:60px;">
-        <span style="font-size:12px;font-weight:600;color:${isCapped ? '#a05c00' : 'var(--text)'};">${pctCapped}%${isCapped ? ' ↑' : ''}</span>
-        <svg width="18" height="14" viewBox="0 0 24 24" fill="none" stroke="#378ADD" stroke-width="2.5" style="margin:2px 0;"><polyline points="9 18 15 12 9 6"/></svg>
-        <span style="font-size:10px;color:var(--muted);">${avanc} avanç.</span>
-      </div>`;
-    }
   });
 
-  // Adiciona etapa Ganhos no final
-  html += `<div style="display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:0 4px 8px;min-width:60px;">
-    <span style="font-size:12px;font-weight:600;color:#0C7488;">${pctGanhos}%</span>
-    <svg width="18" height="14" viewBox="0 0 24 24" fill="none" stroke="#0C7488" stroke-width="2.5" style="margin:2px 0;"><polyline points="9 18 15 12 9 6"/></svg>
-    <span style="font-size:10px;color:var(--muted);">${nGanhos} avanç.</span>
-  </div>
-  <div style="display:flex;flex-direction:column;align-items:center;flex:1;min-width:100px;">
+  // Etapa Ganhos no final (separada visualmente)
+  html += `<div style="width:1px;background:rgba(14,20,40,0.1);align-self:stretch;margin:0 8px;flex-shrink:0;"></div>
+  <div style="display:flex;flex-direction:column;align-items:center;flex:1;min-width:90px;padding:0 4px;">
     <span style="font-size:11px;font-weight:500;color:#0C7488;text-align:center;margin-bottom:4px;">Ganhos</span>
-    <span style="font-size:11px;color:var(--muted);margin-bottom:4px;">${nGanhos} neg.</span>
+    <span style="font-size:13px;font-weight:600;color:#0C7488;margin-bottom:6px;">${nGanhos}</span>
     <div style="height:${barHGanhos}px;width:48px;background:#0C7488;border-radius:4px 4px 0 0;"></div>
   </div>`;
 
@@ -1322,7 +1297,6 @@ function renderAnalise() {
   deals.forEach(d=>{const o=getOrigem(d)||'Não informado';if(!origemMap[o])origemMap[o]={total:0,open:0,won:0,lost:0,value:0};origemMap[o].total++;origemMap[o].value+=d.value||0;if(d.dealStatus?.id===1)origemMap[o].open++;else if(d.dealStatus?.id===2)origemMap[o].won++;else if(d.dealStatus?.id===3)origemMap[o].lost++;});
   const origemSorted=Object.entries(origemMap).sort((a,b)=>b[1].total-a[1].total);
   const oTotal=origemSorted.reduce((acc,[,s])=>({total:acc.total+s.total,open:acc.open+s.open,won:acc.won+s.won,lost:acc.lost+s.lost,value:acc.value+s.value}),{total:0,open:0,won:0,lost:0,value:0});
-
   document.getElementById('a2-origens').textContent=origemSorted.length;
   const bestConv=[...origemSorted].filter(([,s])=>s.won+s.lost>=5).sort((a,b)=>pct(b[1].won,b[1].won+b[1].lost)-pct(a[1].won,a[1].won+a[1].lost))[0];
   if(bestConv){document.getElementById('a2-bestConv').textContent=bestConv[0].length>20?bestConv[0].substring(0,18)+'…':bestConv[0];document.getElementById('a2-bestConvSub').textContent=pct(bestConv[1].won,bestConv[1].won+bestConv[1].lost)+'% conversão';}
@@ -1330,34 +1304,24 @@ function renderAnalise() {
   if(bestVol){document.getElementById('a2-bestVol').textContent=bestVol[0].length>20?bestVol[0].substring(0,18)+'…':bestVol[0];document.getElementById('a2-bestVolSub').textContent=bestVol[1].total.toLocaleString('pt-BR')+' leads';}
   const worstLoss=[...origemSorted].filter(([,s])=>s.total>=5).sort((a,b)=>pct(b[1].lost,b[1].total)-pct(a[1].lost,a[1].total))[0];
   if(worstLoss){document.getElementById('a2-worstLoss').textContent=worstLoss[0].length>20?worstLoss[0].substring(0,18)+'…':worstLoss[0];document.getElementById('a2-worstLossSub').textContent=pct(worstLoss[1].lost,worstLoss[1].total)+'% perda';}
-
-  const fromStr = document.getElementById('dateFrom').value;
-  const toStr = document.getElementById('dateTo').value;
-  const diasPeriodo = (fromStr && toStr) ? Math.max(1, Math.round((new Date(toStr+'T23:59:59') - new Date(fromStr+'T00:00:00')) / (1000*60*60*24))) : 30;
+  const fromStr=document.getElementById('dateFrom').value, toStr=document.getElementById('dateTo').value;
+  const diasPeriodo=(fromStr&&toStr)?Math.max(1,Math.round((new Date(toStr+'T23:59:59')-new Date(fromStr+'T00:00:00'))/(1000*60*60*24))):30;
   document.getElementById('origensTableBody').innerHTML=buildStdTable(origemSorted.slice(0,20),oTotal,diasPeriodo);
-
-  // Funis
   const funnelMap={};
   deals.forEach(d=>{const f=d.dealStage?.funnel?.name||'Não informado';if(!funnelMap[f])funnelMap[f]={total:0,open:0,won:0,lost:0,value:0};funnelMap[f].total++;funnelMap[f].value+=d.value||0;if(d.dealStatus?.id===1)funnelMap[f].open++;else if(d.dealStatus?.id===2)funnelMap[f].won++;else if(d.dealStatus?.id===3)funnelMap[f].lost++;});
   const funnelSorted=Object.entries(funnelMap).sort((a,b)=>b[1].total-a[1].total);
   const fTotal=funnelSorted.reduce((acc,[,s])=>({total:acc.total+s.total,open:acc.open+s.open,won:acc.won+s.won,lost:acc.lost+s.lost,value:acc.value+s.value}),{total:0,open:0,won:0,lost:0,value:0});
   document.getElementById('funnelTableBody').innerHTML=buildStdTable(funnelSorted,fTotal,diasPeriodo);
-
-  // Gráfico volume origens
   if(a2VolChart) a2VolChart.destroy();
   const top15Vol=origemSorted.slice(0,15), volTotal=deals.length;
   const volPlugin={id:'volLbl',afterDatasetsDraw(chart){const ctx=chart.ctx;ctx.save();ctx.font='10px DM Sans';ctx.fillStyle='#6b6a66';ctx.textAlign='left';ctx.textBaseline='middle';chart.data.datasets.forEach((ds,i)=>{chart.getDatasetMeta(i).data.forEach((bar,idx)=>{const v=ds.data[idx],p=volTotal?Math.round((v/volTotal)*100):0;ctx.fillText(v+' ('+p+'%)',bar.x+6,bar.y);});});ctx.restore();}};
   a2VolChart=new Chart(document.getElementById('a2-volChart'),{type:'bar',plugins:[volPlugin],data:{labels:top15Vol.map(([n])=>n.length>30?n.substring(0,28)+'…':n),datasets:[{data:top15Vol.map(([,s])=>s.total),backgroundColor:top15Vol.map((_,i)=>COLORS[i%COLORS.length]),borderRadius:4,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,layout:{padding:{right:80}},plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>' '+ctx.parsed.x+' leads'}}},scales:{x:{ticks:{font:{size:11},color:'#6b6a66'},grid:{color:'rgba(0,0,0,0.04)'},border:{display:false}},y:{ticks:{font:{size:11},color:'#1a1a18'},grid:{display:false},border:{display:false}}}}});
-
-  // Gráfico conversão origens
   if(a2ConvChart) a2ConvChart.destroy();
   const top15Conv=[...origemSorted].filter(([,s])=>s.won+s.lost>=5).sort((a,b)=>pct(b[1].won,b[1].won+b[1].lost)-pct(a[1].won,a[1].won+a[1].lost)).slice(0,15);
   const convData=top15Conv.map(([,s])=>pct(s.won,s.won+s.lost));
   const convWonCounts=top15Conv.map(([,s])=>s.won);
   const convPlugin={id:'convLbl',afterDatasetsDraw(chart){const ctx=chart.ctx;ctx.save();ctx.font='10px DM Sans';ctx.fillStyle='#6b6a66';ctx.textAlign='left';ctx.textBaseline='middle';chart.data.datasets.forEach((ds,i)=>{chart.getDatasetMeta(i).data.forEach((bar,idx)=>{ctx.fillText(ds.data[idx]+'% ('+convWonCounts[idx]+' ganhos)',bar.x+6,bar.y);});});ctx.restore();}};
   a2ConvChart=new Chart(document.getElementById('a2-convChart'),{type:'bar',plugins:[convPlugin],data:{labels:top15Conv.map(([n])=>n.length>30?n.substring(0,28)+'…':n),datasets:[{data:convData,backgroundColor:convData.map(v=>v>=30?'rgba(30,126,74,0.8)':v>=15?'rgba(160,92,0,0.8)':'rgba(179,45,45,0.8)'),borderRadius:4,borderSkipped:false}]},options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,layout:{padding:{right:100}},plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>ctx.parsed.x+'% conversão ('+convWonCounts[ctx.dataIndex]+' ganhos)'}}},scales:{x:{max:100,ticks:{font:{size:11},color:'#6b6a66',callback:v=>v+'%'},grid:{color:'rgba(0,0,0,0.04)'},border:{display:false}},y:{ticks:{font:{size:11},color:'#1a1a18'},grid:{display:false},border:{display:false}}}}});
-
-  // Origem × Responsável (top 5 origens por volume)
   const top5Origens=origemSorted.slice(0,5).map(([n])=>n);
   const ownerOrigemMap={};
   deals.forEach(d=>{
@@ -1375,21 +1339,12 @@ function renderAnalise() {
   top5Origens.forEach(o=>{crossThead.innerHTML+=`<th title="${o}">${o.length>18?o.substring(0,16)+'…':o}</th>`;});
   document.getElementById('crossTbody').innerHTML=ownersSorted.map(([owner,origens])=>{
     let row=`<tr><td style="font-weight:500;">${owner}</td>`;
-    top5Origens.forEach(o=>{
-      const s=origens[o]||{total:0,won:0,lost:0};
-      const conv=pct(s.won,s.won+s.lost);
-      const color=s.total===0?'var(--muted)':conv>=30?'var(--success)':conv>=15?'var(--warning)':'var(--danger)';
-      row+=s.total===0?`<td style="color:var(--muted);">—</td>`:`<td><span style="color:${color};font-weight:500;">${conv}%</span><span style="color:var(--muted);font-size:10px;"> (${s.total})</span></td>`;
-    });
+    top5Origens.forEach(o=>{const s=origens[o]||{total:0,won:0,lost:0};const conv=pct(s.won,s.won+s.lost);const color=s.total===0?'var(--muted)':conv>=30?'var(--success)':conv>=15?'var(--warning)':'var(--danger)';row+=s.total===0?`<td style="color:var(--muted);">—</td>`:`<td><span style="color:${color};font-weight:500;">${conv}%</span><span style="color:var(--muted);font-size:10px;"> (${s.total})</span></td>`;});
     return row+'</tr>';
   }).join('');
-
-  // Responsáveis
   const ownerMap2={};
   deals.forEach(d=>{const name=d.owner?.name||'Sem responsável';if(!ownerMap2[name])ownerMap2[name]={total:0,won:0,lost:0,open:0};ownerMap2[name].total++;if(d.dealStatus?.id===2)ownerMap2[name].won++;else if(d.dealStatus?.id===3)ownerMap2[name].lost++;else ownerMap2[name].open++;});
   document.getElementById('a2-ownerConv').innerHTML=Object.entries(ownerMap2).sort((a,b)=>b[1].total-a[1].total).map(([name,s])=>{const conv=pct(s.won,s.won+s.lost),color=conv>=50?'var(--success)':conv>=25?'var(--warning)':'var(--danger)';return `<div class="owner-row"><div class="owner-info"><div class="owner-name">${name}</div><div class="owner-stats">${s.total} leads · ${s.open} abertos · <span style="color:var(--success)">${s.won} ganhos</span> · <span style="color:var(--danger)">${s.lost} perdidos</span></div></div><div class="owner-conv"><div class="conv-pct" style="color:${color}">${conv}%</div><div class="conv-label">conversão</div><div class="conv-bar"><div class="conv-fill" style="width:${conv}%;background:${color}"></div></div></div></div>`;}).join('')||'<p class="empty">Nenhum dado.</p>';
-
-  // Motivos de perda
   const lostDeals=deals.filter(d=>d.dealStatus?.id===3), motivoMap={};
   lostDeals.forEach(d=>{const m=d.lossReason?.name||'Não informado';motivoMap[m]=(motivoMap[m]||0)+1;});
   const motivoSorted=Object.entries(motivoMap).sort((a,b)=>b[1]-a[1]), motivoTotal=lostDeals.length;
@@ -1397,238 +1352,298 @@ function renderAnalise() {
 }
 
 function renderAcompanhamento() {
-  const deals=filteredDeals;
-  const hoje=new Date();
+  const deals=filteredDeals, hoje=new Date();
   const diasParado=parseInt(document.getElementById('paradosDias').value)||7;
-
-  // Leads parados (em andamento sem atualização há X dias)
-  const parados=deals.filter(d=>{
-    if(d.dealStatus?.id!==1) return false;
-    const upd=new Date(d.updatedAt||d.createdAt);
-    return daysBetween(upd,hoje)>=diasParado;
-  }).sort((a,b)=>new Date(a.updatedAt||a.createdAt)-new Date(b.updatedAt||b.createdAt));
-
+  const parados=deals.filter(d=>{if(d.dealStatus?.id!==1) return false;const upd=new Date(d.updatedAt||d.createdAt);return daysBetween(upd,hoje)>=diasParado;}).sort((a,b)=>new Date(a.updatedAt||a.createdAt)-new Date(b.updatedAt||b.createdAt));
   document.getElementById('a3-parados').textContent=parados.length;
   document.getElementById('a3-paradosSub').textContent='sem atualização há +'+diasParado+'d';
-
-  // Pipeline
   const pipeline=deals.filter(d=>d.dealStatus?.id===1);
   const pipelineValue=pipeline.reduce((s,d)=>s+(d.value||0),0);
   document.getElementById('a3-pipeline').textContent=fmt(pipelineValue);
-
-  // Tempo médio
   const wonWithDates=deals.filter(d=>d.dealStatus?.id===2&&d.createdAt&&d.wonAt);
   const lostWithDates=deals.filter(d=>d.dealStatus?.id===3&&d.createdAt&&d.lostAt);
   const avgWon=wonWithDates.length?Math.round(wonWithDates.reduce((s,d)=>s+daysBetween(d.createdAt,d.wonAt),0)/wonWithDates.length):null;
   const avgLost=lostWithDates.length?Math.round(lostWithDates.reduce((s,d)=>s+daysBetween(d.createdAt,d.lostAt),0)/lostWithDates.length):null;
   document.getElementById('a3-tempoGanho').textContent=avgWon!==null?avgWon+'d':'—';
   document.getElementById('a3-tempoPerda').textContent=avgLost!==null?avgLost+'d':'—';
-
-  // Lista leads parados
   const el=document.getElementById('a3-paradosList');
   if(!parados.length){el.innerHTML='<p class="empty">Nenhum lead parado há mais de '+diasParado+' dias.</p>';return;}
-  el.innerHTML=parados.slice(0,15).map(d=>{
-    const name=d.person?.name||d.organization?.name||d.title||'Sem nome';
-    const stage=d.dealStage?.name||'—', owner=d.owner?.name||'—';
-    const upd=new Date(d.updatedAt||d.createdAt), dias=daysBetween(upd,hoje);
-    const origem=getOrigem(d), tag=origem?`<span style="color:var(--accent);"> · ${origem}</span>`:'';
-    const urgColor=dias>=30?'var(--danger)':dias>=15?'var(--warning)':'var(--muted)';
-    return `<div class="row">
-      <div style="min-width:0;flex:1;">
-        <div class="row-name">${name}</div>
-        <div class="row-sub">${stage} · ${owner}${tag}</div>
-      </div>
-      <div class="row-right">
-        <div class="row-value" style="color:${urgColor};">${dias}d parado</div>
-        <div style="font-size:11px;color:var(--muted);">${upd.toLocaleDateString('pt-BR')}</div>
-      </div>
-    </div>`;
-  }).join('');
-
-  // Pipeline por responsável
+  el.innerHTML=parados.slice(0,15).map(d=>{const name=d.person?.name||d.organization?.name||d.title||'Sem nome';const stage=d.dealStage?.name||'—',owner=d.owner?.name||'—';const upd=new Date(d.updatedAt||d.createdAt),dias=daysBetween(upd,hoje);const origem=getOrigem(d),tag=origem?`<span style="color:var(--accent);"> · ${origem}</span>`:'';const urgColor=dias>=30?'var(--danger)':dias>=15?'var(--warning)':'var(--muted)';return `<div class="row"><div style="min-width:0;flex:1;"><div class="row-name">${name}</div><div class="row-sub">${stage} · ${owner}${tag}</div></div><div class="row-right"><div class="row-value" style="color:${urgColor};">${dias}d parado</div><div style="font-size:11px;color:var(--muted);">${upd.toLocaleDateString('pt-BR')}</div></div></div>`;}).join('');
   const pipelineMap={};
   pipeline.forEach(d=>{const name=d.owner?.name||'Sem responsável';if(!pipelineMap[name])pipelineMap[name]={total:0,value:0};pipelineMap[name].total++;pipelineMap[name].value+=d.value||0;});
   const pipelineSorted=Object.entries(pipelineMap).sort((a,b)=>b[1].value-a[1].value);
   const pipelineTotal=pipelineSorted.reduce((acc,[,s])=>({total:acc.total+s.total,value:acc.value+s.value}),{total:0,value:0});
   document.getElementById('a3-pipelineTable').innerHTML=pipelineSorted.map(([name,s])=>`<tr><td>${name}</td><td>${s.total}</td><td>${fmt(s.value)}</td><td>${fmt(s.total?Math.round(s.value/s.total):0)}</td></tr>`).join('')+`<tr class="total-row"><td>Total</td><td>${pipelineTotal.total}</td><td>${fmt(pipelineTotal.value)}</td><td>${fmt(pipelineTotal.total?Math.round(pipelineTotal.value/pipelineTotal.total):0)}</td></tr>`;
-
-  // Tempo médio por funil
   const tempoMap={};
-  deals.forEach(d=>{
-    const f=d.dealStage?.funnel?.name||'Não informado';
-    if(!tempoMap[f])tempoMap[f]={won:[],lost:[]};
-    if(d.dealStatus?.id===2&&d.createdAt&&d.wonAt) tempoMap[f].won.push(daysBetween(d.createdAt,d.wonAt));
-    if(d.dealStatus?.id===3&&d.createdAt&&d.lostAt) tempoMap[f].lost.push(daysBetween(d.createdAt,d.lostAt));
-  });
-  document.getElementById('a3-tempoTable').innerHTML=Object.entries(tempoMap).map(([f,s])=>{
-    const avgW=s.won.length?Math.round(s.won.reduce((a,b)=>a+b,0)/s.won.length):null;
-    const avgL=s.lost.length?Math.round(s.lost.reduce((a,b)=>a+b,0)/s.lost.length):null;
-    return `<tr><td>${f}</td><td style="color:var(--success);">${avgW!==null?avgW+'d':'—'}</td><td style="color:var(--danger);">${avgL!==null?avgL+'d':'—'}</td></tr>`;
-  }).join('');
+  deals.forEach(d=>{const f=d.dealStage?.funnel?.name||'Não informado';if(!tempoMap[f])tempoMap[f]={won:[],lost:[]};if(d.dealStatus?.id===2&&d.createdAt&&d.wonAt) tempoMap[f].won.push(daysBetween(d.createdAt,d.wonAt));if(d.dealStatus?.id===3&&d.createdAt&&d.lostAt) tempoMap[f].lost.push(daysBetween(d.createdAt,d.lostAt));});
+  document.getElementById('a3-tempoTable').innerHTML=Object.entries(tempoMap).map(([f,s])=>{const avgW=s.won.length?Math.round(s.won.reduce((a,b)=>a+b,0)/s.won.length):null;const avgL=s.lost.length?Math.round(s.lost.reduce((a,b)=>a+b,0)/s.lost.length):null;return `<tr><td>${f}</td><td style="color:var(--success);">${avgW!==null?avgW+'d':'—'}</td><td style="color:var(--danger);">${avgL!==null?avgL+'d':'—'}</td></tr>`;}).join('');
 }
 
 function renderContratos() {
-  // Filtra por wonAt (data de ganho) usando o filtro global de período
-  const from = document.getElementById('dateFrom').value;
-  const to = document.getElementById('dateTo').value;
-  const funis = getSelectedFunnels();
-
-  let won = baseDeals.filter(d => d.dealStatus?.id === 2);
-
-  // Filtro de funil
-  if (funis.length > 0 && funis.length < document.querySelectorAll('.funnel-option').length) {
-    won = won.filter(d => funis.includes(d.dealStage?.funnel?.name));
-  } else if (funis.length === 0) {
-    won = [];
-  }
-
-  // Filtro por wonAt (não createdAt)
-  if (from && to) {
-    const fd = new Date(from+'T00:00:00'), td = new Date(to+'T23:59:59');
-    won = won.filter(d => {
-      const w = d.endTime ? new Date(d.endTime) : (d.wonAt ? new Date(d.wonAt) : null);
-      return w && w >= fd && w <= td;
-    });
-  }
-
-  // Popula select de responsáveis
-  const ownerSel = document.getElementById('c-owner');
-  const currentOwner = ownerSel.value;
-  const owners = [...new Set(won.map(d => d.owner?.name || 'Sem responsável'))].sort();
-  ownerSel.innerHTML = '<option value="all">Todos responsáveis</option>' + owners.map(o => `<option value="${o}" ${o===currentOwner?'selected':''}>${o}</option>`).join('');
-
-  // Filtros
-  const search = (document.getElementById('c-search').value || '').toLowerCase();
-  const ownerFilter = ownerSel.value;
-  let deals = won;
-  if (search) deals = deals.filter(d => (d.title||'').toLowerCase().includes(search) || (d.person?.name||'').toLowerCase().includes(search) || (d.organization?.name||'').toLowerCase().includes(search));
-  if (ownerFilter !== 'all') deals = deals.filter(d => (d.owner?.name||'Sem responsável') === ownerFilter);
-
-  // Métricas
-  const totalVal = deals.reduce((s,d) => s+(d.value||0), 0);
-  const comProd = deals.filter(d => d.products_entities?.length > 0 || d.products?.length > 0).length;
-  const dealsComTempo = deals.filter(d => (d.startTime||d.createdAt) && (d.wonAt||d.endTime));
-  const avgTempo = dealsComTempo.length ? Math.round(dealsComTempo.reduce((s,d) => {
-    const ini = new Date(d.startTime||d.createdAt), fim = new Date(d.wonAt||d.endTime);
-    return s + Math.max(0, Math.round((fim-ini)/(1000*60*60*24)));
-  }, 0) / dealsComTempo.length) : null;
-  document.getElementById('c-total').textContent = deals.length.toLocaleString('pt-BR');
-  document.getElementById('c-valor').textContent = fmt(totalVal);
-  document.getElementById('c-ticket').textContent = fmt(deals.length ? Math.round(totalVal/deals.length) : 0);
-  document.getElementById('c-comprod').textContent = comProd;
-  document.getElementById('c-tempo').textContent = avgTempo !== null ? avgTempo+'d' : '—';
-
-  // Tabela
-  const tbody = document.getElementById('contratosBody');
-  if (!deals.length) { tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:1rem;color:var(--muted);">Nenhum negócio ganho no período.</td></tr>'; return; }
-
-  // Ordena por data de ganho (mais recente primeiro)
-  const sorted = [...deals].sort((a,b) => new Date(getWonDate(b)||b.updatedAt) - new Date(getWonDate(a)||a.updatedAt));
-
-  tbody.innerHTML = sorted.map(d => {
-    const name = d.title || d.person?.name || d.organization?.name || '—';
-    const owner = d.owner?.name || '—';
-    const funnel = d.dealStage?.funnel?.name || '—';
-    const wonDate = getWonDate(d) ? new Date(getWonDate(d)).toLocaleDateString('pt-BR') : '—';
-
-    // Produto — tenta vários campos
-    let produto = '—';
-    if (d.products_entities && d.products_entities.length > 0) {
-      produto = d.products_entities.map(p => p.name || p.product?.name || p.productName || JSON.stringify(p)).filter(Boolean).join(', ');
-    } else if (d.products && d.products.length > 0) {
-      produto = Array.isArray(d.products) ? d.products.join(', ') : d.products;
-    }
-
-    // Data de início e duração
-    const iniDate = d.startTime || d.createdAt;
-    const fimDate = d.wonAt || d.endTime;
-    const iniStr = iniDate ? new Date(iniDate).toLocaleDateString('pt-BR') : '—';
-    let durStr = '—', durColor = 'var(--muted)';
-    if (iniDate && fimDate) {
-      const dias = Math.max(0, Math.round((new Date(fimDate) - new Date(iniDate)) / (1000*60*60*24)));
-      durStr = dias + 'd';
-      durColor = dias <= 7 ? 'var(--teal)' : dias <= 30 ? 'var(--warning)' : 'var(--red)';
-    }
-
-    return `<tr>
-      <td style="font-weight:500;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${name}">${name}</td>
-      <td>${owner}</td>
-      <td style="color:var(--teal);">${produto}</td>
-      <td style="color:var(--muted);font-size:11px;">${funnel}</td>
-      <td style="font-family:'DM Mono',monospace;">${fmt(d.value)}</td>
-      <td style="font-family:'DM Mono',monospace;white-space:nowrap;color:var(--muted);">${iniStr}</td>
-      <td style="font-family:'DM Mono',monospace;white-space:nowrap;">${wonDate}</td>
-      <td style="font-weight:500;color:${durColor};">${durStr}</td>
-    </tr>`;
+  const from=document.getElementById('dateFrom').value, to=document.getElementById('dateTo').value;
+  const funis=getSelectedFunnels();
+  let won=baseDeals.filter(d=>d.dealStatus?.id===2);
+  if(funis.length>0&&funis.length<document.querySelectorAll('.funnel-option').length) won=won.filter(d=>funis.includes(d.dealStage?.funnel?.name));
+  else if(funis.length===0) won=[];
+  if(from&&to){const fd=new Date(from+'T00:00:00'),td=new Date(to+'T23:59:59');won=won.filter(d=>{const w=d.endTime?new Date(d.endTime):(d.wonAt?new Date(d.wonAt):null);return w&&w>=fd&&w<=td;});}
+  const ownerSel=document.getElementById('c-owner');
+  const currentOwner=ownerSel.value;
+  const owners=[...new Set(won.map(d=>d.owner?.name||'Sem responsável'))].sort();
+  ownerSel.innerHTML='<option value="all">Todos responsáveis</option>'+owners.map(o=>`<option value="${o}" ${o===currentOwner?'selected':''}>${o}</option>`).join('');
+  const search=(document.getElementById('c-search').value||'').toLowerCase();
+  const ownerFilter=ownerSel.value;
+  let deals=won;
+  if(search) deals=deals.filter(d=>(d.title||'').toLowerCase().includes(search)||(d.person?.name||'').toLowerCase().includes(search)||(d.organization?.name||'').toLowerCase().includes(search));
+  if(ownerFilter!=='all') deals=deals.filter(d=>(d.owner?.name||'Sem responsável')===ownerFilter);
+  const totalVal=deals.reduce((s,d)=>s+(d.value||0),0);
+  const comProd=deals.filter(d=>d.products_entities?.length>0||d.products?.length>0).length;
+  const dealsComTempo=deals.filter(d=>(d.startTime||d.createdAt)&&(d.wonAt||d.endTime));
+  const avgTempo=dealsComTempo.length?Math.round(dealsComTempo.reduce((s,d)=>{const ini=new Date(d.startTime||d.createdAt),fim=new Date(d.wonAt||d.endTime);return s+Math.max(0,Math.round((fim-ini)/(1000*60*60*24)));},0)/dealsComTempo.length):null;
+  document.getElementById('c-total').textContent=deals.length.toLocaleString('pt-BR');
+  document.getElementById('c-valor').textContent=fmt(totalVal);
+  document.getElementById('c-ticket').textContent=fmt(deals.length?Math.round(totalVal/deals.length):0);
+  document.getElementById('c-comprod').textContent=comProd;
+  document.getElementById('c-tempo').textContent=avgTempo!==null?avgTempo+'d':'—';
+  const tbody=document.getElementById('contratosBody');
+  if(!deals.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:1rem;color:var(--muted);">Nenhum negócio ganho no período.</td></tr>';return;}
+  const sorted=[...deals].sort((a,b)=>new Date(getWonDate(b)||b.updatedAt)-new Date(getWonDate(a)||a.updatedAt));
+  tbody.innerHTML=sorted.map(d=>{
+    const name=d.title||d.person?.name||d.organization?.name||'—', owner=d.owner?.name||'—', funnel=d.dealStage?.funnel?.name||'—';
+    const wonDate=getWonDate(d)?new Date(getWonDate(d)).toLocaleDateString('pt-BR'):'—';
+    let produto='—';
+    if(d.products_entities&&d.products_entities.length>0) produto=d.products_entities.map(p=>p.name||p.product?.name||p.productName||JSON.stringify(p)).filter(Boolean).join(', ');
+    else if(d.products&&d.products.length>0) produto=Array.isArray(d.products)?d.products.join(', '):d.products;
+    const iniDate=d.startTime||d.createdAt, fimDate=d.wonAt||d.endTime;
+    const iniStr=iniDate?new Date(iniDate).toLocaleDateString('pt-BR'):'—';
+    let durStr='—',durColor='var(--muted)';
+    if(iniDate&&fimDate){const dias=Math.max(0,Math.round((new Date(fimDate)-new Date(iniDate))/(1000*60*60*24)));durStr=dias+'d';durColor=dias<=7?'var(--teal)':dias<=30?'var(--warning)':'var(--red)';}
+    return `<tr><td style="font-weight:500;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${name}">${name}</td><td>${owner}</td><td style="color:var(--teal);">${produto}</td><td style="color:var(--muted);font-size:11px;">${funnel}</td><td style="font-family:'DM Mono',monospace;">${fmt(d.value)}</td><td style="font-family:'DM Mono',monospace;white-space:nowrap;color:var(--muted);">${iniStr}</td><td style="font-family:'DM Mono',monospace;white-space:nowrap;">${wonDate}</td><td style="font-weight:500;color:${durColor};">${durStr}</td></tr>`;
   }).join('');
 }
 
+// ===== ABA ATIVIDADES =====
+let atvTasksCache = null;
+
+function initAtividades() {
+  const to = new Date(), from = new Date();
+  from.setDate(from.getDate() - 7);
+  document.getElementById('atv-dateTo').value = toISO(to);
+  document.getElementById('atv-dateFrom').value = toISO(from);
+}
+
+function setAtvPeriod(days, btn) {
+  clearAtvBtns();
+  if (btn) btn.classList.add('active');
+  const to = new Date(), from = new Date();
+  if (days > 0) from.setDate(from.getDate() - days); else from.setFullYear(2000);
+  document.getElementById('atv-dateTo').value = toISO(to);
+  document.getElementById('atv-dateFrom').value = toISO(from);
+  renderAtividades();
+}
+
+function clearAtvBtns() {
+  ['atv-btn-7','atv-btn-30','atv-btn-90','atv-btn-todos'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('active');
+  });
+}
+
+async function fetchTasks(forceRefresh) {
+  if (!forceRefresh && atvTasksCache !== null) { renderAtividades(); return; }
+  const btn = document.getElementById('atv-refresh-btn');
+  if (btn) { btn.innerHTML = '<span class="spinner" style="border-top-color:#0C7488;border-color:rgba(14,20,40,0.2);"></span> Buscando...'; btn.disabled = true; }
+  try {
+    const resp = await fetch(PROXY + '/tasks');
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const result = await resp.json();
+    atvTasksCache = result.data || [];
+    baseTasks = atvTasksCache;
+  } catch(e) {
+    console.warn('Erro ao buscar tasks:', e.message);
+    if (!atvTasksCache) atvTasksCache = [];
+  }
+  if (btn) { btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg> Recarregar'; btn.disabled = false; }
+  renderAtividades();
+}
+
+function renderAtividades() {
+  const tasks = atvTasksCache || baseTasks;
+  if (!tasks || tasks.length === 0) {
+    document.getElementById('atv-list').innerHTML = '<p class="empty">Nenhuma atividade encontrada. Clique em "Recarregar" para buscar do servidor.</p>';
+    document.getElementById('atv-total').textContent = '—';
+    document.getElementById('atv-done').textContent = '—';
+    document.getElementById('atv-pending').textContent = '—';
+    document.getElementById('atv-taxa').textContent = '—';
+    document.getElementById('atv-overdue').textContent = '—';
+    return;
+  }
+
+  const fromVal = document.getElementById('atv-dateFrom').value;
+  const toVal = document.getElementById('atv-dateTo').value;
+  const ownerFilter = document.getElementById('atv-owner').value;
+  const statusFilter = document.getElementById('atv-status').value;
+  const search = (document.getElementById('atv-search')?.value || '').toLowerCase();
+  const from = fromVal ? new Date(fromVal + 'T00:00:00') : null;
+  const to = toVal ? new Date(toVal + 'T23:59:59') : null;
+  const hoje = new Date();
+
+  // Popula select de responsáveis
+  const owners = [...new Set(tasks.map(t => t.owner?.name || t.ownerName || '').filter(Boolean))].sort();
+  const ownerSel = document.getElementById('atv-owner');
+  const curOwner = ownerSel.value;
+  ownerSel.innerHTML = '<option value="all">Todos responsáveis</option>' + owners.map(o => `<option value="${o}" ${o===curOwner?'selected':''}>${o}</option>`).join('');
+
+  // Filtra por período (usa dueAt ou createdAt)
+  let filtered = tasks.filter(t => {
+    const ref = t.dueAt || t.createdAt || t.updatedAt;
+    if (from && to && ref) {
+      const d = new Date(ref);
+      if (d < from || d > to) return false;
+    }
+    return true;
+  });
+
+  // Aplica outros filtros
+  if (ownerFilter !== 'all') filtered = filtered.filter(t => (t.owner?.name || t.ownerName || '') === ownerFilter);
+  if (statusFilter === 'done') filtered = filtered.filter(t => t.completed || t.isDone || t.status === 'done');
+  if (statusFilter === 'pending') filtered = filtered.filter(t => !t.completed && !t.isDone && t.status !== 'done');
+  if (search) filtered = filtered.filter(t => (t.text || t.title || t.description || '').toLowerCase().includes(search));
+
+  const isDone = t => !!(t.completed || t.isDone || t.status === 'done');
+  const isOverdue = t => {
+    if (isDone(t)) return false;
+    const due = t.dueAt || t.dueDatetime;
+    return due && new Date(due) < hoje;
+  };
+
+  const total = filtered.length;
+  const done = filtered.filter(isDone).length;
+  const pending = total - done;
+  const overdue = filtered.filter(isOverdue).length;
+  const taxa = total > 0 ? Math.round((done / total) * 100) : 0;
+
+  document.getElementById('atv-total').textContent = total;
+  document.getElementById('atv-done').textContent = done;
+  document.getElementById('atv-pending').textContent = pending;
+  document.getElementById('atv-taxa').textContent = taxa + '%';
+  document.getElementById('atv-overdue').textContent = overdue;
+  document.getElementById('atv-done-pct').textContent = taxa + '%';
+  document.getElementById('atv-done-bar').style.width = taxa + '%';
+  const pendPct = total > 0 ? Math.round((pending / total) * 100) : 0;
+  document.getElementById('atv-pending-pct').textContent = pendPct + '%';
+  document.getElementById('atv-pending-bar').style.width = pendPct + '%';
+
+  // Tabela por responsável
+  const ownerMap = {};
+  filtered.forEach(t => {
+    const name = t.owner?.name || t.ownerName || 'Sem responsável';
+    if (!ownerMap[name]) ownerMap[name] = { total: 0, done: 0, pending: 0, overdue: 0 };
+    ownerMap[name].total++;
+    if (isDone(t)) ownerMap[name].done++; else ownerMap[name].pending++;
+    if (isOverdue(t)) ownerMap[name].overdue++;
+  });
+  const ownerRows = Object.entries(ownerMap).sort((a,b) => b[1].total - a[1].total).map(([name, s]) => {
+    const txPct = s.total > 0 ? Math.round((s.done / s.total) * 100) : 0;
+    const color = txPct >= 70 ? 'var(--success)' : txPct >= 40 ? 'var(--warning)' : 'var(--danger)';
+    return `<tr>
+      <td>${name}</td>
+      <td>${s.total}</td>
+      <td style="color:var(--success);">${s.done}</td>
+      <td style="color:var(--warning);">${s.pending}</td>
+      <td style="color:${s.overdue > 0 ? 'var(--danger)' : 'var(--muted)'};">${s.overdue}</td>
+      <td style="color:${color};font-weight:500;">${txPct}%<div style="height:3px;background:var(--bg);border-radius:2px;margin-top:3px;overflow:hidden;"><div style="height:100%;width:${txPct}%;background:${color};border-radius:2px;"></div></div></td>
+    </tr>`;
+  }).join('');
+  document.getElementById('atv-owner-body').innerHTML = ownerRows || '<tr><td colspan="6" class="empty">Nenhum dado</td></tr>';
+
+  // Lista de atividades
+  document.getElementById('atv-count-label').textContent = total + ' atividade' + (total !== 1 ? 's' : '');
+  const listEl = document.getElementById('atv-list');
+  if (!filtered.length) { listEl.innerHTML = '<p class="empty">Nenhuma atividade no período com os filtros selecionados.</p>'; return; }
+
+  const sorted = [...filtered].sort((a, b) => {
+    // Pendentes primeiro, depois por prazo
+    const aDone = isDone(a), bDone = isDone(b);
+    if (aDone !== bDone) return aDone ? 1 : -1;
+    const aDate = new Date(a.dueAt || a.createdAt || 0);
+    const bDate = new Date(b.dueAt || b.createdAt || 0);
+    return aDate - bDate;
+  });
+
+  listEl.innerHTML = sorted.slice(0, 50).map(t => {
+    const done_ = isDone(t);
+    const over = isOverdue(t);
+    const iconClass = done_ ? 'done' : (over ? 'overdue' : 'pending');
+    const icon = done_ ? '✓' : (over ? '!' : '○');
+    const titulo = t.text || t.title || t.description || '(sem descrição)';
+    const owner = t.owner?.name || t.ownerName || '—';
+    const dealTitle = t.deal?.title || t.dealTitle || '';
+    const dueDate = t.dueAt || t.dueDatetime;
+    const dueStr = dueDate ? new Date(dueDate).toLocaleDateString('pt-BR') : '—';
+    const concluStr = done_ ? (t.concludedAt ? new Date(t.concludedAt).toLocaleDateString('pt-BR') : '✓') : '';
+    const statusBadge = done_
+      ? `<span class="badge won">Concluída</span>`
+      : over
+        ? `<span class="badge lost">Atrasada</span>`
+        : `<span class="badge warn">Pendente</span>`;
+    return `<div class="task-row">
+      <div class="task-check-icon ${iconClass}">${icon}</div>
+      <div class="task-info">
+        <div class="task-title" style="${done_ ? 'text-decoration:line-through;color:var(--muted);' : ''}">${titulo}</div>
+        <div class="task-meta">
+          <span>👤 ${owner}</span>
+          ${dealTitle ? `<span>🔗 ${dealTitle}</span>` : ''}
+          ${dueStr !== '—' ? `<span>📅 Prazo: ${dueStr}</span>` : ''}
+          ${concluStr ? `<span>✅ Concluída: ${concluStr}</span>` : ''}
+        </div>
+      </div>
+      <div class="task-right">${statusBadge}</div>
+    </div>`;
+  }).join('');
+
+  if (filtered.length > 50) {
+    listEl.innerHTML += `<p style="font-size:12px;color:var(--muted);padding:8px 0;text-align:center;">Mostrando 50 de ${filtered.length} atividades. Use os filtros para refinar.</p>`;
+  }
+}
 
 // ===== COMISSÕES =====
 const SENHA_COMISSOES = 'GestaoComercial';
 let comissoesDesbloqueadas = false;
 let comissoesExpiresAt = null;
-const COMISSOES_TIMEOUT_MS = 2 * 60 * 60 * 1000; // 2 horas
+const COMISSOES_TIMEOUT_MS = 2 * 60 * 60 * 1000;
 
 function isComissoesValido() {
   if (!comissoesDesbloqueadas || !comissoesExpiresAt) return false;
-  if (Date.now() > comissoesExpiresAt) {
-    comissoesDesbloqueadas = false;
-    comissoesExpiresAt = null;
-    return false;
-  }
+  if (Date.now() > comissoesExpiresAt) { comissoesDesbloqueadas = false; comissoesExpiresAt = null; return false; }
   return true;
 }
 
-// Taxas padrão (Ronaldo, Everton e outros)
 const TAXAS_COMISSAO = {
-  'Preço base': 0.30,
-  'Indicação de Amigo': 0.80,
-  'IRPF grátis primeiro ano': 0.28,
-  'Isenção do primeiro mês': 0.25,
-  'Isenção primeiro mês': 0.25,
-  '15% de desconto no primeiro ano': 0.22,
-  'Gratuidade dois meses': 0.20,
-  'Gratuidade três meses': 0.15,
-  'Parceria Leo Marconi': 0.20,
+  'Preço base': 0.30, 'Indicação de Amigo': 0.80, 'IRPF grátis primeiro ano': 0.28,
+  'Isenção do primeiro mês': 0.25, 'Isenção primeiro mês': 0.25,
+  '15% de desconto no primeiro ano': 0.22, 'Gratuidade dois meses': 0.20,
+  'Parceria Leo Marconi': 0.20, 'Gratuidade três meses': 0.15,
 };
 
-// Descontos da Fabíola sobre a comissão (comissão = valor × (1 - desconto))
 const DESCONTOS_FABIOLA = {
-  'Preço base': 0.00,
-  'IRPF grátis primeiro ano': 0.15,
-  'Isenção do primeiro mês': 0.18,
-  'Isenção primeiro mês': 0.18,
-  'Parceria Afiliados': 0.20,
-  'Indicação de Amigo': 0.20,
-  'Parceria Leo Marconi': 0.20,
-  'Gratuidade dois meses': 0.40,
-  'Gratuidade de dois meses': 0.40,
-  '15% de desconto no primeiro ano': 0.40,
-  'Gratuidade três meses': 0.50,
-  'Gratuidade de três meses': 0.50,
+  'Preço base': 0.00, 'IRPF grátis primeiro ano': 0.15,
+  'Isenção do primeiro mês': 0.18, 'Isenção primeiro mês': 0.18,
+  'Parceria Afiliados': 0.20, 'Indicação de Amigo': 0.20, 'Parceria Leo Marconi': 0.20,
+  'Gratuidade dois meses': 0.40, 'Gratuidade de dois meses': 0.40,
+  '15% de desconto no primeiro ano': 0.40, 'Gratuidade três meses': 0.50, 'Gratuidade de três meses': 0.50,
 };
+
 function getTaxaFabiola(condicao) {
   if (!condicao) return null;
-  // busca exata
   if (DESCONTOS_FABIOLA[condicao] !== undefined) return 1 - DESCONTOS_FABIOLA[condicao];
-  // busca parcial
-  const key = Object.keys(DESCONTOS_FABIOLA).find(k =>
-    k.toLowerCase().includes(condicao.toLowerCase()) || condicao.toLowerCase().includes(k.toLowerCase())
-  );
+  const key = Object.keys(DESCONTOS_FABIOLA).find(k => k.toLowerCase().includes(condicao.toLowerCase()) || condicao.toLowerCase().includes(k.toLowerCase()));
   return key !== undefined ? 1 - DESCONTOS_FABIOLA[key] : null;
 }
 
-// Bônus de reunião manual — persiste no localStorage
 const VALOR_BONUS_REUNIAO = 30;
 let BONUS_REUNIAO = {};
-try {
-  const _saved = localStorage.getItem('lucralize_bonus_reuniao');
-  if (_saved) BONUS_REUNIAO = JSON.parse(_saved);
-} catch(e) { BONUS_REUNIAO = {}; }
-function saveBonusReuniao() {
-  try { localStorage.setItem('lucralize_bonus_reuniao', JSON.stringify(BONUS_REUNIAO)); } catch(e) {}
-}
+try { const _saved = localStorage.getItem('lucralize_bonus_reuniao'); if (_saved) BONUS_REUNIAO = JSON.parse(_saved); } catch(e) { BONUS_REUNIAO = {}; }
+function saveBonusReuniao() { try { localStorage.setItem('lucralize_bonus_reuniao', JSON.stringify(BONUS_REUNIAO)); } catch(e) {} }
 
 function openComissoes(btn) {
   if (isComissoesValido()) {
@@ -1644,15 +1659,13 @@ function openComissoes(btn) {
   document.getElementById('senha-input').value = '';
   document.getElementById('senha-erro').textContent = '';
   setTimeout(() => document.getElementById('senha-input').focus(), 100);
-  // guardar ref do btn para ativar depois
   window._comBtn = btn;
 }
 
 function verificarSenha() {
   const val = document.getElementById('senha-input').value;
   if (val === SENHA_COMISSOES) {
-    comissoesDesbloqueadas = true;
-    comissoesExpiresAt = Date.now() + COMISSOES_TIMEOUT_MS;
+    comissoesDesbloqueadas = true; comissoesExpiresAt = Date.now() + COMISSOES_TIMEOUT_MS;
     document.getElementById('modal-senha').style.display = 'none';
     document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -1668,13 +1681,10 @@ function verificarSenha() {
   }
 }
 
-function fecharModalSenha() {
-  document.getElementById('modal-senha').style.display = 'none';
-}
+function fecharModalSenha() { document.getElementById('modal-senha').style.display = 'none'; }
 
 function sairComissoes() {
-  comissoesDesbloqueadas = false;
-  comissoesExpiresAt = null;
+  comissoesDesbloqueadas = false; comissoesExpiresAt = null;
   document.getElementById('helpBtn').classList.remove('visible');
   document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -1693,15 +1703,13 @@ function setComCiclo(offset, btn) {
   const now = new Date();
   const fimMes = new Date(now.getFullYear(), now.getMonth() + offset, 25);
   const iniMes = new Date(now.getFullYear(), now.getMonth() + offset - 1, 26);
-  const fmt = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  document.getElementById('com-dateFrom').value = fmt(iniMes);
-  document.getElementById('com-dateTo').value = fmt(fimMes);
+  const fmt_ = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  document.getElementById('com-dateFrom').value = fmt_(iniMes);
+  document.getElementById('com-dateTo').value = fmt_(fimMes);
   renderComissoes();
 }
 
-function initComPeriod() {
-  setComCiclo(0, document.getElementById('com-btn-atual'));
-}
+function initComPeriod() { setComCiclo(0, document.getElementById('com-btn-atual')); }
 
 function getCondicao(d) {
   const c = d.customFields?.condicao_comercial;
@@ -1713,544 +1721,270 @@ function getCondicao(d) {
 
 function getTaxaComissao(condicao) {
   if (!condicao) return null;
-  // busca exata primeiro
   if (TAXAS_COMISSAO[condicao] !== undefined) return TAXAS_COMISSAO[condicao];
-  // busca parcial (case insensitive)
   const key = Object.keys(TAXAS_COMISSAO).find(k => k.toLowerCase().includes(condicao.toLowerCase()) || condicao.toLowerCase().includes(k.toLowerCase()));
   return key ? TAXAS_COMISSAO[key] : null;
 }
 
-// Responsáveis com regra especial baseada na origem
-const REGRA_ORIGEM = ['Diogo Vieira', 'Brenda Medeiros'];
 const LEGADO_DIOGO_CORTE = new Date('2026-06-01T00:00:00');
 function isRegraOrigemDeal(owner, d) {
   if (owner === 'Brenda Medeiros') return true;
   if (owner === 'Diogo Vieira') return true;
-  if (owner === 'Matheus Augusto') {
-    // Legado: antes de 01/06/2026 segue regra do Diogo
-    const wonDate = getWonDate(d);
-    return wonDate ? new Date(wonDate) < LEGADO_DIOGO_CORTE : false;
-  }
+  if (owner === 'Matheus Augusto') { const wonDate = getWonDate(d); return wonDate ? new Date(wonDate) < LEGADO_DIOGO_CORTE : false; }
   return false;
 }
-
 function getComissaoEspecial(d) {
-  // Retorna a taxa para responsáveis com regra baseada em origem
   const origem = d.customFields?.origem_do_negocio?.value || '';
-  if (origem.toLowerCase().includes('relacionamento diretoria')) return null; // sem comissão
+  if (origem.toLowerCase().includes('relacionamento diretoria')) return null;
   if (origem.toLowerCase().includes('indique um amigo (colaborador)')) return 0.80;
   return 0.15;
 }
-
 function getProdutoNome(d) {
   if (d.products_entities?.length > 0) return d.products_entities[0].name || '—';
   if (d.products?.length > 0) return d.products[0].name || '—';
   return '—';
 }
-
 function fmtBRL(v) { return 'R$ ' + Number(v).toLocaleString('pt-BR', {minimumFractionDigits:0, maximumFractionDigits:0}); }
 function fmtDate(s) { if (!s) return '—'; const d = new Date(s); return d.toLocaleDateString('pt-BR'); }
-// Data de conclusão real: endTime (preenchido pelo usuário) ou wonAt (quando clicou em Ganho)
 function getWonDate(d) { return d.endTime || d.wonAt || null; }
-// Nome de exibição: Matheus Augusto antes de 01/06/2026 aparece como Diogo Vieira (legado)
 function getOwnerDisplay(d) {
   const owner = d.owner?.name || '—';
-  if (owner === 'Matheus Augusto') {
-    const wonDate = getWonDate(d);
-    if (wonDate && new Date(wonDate) < LEGADO_DIOGO_CORTE) return 'Diogo Vieira';
-  }
+  if (owner === 'Matheus Augusto') { const wonDate = getWonDate(d); if (wonDate && new Date(wonDate) < LEGADO_DIOGO_CORTE) return 'Diogo Vieira'; }
   return owner;
 }
 
 function renderComissoes() {
-  const fromVal = document.getElementById('com-dateFrom').value;
-  const toVal = document.getElementById('com-dateTo').value;
-  const ownerSel = document.getElementById('com-owner').value;
-  const search = (document.getElementById('com-search')?.value || '').toLowerCase();
-  const detailOwner = document.getElementById('com-detail-owner')?.value || 'all';
-  const detailProduto = document.getElementById('com-detail-produto')?.value || 'all';
-  const detailCondicao = document.getElementById('com-detail-condicao')?.value || 'all';
-  const detailOrigem = document.getElementById('com-detail-origem')?.value || 'all';
-
-  const from = fromVal ? new Date(fromVal + 'T00:00:00') : null;
-  const to = toVal ? new Date(toVal + 'T23:59:59') : null;
-
-  // Popular select de responsáveis
-  const owners = [...new Set(baseDeals.filter(d => d.dealStatus?.id === 2).map(d => d.owner?.name).filter(Boolean))].sort();
-  const sel = document.getElementById('com-owner');
-  const curVal = sel.value;
-  sel.innerHTML = '<option value="all">Todos responsáveis</option>' + owners.map(o => `<option value="${o}" ${o===curVal?'selected':''}>${o}</option>`).join('');
-
-  let deals = baseDeals.filter(d => {
-    if (d.dealStatus?.id !== 2) return false;
-    const wonAt = d.endTime ? new Date(d.endTime) : (d.wonAt ? new Date(d.wonAt) : null);
-    // Exclui negócios sem data de conclusão quando há filtro de período
-    if ((from || to) && !wonAt) return false;
-    if (from && wonAt && wonAt < from) return false;
-    if (to && wonAt && wonAt > to) return false;
-    if (ownerSel !== 'all' && d.owner?.name !== ownerSel) return false;
-    if (search) {
-      const title = (d.title || d.person?.name || '').toLowerCase();
-      if (!title.includes(search)) return false;
-    }
+  const fromVal=document.getElementById('com-dateFrom').value, toVal=document.getElementById('com-dateTo').value;
+  const ownerSel=document.getElementById('com-owner').value;
+  const search=(document.getElementById('com-search')?.value||'').toLowerCase();
+  const detailOwner=document.getElementById('com-detail-owner')?.value||'all';
+  const detailProduto=document.getElementById('com-detail-produto')?.value||'all';
+  const detailCondicao=document.getElementById('com-detail-condicao')?.value||'all';
+  const detailOrigem=document.getElementById('com-detail-origem')?.value||'all';
+  const from=fromVal?new Date(fromVal+'T00:00:00'):null, to=toVal?new Date(toVal+'T23:59:59'):null;
+  const owners=[...new Set(baseDeals.filter(d=>d.dealStatus?.id===2).map(d=>d.owner?.name).filter(Boolean))].sort();
+  const sel=document.getElementById('com-owner');
+  const curVal=sel.value;
+  sel.innerHTML='<option value="all">Todos responsáveis</option>'+owners.map(o=>`<option value="${o}" ${o===curVal?'selected':''}>${o}</option>`).join('');
+  let deals=baseDeals.filter(d=>{
+    if(d.dealStatus?.id!==2) return false;
+    const wonAt=d.endTime?new Date(d.endTime):(d.wonAt?new Date(d.wonAt):null);
+    if((from||to)&&!wonAt) return false;
+    if(from&&wonAt&&wonAt<from) return false;
+    if(to&&wonAt&&wonAt>to) return false;
+    if(ownerSel!=='all'&&d.owner?.name!==ownerSel) return false;
+    if(search){const title=(d.title||d.person?.name||'').toLowerCase();if(!title.includes(search)) return false;}
     return true;
   });
-
-  // Popular selects do detalhamento
   function refreshSelect(id, values, cur) {
-    const el = document.getElementById(id);
-    if (!el) return;
-    const label = el.options[0].text;
-    el.innerHTML = '<option value="all">' + label + '</option>' + values.map(v => '<option value="' + v + '"' + (v===cur?' selected':'') + '>' + v + '</option>').join('');
+    const el=document.getElementById(id);
+    if(!el) return;
+    const label=el.options[0].text;
+    el.innerHTML='<option value="all">'+label+'</option>'+values.map(v=>'<option value="'+v+'"'+(v===cur?' selected':'')+'>'+v+'</option>').join('');
   }
-  refreshSelect('com-detail-owner', [...new Set(deals.map(d => d.owner && d.owner.name).filter(Boolean))].sort(), detailOwner);
-  refreshSelect('com-detail-produto', [...new Set(deals.map(d => getProdutoNome(d)).filter(v => v !== '—'))].sort(), detailProduto);
-  refreshSelect('com-detail-condicao', [...new Set(deals.map(d => getCondicao(d)).filter(Boolean))].sort(), detailCondicao);
-  refreshSelect('com-detail-origem', [...new Set(deals.map(d => d.customFields && d.customFields.origem_do_negocio && d.customFields.origem_do_negocio.value).filter(Boolean))].sort(), detailOrigem);
-
-  // Regras de comissão:
-  // - Ronaldo Junior → 100% para si
-  // - Everton Silva / Fabíola Carvalho → 100% para si + Ronaldo recebe 1/3
-  // - Diretoria (Relacionamento Diretoria na origem) → sem comissão
-  // - Outros → 100% para si, Ronaldo não recebe nada
-  const GERAM_BONUS_RONALDO = ['Everton Silva', 'Fabíola Carvalho'];
-  const NOME_RONALDO = 'Ronaldo Junior';
-  // Responsáveis que NÃO recebem comissão (Diretoria)
-  const SEM_COMISSAO = ['Diretoria'];
-
-  let totalValor = 0, totalComissao = 0, pendentes = 0;
-  const porResponsavel = {};
-
-  // Calcula métricas e resumo sobre TODOS os deals do período (sem filtros de detalhe)
-  deals.forEach(d => {
-    const condicao = getCondicao(d);
-    const owner = d.owner?.name || '—';
-    const ownerDisplay = getOwnerDisplay(d);
-    const origem = d.customFields?.origem_do_negocio?.value || '';
-    const isDiretoria = origem.toLowerCase().includes('relacionamento diretoria');
-    const isRegraOrigem = isRegraOrigemDeal(owner, d);
-    const isFabiola = owner === 'Fabíola Carvalho';
+  refreshSelect('com-detail-owner',[...new Set(deals.map(d=>d.owner&&d.owner.name).filter(Boolean))].sort(),detailOwner);
+  refreshSelect('com-detail-produto',[...new Set(deals.map(d=>getProdutoNome(d)).filter(v=>v!=='—'))].sort(),detailProduto);
+  refreshSelect('com-detail-condicao',[...new Set(deals.map(d=>getCondicao(d)).filter(Boolean))].sort(),detailCondicao);
+  refreshSelect('com-detail-origem',[...new Set(deals.map(d=>d.customFields&&d.customFields.origem_do_negocio&&d.customFields.origem_do_negocio.value).filter(Boolean))].sort(),detailOrigem);
+  const GERAM_BONUS_RONALDO=['Everton Silva','Fabíola Carvalho'];
+  const NOME_RONALDO='Ronaldo Junior';
+  let totalValor=0,totalComissao=0,pendentes=0;
+  const porResponsavel={};
+  deals.forEach(d=>{
+    const condicao=getCondicao(d),owner=d.owner?.name||'—',ownerDisplay=getOwnerDisplay(d);
+    const origem=d.customFields?.origem_do_negocio?.value||'';
+    const isDiretoria=origem.toLowerCase().includes('relacionamento diretoria');
+    const isRegraOrigem=isRegraOrigemDeal(owner,d),isFabiola=owner==='Fabíola Carvalho';
     let taxa;
-    if (isDiretoria) { taxa = null; }
-    else if (isRegraOrigem) { taxa = getComissaoEspecial(d); }
-    else if (isFabiola) { taxa = getTaxaFabiola(condicao); }
-    else { taxa = getTaxaComissao(condicao); }
-    const valor = d.value || 0;
-    const isPendente = !isRegraOrigem && !isDiretoria && !condicao;
-    const comissao = taxa !== null ? valor * taxa : null;
-    const reunioes = BONUS_REUNIAO[d.id] || 0;
-    const bonusReuniao = isFabiola ? reunioes * VALOR_BONUS_REUNIAO : 0;
-    const totalParaRonaldo2 = (comissao || 0) + (GERAM_BONUS_RONALDO.includes(owner) ? bonusReuniao : 0);
-    const bonusRonaldo2 = (comissao !== null && GERAM_BONUS_RONALDO.includes(owner)) ? totalParaRonaldo2 / 3 : 0;
-    totalValor += valor;
-    if (comissao !== null) totalComissao += comissao;
-    if (bonusReuniao > 0) totalComissao += bonusReuniao;
-    if (isPendente) pendentes++;
-    if (!porResponsavel[ownerDisplay]) porResponsavel[ownerDisplay] = { negocios: 0, valor: 0, comissao: 0, pendentes: 0, bonusReuniao: 0 };
-    porResponsavel[ownerDisplay].negocios++;
-    porResponsavel[ownerDisplay].valor += valor;
-    if (comissao !== null) porResponsavel[ownerDisplay].comissao += comissao;
-    if (bonusReuniao > 0) porResponsavel[ownerDisplay].bonusReuniao += bonusReuniao;
-    if (isPendente) porResponsavel[ownerDisplay].pendentes++;
-    if (bonusRonaldo2 > 0) {
-      if (!porResponsavel[NOME_RONALDO]) porResponsavel[NOME_RONALDO] = { negocios: 0, valor: 0, comissao: 0, pendentes: 0, bonusReuniao: 0 };
-      porResponsavel[NOME_RONALDO].comissao += bonusRonaldo2;
-      totalComissao += bonusRonaldo2;
+    if(isDiretoria) taxa=null;
+    else if(isRegraOrigem) taxa=getComissaoEspecial(d);
+    else if(isFabiola) taxa=getTaxaFabiola(condicao);
+    else taxa=getTaxaComissao(condicao);
+    const valor=d.value||0,isPendente=!isRegraOrigem&&!isDiretoria&&!condicao;
+    const comissao=taxa!==null?valor*taxa:null;
+    const reunioes=BONUS_REUNIAO[d.id]||0,bonusReuniao=isFabiola?reunioes*VALOR_BONUS_REUNIAO:0;
+    const totalParaRonaldo2=(comissao||0)+(GERAM_BONUS_RONALDO.includes(owner)?bonusReuniao:0);
+    const bonusRonaldo2=(comissao!==null&&GERAM_BONUS_RONALDO.includes(owner))?totalParaRonaldo2/3:0;
+    totalValor+=valor;
+    if(comissao!==null) totalComissao+=comissao;
+    if(bonusReuniao>0) totalComissao+=bonusReuniao;
+    if(isPendente) pendentes++;
+    if(!porResponsavel[ownerDisplay]) porResponsavel[ownerDisplay]={negocios:0,valor:0,comissao:0,pendentes:0,bonusReuniao:0};
+    porResponsavel[ownerDisplay].negocios++;porResponsavel[ownerDisplay].valor+=valor;
+    if(comissao!==null) porResponsavel[ownerDisplay].comissao+=comissao;
+    if(bonusReuniao>0) porResponsavel[ownerDisplay].bonusReuniao+=bonusReuniao;
+    if(isPendente) porResponsavel[ownerDisplay].pendentes++;
+    if(bonusRonaldo2>0){
+      if(!porResponsavel[NOME_RONALDO]) porResponsavel[NOME_RONALDO]={negocios:0,valor:0,comissao:0,pendentes:0,bonusReuniao:0};
+      porResponsavel[NOME_RONALDO].comissao+=bonusRonaldo2;totalComissao+=bonusRonaldo2;
     }
   });
-
-  // Filtros do detalhamento — só afetam a tabela de linhas
-  let dealsDetail = deals;
-  if (detailOwner !== 'all') dealsDetail = dealsDetail.filter(d => (d.owner?.name||'') === detailOwner);
-  if (detailProduto !== 'all') dealsDetail = dealsDetail.filter(d => getProdutoNome(d) === detailProduto);
-  if (detailCondicao !== 'all') dealsDetail = dealsDetail.filter(d => getCondicao(d) === detailCondicao);
-  if (detailOrigem !== 'all') dealsDetail = dealsDetail.filter(d => (d.customFields?.origem_do_negocio?.value||'') === detailOrigem);
-
-  const rows = [...dealsDetail].sort((a,b) => new Date(getWonDate(b)||0) - new Date(getWonDate(a)||0)).map(d => {
-    const condicao = getCondicao(d);
-    const owner = d.owner?.name || '—';
-    const ownerDisplay = getOwnerDisplay(d);
-    const produto = getProdutoNome(d);
-    const origem = d.customFields?.origem_do_negocio?.value || '';
-    const isDiretoria = origem.toLowerCase().includes('relacionamento diretoria');
-    const isRegraOrigem = isRegraOrigemDeal(owner, d);
-
-    // Taxa: Fabíola tem tabela própria, Diogo/Brenda usam origem, demais usam condição comercial
+  let dealsDetail=deals;
+  if(detailOwner!=='all') dealsDetail=dealsDetail.filter(d=>(d.owner?.name||'')===detailOwner);
+  if(detailProduto!=='all') dealsDetail=dealsDetail.filter(d=>getProdutoNome(d)===detailProduto);
+  if(detailCondicao!=='all') dealsDetail=dealsDetail.filter(d=>getCondicao(d)===detailCondicao);
+  if(detailOrigem!=='all') dealsDetail=dealsDetail.filter(d=>(d.customFields?.origem_do_negocio?.value||'')===detailOrigem);
+  const rows=[...dealsDetail].sort((a,b)=>new Date(getWonDate(b)||0)-new Date(getWonDate(a)||0)).map(d=>{
+    const condicao=getCondicao(d),owner=d.owner?.name||'—',ownerDisplay=getOwnerDisplay(d),produto=getProdutoNome(d);
+    const origem=d.customFields?.origem_do_negocio?.value||'';
+    const isDiretoria=origem.toLowerCase().includes('relacionamento diretoria');
+    const isRegraOrigem=isRegraOrigemDeal(owner,d),isFabiola=owner==='Fabíola Carvalho';
     let taxa;
-    const isFabiola = owner === 'Fabíola Carvalho';
-    if (isDiretoria) {
-      taxa = null;
-    } else if (isRegraOrigem) {
-      taxa = getComissaoEspecial(d);
-    } else if (isFabiola) {
-      taxa = getTaxaFabiola(condicao);
-    } else {
-      taxa = getTaxaComissao(condicao);
-    }
-
-    const valor = d.value || 0;
-    const isPendente = !isRegraOrigem && !isDiretoria && !condicao;
-    const comissao = taxa !== null ? valor * taxa : null;
-
-    // Bônus de reunião manual (apenas Fabíola)
-    const reunioes = BONUS_REUNIAO[d.id] || 0;
-    const bonusReuniao = isFabiola ? reunioes * VALOR_BONUS_REUNIAO : 0;
-
-    // Bônus do Ronaldo (1/3 do total Fabíola/Everton incluindo bônus de reunião)
-    const totalParaRonaldo = (comissao || 0) + (GERAM_BONUS_RONALDO.includes(owner) ? bonusReuniao : 0);
-    const bonusRonaldo = (comissao !== null && GERAM_BONUS_RONALDO.includes(owner)) ? totalParaRonaldo / 3 : 0;
-
-    // (métricas e resumo já calculados no forEach acima)
-
-    const condDisplay = isDiretoria
-      ? '<span style="background:#f5f5f5;color:#999;padding:2px 8px;border-radius:12px;font-size:11px;">Diretoria</span>'
-      : isRegraOrigem
-        ? '—'
-        : isPendente
-          ? '<span style="color:#F62642;font-size:11px;font-weight:600;">⚠ Pendente</span>'
-          : `<span style="background:#e0f5f7;color:#0C7488;padding:2px 8px;border-radius:12px;font-size:11px;">${condicao}</span>`;
-
-    const origemDisplay = origem
-      ? `<span style="font-size:11px;color:#657786;">${origem}</span>`
-      : '—';
-
-    const taxaDisplay = taxa !== null ? (isFabiola ? `${(taxa*100).toFixed(0)}%<span style="font-size:10px;color:#999;"> (desc. ${(100-(taxa*100)).toFixed(0)}%)</span>` : `${(taxa*100).toFixed(0)}%`) : '<span style="color:#999;">—</span>';
-    const comBase = comissao !== null ? fmtBRL(comissao) : '—';
-    const comDisplay = comissao !== null ? `<strong>${fmtBRL(comissao)}</strong>` : '<span style="color:#999;">—</span>';
-
-    // Checkbox de reunião (apenas Fabíola)
-    const temReuniao = reunioes > 0;
-    const reuniaoCell = isFabiola
-      ? `<span onclick="toggleReuniao(${d.id})" title="${temReuniao ? 'Remover reunião' : 'Marcar reunião'}" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:4px;border:1.5px solid ${temReuniao ? '#0C7488' : 'rgba(14,20,40,0.2)'};background:${temReuniao ? '#e0f5f7' : 'transparent'};cursor:pointer;font-size:11px;color:#0C7488;">${temReuniao ? '✓' : ''}</span>`
-      : '<span style="color:#ccc;font-size:11px;">—</span>';
-
-    const comTotal = (comissao || 0) + bonusReuniao;
-
-    return `<tr>
-      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${d.title||''}">${d.title || d.person?.name || '—'}</td>
-      <td>${ownerDisplay}</td>
-      <td style="color:#0C7488;font-size:12px;">${produto}</td>
-      <td>${condDisplay}</td>
-      <td>${origemDisplay}</td>
-      <td style="text-align:right;">${fmtBRL(valor)}</td>
-      <td style="text-align:right;">${taxaDisplay}</td>
-      <td style="text-align:right;">${comissao !== null ? '<strong>'+fmtBRL(comTotal)+'</strong>' : '<span style="color:#999;">—</span>'}</td>
-      <td style="text-align:center;">${reuniaoCell}</td>
-      <td style="text-align:right;color:#0C7488;">${bonusRonaldo > 0 ? (totalParaRonaldo > 0 ? Math.round((bonusRonaldo/totalParaRonaldo)*100)+'%' : '—') : '<span style="color:#999;">—</span>'}</td>
-      <td style="text-align:right;color:#0C7488;">${bonusRonaldo > 0 ? '<strong>'+fmtBRL(bonusRonaldo)+'</strong>' : '<span style="color:#999;">—</span>'}</td>
-      <td style="text-align:right;font-family:'DM Mono',monospace;font-size:12px;">${fmtDate(getWonDate(d))}</td>
-      <td style="text-align:right;font-family:'DM Mono',monospace;font-size:12px;color:#999;">${fmtDate(d.wonAt)}</td>
-    </tr>`;
+    if(isDiretoria) taxa=null;
+    else if(isRegraOrigem) taxa=getComissaoEspecial(d);
+    else if(isFabiola) taxa=getTaxaFabiola(condicao);
+    else taxa=getTaxaComissao(condicao);
+    const valor=d.value||0,isPendente=!isRegraOrigem&&!isDiretoria&&!condicao,comissao=taxa!==null?valor*taxa:null;
+    const reunioes=BONUS_REUNIAO[d.id]||0,bonusReuniao=isFabiola?reunioes*VALOR_BONUS_REUNIAO:0;
+    const totalParaRonaldo=(comissao||0)+(GERAM_BONUS_RONALDO.includes(owner)?bonusReuniao:0);
+    const bonusRonaldo=(comissao!==null&&GERAM_BONUS_RONALDO.includes(owner))?totalParaRonaldo/3:0;
+    const GERAM_BONUS_RONALDO=['Everton Silva','Fabíola Carvalho'];
+    const condDisplay=isDiretoria?'<span style="background:#f5f5f5;color:#999;padding:2px 8px;border-radius:12px;font-size:11px;">Diretoria</span>':isRegraOrigem?'—':isPendente?'<span style="color:#F62642;font-size:11px;font-weight:600;">⚠ Pendente</span>':`<span style="background:#e0f5f7;color:#0C7488;padding:2px 8px;border-radius:12px;font-size:11px;">${condicao}</span>`;
+    const origemDisplay=origem?`<span style="font-size:11px;color:#657786;">${origem}</span>`:'—';
+    const taxaDisplay=taxa!==null?(isFabiola?`${(taxa*100).toFixed(0)}%<span style="font-size:10px;color:#999;"> (desc. ${(100-(taxa*100)).toFixed(0)}%)</span>`:`${(taxa*100).toFixed(0)}%`):'<span style="color:#999;">—</span>';
+    const comTotal=(comissao||0)+bonusReuniao;
+    const reuniaoCell=isFabiola?`<span onclick="toggleReuniao(${d.id})" title="${reunioes>0?'Remover reunião':'Marcar reunião'}" style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:4px;border:1.5px solid ${reunioes>0?'#0C7488':'rgba(14,20,40,0.2)'};background:${reunioes>0?'#e0f5f7':'transparent'};cursor:pointer;font-size:11px;color:#0C7488;">${reunioes>0?'✓':''}</span>`:'<span style="color:#ccc;font-size:11px;">—</span>';
+    return `<tr><td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${d.title||''}">${d.title||d.person?.name||'—'}</td><td>${ownerDisplay}</td><td style="color:#0C7488;font-size:12px;">${produto}</td><td>${condDisplay}</td><td>${origemDisplay}</td><td style="text-align:right;">${fmtBRL(valor)}</td><td style="text-align:right;">${taxaDisplay}</td><td style="text-align:right;">${comissao!==null?'<strong>'+fmtBRL(comTotal)+'</strong>':'<span style="color:#999;">—</span>'}</td><td style="text-align:center;">${reuniaoCell}</td><td style="text-align:right;color:#0C7488;">${bonusRonaldo>0?(totalParaRonaldo>0?Math.round((bonusRonaldo/totalParaRonaldo)*100)+'%':'—'):'<span style="color:#999;">—</span>'}</td><td style="text-align:right;color:#0C7488;">${bonusRonaldo>0?'<strong>'+fmtBRL(bonusRonaldo)+'</strong>':'<span style="color:#999;">—</span>'}</td><td style="text-align:right;font-family:'DM Mono',monospace;font-size:12px;">${fmtDate(getWonDate(d))}</td><td style="text-align:right;font-family:'DM Mono',monospace;font-size:12px;color:#999;">${fmtDate(d.wonAt)}</td></tr>`;
   }).join('');
-
-  document.getElementById('com-detail-body').innerHTML = rows || '<tr><td colspan="8" class="empty">Nenhum negócio no período</td></tr>';
+  document.getElementById('com-detail-body').innerHTML=rows||'<tr><td colspan="13" class="empty">Nenhum negócio no período</td></tr>';
   renderFechamentoFabiola(deals);
-
-  // Métricas
-  const semWonAt = baseDeals.filter(d => d.dealStatus?.id === 2 && !d.endTime && !d.wonAt).length;
-  document.getElementById('com-total').textContent = deals.length;
-  document.getElementById('com-total-sub').textContent = 'de ' + (deals.length + semWonAt) + ' ganhos totais';
-  document.getElementById('com-valor').textContent = fmtBRL(totalValor);
-  document.getElementById('com-comissao').textContent = fmtBRL(totalComissao);
-  document.getElementById('com-pendentes').textContent = pendentes;
-  if (pendentes > 0) document.getElementById('com-pendentes').style.color = '#F62642';
-  else document.getElementById('com-pendentes').style.color = '';
-  const semWonAtEl = document.getElementById('com-sem-wonat');
-  if (semWonAtEl) {
-    semWonAtEl.textContent = semWonAt;
-    semWonAtEl.style.color = semWonAt > 0 ? '#a05c00' : '#1e7e4a';
-    if (semWonAt === 0) { semWonAtEl.closest('.metric-card').style.borderColor = 'rgba(14,20,40,0.1)'; semWonAtEl.closest('.metric-card').style.background = 'white'; }
-  }
-
-  // Responsáveis que são Diretoria (sem comissão, mas aparecem no resumo)
-  const DIRETORIA_NOMES = ['Luiz Santos'];
-
-  // Resumo por responsável
-  const totalNegocios = Object.values(porResponsavel).reduce((s,r) => s + r.negocios, 0);
-  const totalValorResumo = Object.values(porResponsavel).reduce((s,r) => s + r.valor, 0);
-
-  const resumoRows = Object.entries(porResponsavel)
-    .sort((a,b) => (b[1].comissao + b[1].bonusReuniao) - (a[1].comissao + a[1].bonusReuniao))
-    .map(([name, r]) => {
-      const total = r.comissao + (r.bonusReuniao || 0);
-      const bonusTag = r.bonusReuniao > 0 ? ` <span style="font-size:10px;color:#657786;">(+${fmtBRL(r.bonusReuniao)} reunião)</span>` : '';
-      const pctNeg = totalNegocios > 0 ? ((r.negocios / totalNegocios) * 100).toFixed(0) : 0;
-      const pctVal = totalValorResumo > 0 ? ((r.valor / totalValorResumo) * 100).toFixed(0) : 0;
-      const isDiretoriaResumo = DIRETORIA_NOMES.includes(name);
-      const nomeDisplay = isDiretoriaResumo ? `${name} <span style="background:#f5f5f5;color:#999;padding:1px 6px;border-radius:8px;font-size:10px;">Diretoria</span>` : name;
-      return `<tr>
-        <td><strong>${nomeDisplay}</strong></td>
-        <td style="text-align:right;">${r.negocios} <span style="color:#657786;font-size:11px;">${pctNeg}%</span></td>
-        <td style="text-align:right;">${fmtBRL(r.valor)} <span style="color:#657786;font-size:11px;">${pctVal}%</span></td>
-        <td style="text-align:right;"><strong style="color:${isDiretoriaResumo ? '#999' : '#0C7488'};">${isDiretoriaResumo ? '—' : fmtBRL(total)}</strong>${bonusTag}</td>
-        <td style="text-align:right;">${r.pendentes > 0 ? `<span style="color:#F62642;">${r.pendentes}</span>` : '0'}</td>
-      </tr>`;
-    }).join('');
-  const totalComissaoResumo = Object.values(porResponsavel).reduce((s,r) => s + r.comissao + (r.bonusReuniao||0), 0);
-  const totalRow = `<tr class="total-row">
-    <td><strong>Total</strong></td>
-    <td style="text-align:right;"><strong>${deals.length}</strong></td>
-    <td style="text-align:right;"><strong>${fmtBRL(totalValorResumo)}</strong></td>
-    <td style="text-align:right;"><strong style="color:#0C7488;">${fmtBRL(totalComissaoResumo)}</strong></td>
-    <td style="text-align:right;"><strong>${pendentes > 0 ? '<span style="color:#F62642;">'+pendentes+'</span>' : '0'}</strong></td>
-  </tr>`;
-  document.getElementById('com-resumo-body').innerHTML = (resumoRows || '<tr><td colspan="5" class="empty">—</td></tr>') + totalRow;
-
-  // Resumo por condição comercial
-  const porCondicao = {};
-  const porOrigem = {};
-  deals.forEach(d => {
-    const condicao = getCondicao(d) || '⚠ Pendente';
-    const origem = d.customFields?.origem_do_negocio?.value || '—';
-    const valor = d.value || 0;
-    if (!porCondicao[condicao]) porCondicao[condicao] = { negocios: 0, valor: 0 };
-    porCondicao[condicao].negocios++;
-    porCondicao[condicao].valor += valor;
-    if (!porOrigem[origem]) porOrigem[origem] = { negocios: 0, valor: 0 };
-    porOrigem[origem].negocios++;
-    porOrigem[origem].valor += valor;
+  const semWonAt=baseDeals.filter(d=>d.dealStatus?.id===2&&!d.endTime&&!d.wonAt).length;
+  document.getElementById('com-total').textContent=deals.length;
+  document.getElementById('com-total-sub').textContent='de '+(deals.length+semWonAt)+' ganhos totais';
+  document.getElementById('com-valor').textContent=fmtBRL(totalValor);
+  document.getElementById('com-comissao').textContent=fmtBRL(totalComissao);
+  document.getElementById('com-pendentes').textContent=pendentes;
+  if(pendentes>0) document.getElementById('com-pendentes').style.color='#F62642';
+  else document.getElementById('com-pendentes').style.color='';
+  const semWonAtEl=document.getElementById('com-sem-wonat');
+  if(semWonAtEl){semWonAtEl.textContent=semWonAt;semWonAtEl.style.color=semWonAt>0?'#a05c00':'#1e7e4a';if(semWonAt===0){semWonAtEl.closest('.metric-card').style.borderColor='rgba(14,20,40,0.1)';semWonAtEl.closest('.metric-card').style.background='white';}}
+  const DIRETORIA_NOMES=['Luiz Santos'];
+  const totalNegociosR=Object.values(porResponsavel).reduce((s,r)=>s+r.negocios,0);
+  const totalValorResumo=Object.values(porResponsavel).reduce((s,r)=>s+r.valor,0);
+  const resumoRows=Object.entries(porResponsavel).sort((a,b)=>(b[1].comissao+b[1].bonusReuniao)-(a[1].comissao+a[1].bonusReuniao)).map(([name,r])=>{
+    const total=r.comissao+(r.bonusReuniao||0);
+    const bonusTag=r.bonusReuniao>0?` <span style="font-size:10px;color:#657786;">(+${fmtBRL(r.bonusReuniao)} reunião)</span>`:'';
+    const pctNeg=totalNegociosR>0?((r.negocios/totalNegociosR)*100).toFixed(0):0;
+    const pctVal=totalValorResumo>0?((r.valor/totalValorResumo)*100).toFixed(0):0;
+    const isDiretoriaResumo=DIRETORIA_NOMES.includes(name);
+    const nomeDisplay=isDiretoriaResumo?`${name} <span style="background:#f5f5f5;color:#999;padding:1px 6px;border-radius:8px;font-size:10px;">Diretoria</span>`:name;
+    return `<tr><td><strong>${nomeDisplay}</strong></td><td style="text-align:right;">${r.negocios} <span style="color:#657786;font-size:11px;">${pctNeg}%</span></td><td style="text-align:right;">${fmtBRL(r.valor)} <span style="color:#657786;font-size:11px;">${pctVal}%</span></td><td style="text-align:right;"><strong style="color:${isDiretoriaResumo?'#999':'#0C7488'};">${isDiretoriaResumo?'—':fmtBRL(total)}</strong>${bonusTag}</td><td style="text-align:right;">${r.pendentes>0?`<span style="color:#F62642;">${r.pendentes}</span>`:'0'}</td></tr>`;
+  }).join('');
+  const totalComissaoResumo=Object.values(porResponsavel).reduce((s,r)=>s+r.comissao+(r.bonusReuniao||0),0);
+  const totalRowR=`<tr class="total-row"><td><strong>Total</strong></td><td style="text-align:right;"><strong>${deals.length}</strong></td><td style="text-align:right;"><strong>${fmtBRL(totalValorResumo)}</strong></td><td style="text-align:right;"><strong style="color:#0C7488;">${fmtBRL(totalComissaoResumo)}</strong></td><td style="text-align:right;"><strong>${pendentes>0?'<span style="color:#F62642;">'+pendentes+'</span>':'0'}</strong></td></tr>`;
+  document.getElementById('com-resumo-body').innerHTML=(resumoRows||'<tr><td colspan="5" class="empty">—</td></tr>')+totalRowR;
+  const porCondicao={},porOrigem={};
+  deals.forEach(d=>{
+    const condicao=getCondicao(d)||'⚠ Pendente',origem=d.customFields?.origem_do_negocio?.value||'—',valor=d.value||0;
+    if(!porCondicao[condicao]) porCondicao[condicao]={negocios:0,valor:0};
+    porCondicao[condicao].negocios++;porCondicao[condicao].valor+=valor;
+    if(!porOrigem[origem]) porOrigem[origem]={negocios:0,valor:0};
+    porOrigem[origem].negocios++;porOrigem[origem].valor+=valor;
   });
-
-  const totalDealsCond = deals.length;
-  const condicaoRows = Object.entries(porCondicao)
-    .sort((a,b) => b[1].negocios - a[1].negocios)
-    .map(([cond, r]) => {
-      const pct = totalDealsCond > 0 ? ((r.negocios / totalDealsCond) * 100).toFixed(0) : 0;
-      const isPend = cond === '⚠ Pendente';
-      return `<tr>
-        <td>${isPend ? '<span style="color:#F62642;font-size:11px;font-weight:600;">⚠ Pendente</span>' : `<span style="background:#e0f5f7;color:#0C7488;padding:2px 8px;border-radius:12px;font-size:11px;">${cond}</span>`}</td>
-        <td style="text-align:right;">${r.negocios}</td>
-        <td style="text-align:right;color:#657786;">${pct}%</td>
-        <td style="text-align:right;">${fmtBRL(r.valor)}</td>
-      </tr>`;
-    }).join('');
-  document.getElementById('com-condicao-body').innerHTML = condicaoRows || '<tr><td colspan="4" class="empty">—</td></tr>';
-
-  const origemRows = Object.entries(porOrigem)
-    .sort((a,b) => b[1].negocios - a[1].negocios)
-    .map(([orig, r]) => {
-      const pct = totalDealsCond > 0 ? ((r.negocios / totalDealsCond) * 100).toFixed(0) : 0;
-      return `<tr>
-        <td style="font-size:12px;">${orig}</td>
-        <td style="text-align:right;">${r.negocios}</td>
-        <td style="text-align:right;color:#657786;">${pct}%</td>
-        <td style="text-align:right;">${fmtBRL(r.valor)}</td>
-      </tr>`;
-    }).join('');
-  document.getElementById('com-origem-body').innerHTML = origemRows || '<tr><td colspan="4" class="empty">—</td></tr>';
+  const totalDealsCond=deals.length;
+  document.getElementById('com-condicao-body').innerHTML=Object.entries(porCondicao).sort((a,b)=>b[1].negocios-a[1].negocios).map(([cond,r])=>{const p=totalDealsCond>0?((r.negocios/totalDealsCond)*100).toFixed(0):0;const isPend=cond==='⚠ Pendente';return `<tr><td>${isPend?'<span style="color:#F62642;font-size:11px;font-weight:600;">⚠ Pendente</span>':`<span style="background:#e0f5f7;color:#0C7488;padding:2px 8px;border-radius:12px;font-size:11px;">${cond}</span>`}</td><td style="text-align:right;">${r.negocios}</td><td style="text-align:right;color:#657786;">${p}%</td><td style="text-align:right;">${fmtBRL(r.valor)}</td></tr>`;}).join('')||'<tr><td colspan="4" class="empty">—</td></tr>';
+  document.getElementById('com-origem-body').innerHTML=Object.entries(porOrigem).sort((a,b)=>b[1].negocios-a[1].negocios).map(([orig,r])=>{const p=totalDealsCond>0?((r.negocios/totalDealsCond)*100).toFixed(0):0;return `<tr><td style="font-size:12px;">${orig}</td><td style="text-align:right;">${r.negocios}</td><td style="text-align:right;color:#657786;">${p}%</td><td style="text-align:right;">${fmtBRL(r.valor)}</td></tr>`;}).join('')||'<tr><td colspan="4" class="empty">—</td></tr>';
 }
 
-function toggleReuniao(dealId) {
-  if (BONUS_REUNIAO[dealId] > 0) { delete BONUS_REUNIAO[dealId]; }
-  else { BONUS_REUNIAO[dealId] = 1; }
-  saveBonusReuniao();
-  renderComissoes();
-}
-function addReuniao(dealId) { BONUS_REUNIAO[dealId] = (BONUS_REUNIAO[dealId]||0)+1; saveBonusReuniao(); renderComissoes(); }
-function removeReuniao(dealId) { const a=BONUS_REUNIAO[dealId]||0; if(a<=1){delete BONUS_REUNIAO[dealId];}else{BONUS_REUNIAO[dealId]=a-1;} saveBonusReuniao(); renderComissoes(); }
+function toggleReuniao(dealId) { if(BONUS_REUNIAO[dealId]>0){delete BONUS_REUNIAO[dealId];}else{BONUS_REUNIAO[dealId]=1;} saveBonusReuniao(); renderComissoes(); }
 
 function renderFechamentoFabiola(deals) {
-  window._lastDeals = deals;
-  const allFab = deals.filter(d => d.owner?.name === 'Fabíola Carvalho');
-  const card = document.getElementById('card-fechamento-fabiola');
-  const tbody = document.getElementById('fechamento-fabiola-body');
-
-  if (!allFab.length) { card.style.display = 'none'; return; }
-  card.style.display = '';
-
-  // Popular filtros
-  const selProd = document.getElementById('fab-filter-produto');
-  const selCond = document.getElementById('fab-filter-condicao');
-  const curProd = selProd?.value || 'all';
-  const curCond = selCond?.value || 'all';
-
-  if (selProd) {
-    const prods = [...new Set(allFab.map(d => getProdutoNome(d)).filter(Boolean))].sort();
-    selProd.innerHTML = '<option value="all">Todos produtos</option>' + prods.map(p => `<option value="${p}" ${p===curProd?'selected':''}>${p}</option>`).join('');
-  }
-  if (selCond) {
-    const conds = [...new Set(allFab.map(d => getCondicao(d)).filter(Boolean))].sort();
-    selCond.innerHTML = '<option value="all">Todas condições</option>' + conds.map(c => `<option value="${c}" ${c===curCond?'selected':''}>${c}</option>`).join('');
-  }
-
-  // Aplicar filtros
-  const fabDeals = allFab.filter(d => {
-    if (curProd !== 'all' && getProdutoNome(d) !== curProd) return false;
-    if (curCond !== 'all' && getCondicao(d) !== curCond) return false;
-    return true;
-  });
-
-  let totalComissao = 0, totalRonaldo = 0;
-
-  const rows = [...fabDeals]
-    .sort((a,b) => new Date(getWonDate(a)||0) - new Date(getWonDate(b)||0))
-    .map(d => {
-      const condicao = getCondicao(d);
-      const taxa = getTaxaFabiola(condicao);
-      const valor = d.value || 0;
-      const produto = getProdutoNome(d);
-      const origem = d.customFields?.origem_do_negocio?.value || '—';
-      const descEntry = condicao ? Object.entries(DESCONTOS_FABIOLA).find(([k]) =>
-        k === condicao || k.toLowerCase().includes(condicao.toLowerCase()) || condicao.toLowerCase().includes(k.toLowerCase())
-      ) : null;
-      const descPct = descEntry ? descEntry[1] : (taxa !== null ? 1 - taxa : null);
-      const comissaoBase = taxa !== null ? valor * taxa : 0;
-      const reunioes = BONUS_REUNIAO[d.id] || 0;
-      const bonusReuniao = reunioes * VALOR_BONUS_REUNIAO;
-      const comissaoTotal = comissaoBase + bonusReuniao;
-      const comRonaldo = comissaoTotal / 3;
-      totalComissao += comissaoTotal;
-      totalRonaldo += comRonaldo;
-
-      const dataStr = fmtDate(getWonDate(d));
-      const titulo = d.title || d.person?.name || '—';
-      const condDisplay = condicao
-        ? `<span style="background:#e0f5f7;color:#0C7488;padding:2px 8px;border-radius:12px;font-size:11px;">${condicao}</span>`
-        : '<span style="color:#F62642;font-size:11px;">⚠ Pendente</span>';
-      const descDisplay = descPct !== null ? `${(descPct*100).toFixed(0)}%` : '—';
-      const reuniaoDisplay = bonusReuniao > 0
-        ? `<span style="color:#0C7488;">${fmtBRL(bonusReuniao)}</span>`
-        : '<span style="color:#999;">—</span>';
-
-      return `<tr>
-        <td style="white-space:nowrap;font-family:'DM Mono',monospace;font-size:12px;">${dataStr}</td>
-        <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${titulo}">${titulo}</td>
-        <td style="color:#0C7488;font-size:12px;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${produto}</td>
-        <td>${condDisplay}</td>
-        <td style="font-size:11px;color:#657786;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${origem}</td>
-        <td style="text-align:right;font-family:'DM Mono',monospace;">${fmtBRL(valor)}</td>
-        <td style="text-align:right;color:#657786;">${descDisplay}</td>
-        <td style="text-align:right;">${reuniaoDisplay}</td>
-        <td style="text-align:right;font-weight:700;color:#0C7488;font-family:'DM Mono',monospace;">${fmtBRL(comissaoTotal)}</td>
-        <td style="text-align:center;color:#185FA5;font-size:12px;">33%</td>
-        <td style="text-align:right;color:#185FA5;font-weight:700;font-family:'DM Mono',monospace;">${fmtBRL(comRonaldo)}</td>
-        <td style="text-align:center;font-family:'DM Mono',monospace;font-size:12px;">${fmtDate(getWonDate(d))}</td>
-        <td style="text-align:center;font-family:'DM Mono',monospace;font-size:12px;color:#999;">${fmtDate(d.wonAt)}</td>
-      </tr>`;
-    }).join('');
-
-  const totalRow = `<tr class="total-row">
-    <td colspan="8" style="text-align:right;font-weight:700;">Total</td>
-    <td style="text-align:right;font-weight:700;color:#0C7488;font-family:'DM Mono',monospace;">${fmtBRL(totalComissao)}</td>
-    <td></td>
-    <td style="text-align:right;font-weight:700;color:#185FA5;font-family:'DM Mono',monospace;">${fmtBRL(totalRonaldo)}</td>
-    <td colspan="2"></td>
-  </tr>`;
-
-  tbody.innerHTML = rows + totalRow;
+  window._lastDeals=deals;
+  const allFab=deals.filter(d=>d.owner?.name==='Fabíola Carvalho');
+  const card=document.getElementById('card-fechamento-fabiola'),tbody=document.getElementById('fechamento-fabiola-body');
+  if(!allFab.length){card.style.display='none';return;}
+  card.style.display='';
+  const selProd=document.getElementById('fab-filter-produto'),selCond=document.getElementById('fab-filter-condicao');
+  const curProd=selProd?.value||'all',curCond=selCond?.value||'all';
+  if(selProd){const prods=[...new Set(allFab.map(d=>getProdutoNome(d)).filter(Boolean))].sort();selProd.innerHTML='<option value="all">Todos produtos</option>'+prods.map(p=>`<option value="${p}" ${p===curProd?'selected':''}>${p}</option>`).join('');}
+  if(selCond){const conds=[...new Set(allFab.map(d=>getCondicao(d)).filter(Boolean))].sort();selCond.innerHTML='<option value="all">Todas condições</option>'+conds.map(c=>`<option value="${c}" ${c===curCond?'selected':''}>${c}</option>`).join('');}
+  const fabDeals=allFab.filter(d=>{if(curProd!=='all'&&getProdutoNome(d)!==curProd)return false;if(curCond!=='all'&&getCondicao(d)!==curCond)return false;return true;});
+  let totalComissao=0,totalRonaldo=0;
+  const rows=[...fabDeals].sort((a,b)=>new Date(getWonDate(a)||0)-new Date(getWonDate(b)||0)).map(d=>{
+    const condicao=getCondicao(d),taxa=getTaxaFabiola(condicao),valor=d.value||0,produto=getProdutoNome(d),origem=d.customFields?.origem_do_negocio?.value||'—';
+    const descEntry=condicao?Object.entries(DESCONTOS_FABIOLA).find(([k])=>k===condicao||k.toLowerCase().includes(condicao.toLowerCase())||condicao.toLowerCase().includes(k.toLowerCase())):null;
+    const descPct=descEntry?descEntry[1]:(taxa!==null?1-taxa:null);
+    const comissaoBase=taxa!==null?valor*taxa:0,reunioes=BONUS_REUNIAO[d.id]||0,bonusReuniao=reunioes*VALOR_BONUS_REUNIAO;
+    const comissaoTotal=comissaoBase+bonusReuniao,comRonaldo=comissaoTotal/3;
+    totalComissao+=comissaoTotal;totalRonaldo+=comRonaldo;
+    const condDisplay=condicao?`<span style="background:#e0f5f7;color:#0C7488;padding:2px 8px;border-radius:12px;font-size:11px;">${condicao}</span>`:'<span style="color:#F62642;font-size:11px;">⚠ Pendente</span>';
+    return `<tr><td style="white-space:nowrap;font-family:'DM Mono',monospace;font-size:12px;">${fmtDate(getWonDate(d))}</td><td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.title||d.person?.name||'—'}</td><td style="color:#0C7488;font-size:12px;">${produto}</td><td>${condDisplay}</td><td style="font-size:11px;color:#657786;">${origem}</td><td style="text-align:right;font-family:'DM Mono',monospace;">${fmtBRL(valor)}</td><td style="text-align:right;color:#657786;">${descPct!==null?(descPct*100).toFixed(0)+'%':'—'}</td><td style="text-align:right;">${bonusReuniao>0?`<span style="color:#0C7488;">${fmtBRL(bonusReuniao)}</span>`:'<span style="color:#999;">—</span>'}</td><td style="text-align:right;font-weight:700;color:#0C7488;font-family:'DM Mono',monospace;">${fmtBRL(comissaoTotal)}</td><td style="text-align:center;color:#185FA5;font-size:12px;">33%</td><td style="text-align:right;color:#185FA5;font-weight:700;font-family:'DM Mono',monospace;">${fmtBRL(comRonaldo)}</td><td style="text-align:center;font-family:'DM Mono',monospace;font-size:12px;">${fmtDate(getWonDate(d))}</td><td style="text-align:center;font-family:'DM Mono',monospace;font-size:12px;color:#999;">${fmtDate(d.wonAt)}</td></tr>`;
+  }).join('');
+  tbody.innerHTML=rows+`<tr class="total-row"><td colspan="8" style="text-align:right;font-weight:700;">Total</td><td style="text-align:right;font-weight:700;color:#0C7488;font-family:'DM Mono',monospace;">${fmtBRL(totalComissao)}</td><td></td><td style="text-align:right;font-weight:700;color:#185FA5;font-family:'DM Mono',monospace;">${fmtBRL(totalRonaldo)}</td><td colspan="2"></td></tr>`;
 }
 
 function exportarFechamentoFabiola() {
-  const rows = document.querySelectorAll('#fechamento-fabiola-body tr');
-  if (!rows.length || rows[0].querySelector('.empty')) { alert('Nenhum dado para exportar.'); return; }
-  const headers = ['Data','Negócio','Produto','Condição Comercial','Origem','Valor (R$)','Desconto','Reunião (R$)','Comissão (R$)','% Com. Ronaldo','Com. Ronaldo (R$)','Data Ganho','Reg. Ganho'];
-  function cellText(td) { return td ? td.innerText.replace(/\n/g,' ').trim() : ''; }
-  const data = [headers];
-  rows.forEach(tr => {
-    const tds = tr.querySelectorAll('td');
-    if (tds.length < 9) return;
-    data.push([
-      cellText(tds[0]),
-      cellText(tds[1]),
-      cellText(tds[2]),
-      cellText(tds[3]).replace('R$ ','').replace(/\./g,'').replace(',','.'),
-      cellText(tds[4]),
-      cellText(tds[5]).replace('R$ ','').replace(/\./g,'').replace(',','.'),
-      cellText(tds[6]).replace('R$ ','').replace(/\./g,'').replace(',','.'),
-    ]);
-  });
-  const csv = data.map(row => row.map(v => '"' + String(v).replace(/"/g,'""') + '"').join(';')).join('\r\n');
-  const from = document.getElementById('com-dateFrom').value || 'inicio';
-  const to = document.getElementById('com-dateTo').value || 'fim';
-  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'fechamento_fabiola_' + from + '_' + to + '.csv'; a.click();
-  URL.revokeObjectURL(url);
+  const rows=document.querySelectorAll('#fechamento-fabiola-body tr');
+  if(!rows.length||rows[0].querySelector('.empty')){alert('Nenhum dado para exportar.');return;}
+  const headers=['Data','Negócio','Produto','Condição Comercial','Origem','Valor (R$)','Desconto','Reunião (R$)','Comissão (R$)','% Com. Ronaldo','Com. Ronaldo (R$)','Data Ganho','Reg. Ganho'];
+  function cellText(td){return td?td.innerText.replace(/\n/g,' ').trim():'';}
+  const data=[headers];
+  rows.forEach(tr=>{const tds=tr.querySelectorAll('td');if(tds.length<9)return;data.push([cellText(tds[0]),cellText(tds[1]),cellText(tds[2]),cellText(tds[3]),cellText(tds[4]),cellText(tds[5]).replace('R$ ','').replace(/\./g,'').replace(',','.'),cellText(tds[6]),cellText(tds[7]),cellText(tds[8])]);});
+  const csv=data.map(row=>row.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(';')).join('\r\n');
+  const from=document.getElementById('com-dateFrom').value||'inicio',to=document.getElementById('com-dateTo').value||'fim';
+  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='fechamento_fabiola_'+from+'_'+to+'.csv';a.click();URL.revokeObjectURL(url);
 }
 
 function exportarExcelComissoes() {
-  const rows = document.querySelectorAll('#com-detail-body tr');
-  if (!rows.length || rows[0].querySelector('.empty')) { alert('Nenhum dado para exportar.'); return; }
-  const headers = ['Negócio','Responsável','Produto','Condição Comercial','Origem','Valor (R$)','% Comissão','Comissão (R$)','Data Ganho'];
-  function cellText(td) { return td ? td.innerText.replace(/\n/g,' ').trim() : ''; }
-  const data = [headers];
-  rows.forEach(tr => {
-    const tds = tr.querySelectorAll('td');
-    if (tds.length < 8) return;
-    data.push([
-      cellText(tds[0]), cellText(tds[1]), cellText(tds[2]), cellText(tds[3]), cellText(tds[4]),
-      cellText(tds[5]).replace('R$ ','').replace(/\./g,'').replace(',','.'),
-      cellText(tds[6]),
-      cellText(tds[7]).replace('R$ ','').replace(/\./g,'').replace(',','.'),
-      cellText(tds[8]),
-    ]);
-  });
-  const csv = data.map(row => row.map(v => '"' + String(v).replace(/"/g,'""') + '"').join(';')).join('\r\n');
-  const from = document.getElementById('com-dateFrom').value || 'inicio';
-  const to = document.getElementById('com-dateTo').value || 'fim';
-  const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8;' });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = 'comissoes_' + from + '_' + to + '.csv'; a.click();
-  URL.revokeObjectURL(url);
+  const rows=document.querySelectorAll('#com-detail-body tr');
+  if(!rows.length||rows[0].querySelector('.empty')){alert('Nenhum dado para exportar.');return;}
+  const headers=['Negócio','Responsável','Produto','Condição Comercial','Origem','Valor (R$)','% Comissão','Comissão (R$)','Data Ganho'];
+  function cellText(td){return td?td.innerText.replace(/\n/g,' ').trim():'';}
+  const data=[headers];
+  rows.forEach(tr=>{const tds=tr.querySelectorAll('td');if(tds.length<8)return;data.push([cellText(tds[0]),cellText(tds[1]),cellText(tds[2]),cellText(tds[3]),cellText(tds[4]),cellText(tds[5]).replace('R$ ','').replace(/\./g,'').replace(',','.'),cellText(tds[6]),cellText(tds[7]).replace('R$ ','').replace(/\./g,'').replace(',','.'),cellText(tds[8])]);});
+  const csv=data.map(row=>row.map(v=>'"'+String(v).replace(/"/g,'""')+'"').join(';')).join('\r\n');
+  const from=document.getElementById('com-dateFrom').value||'inicio',to=document.getElementById('com-dateTo').value||'fim';
+  const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
+  const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='comissoes_'+from+'_'+to+'.csv';a.click();URL.revokeObjectURL(url);
 }
 
 let refreshBlockedUntil = null;
 
 async function fetchAll() {
-  const btn = document.getElementById('refreshBtn');
-  const now = new Date();
-
-  // Se ainda está bloqueado, mostra aviso
-  if (refreshBlockedUntil && now < refreshBlockedUntil) {
-    const hora = refreshBlockedUntil.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
-    setMsg('error', `⏳ Proxy ainda atualizando. Tente novamente após ${hora}.`);
+  const btn=document.getElementById('refreshBtn'), now=new Date();
+  if(refreshBlockedUntil&&now<refreshBlockedUntil){
+    const hora=refreshBlockedUntil.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    setMsg('error',`⏳ Proxy ainda atualizando. Tente novamente após ${hora}.`);
     return;
   }
-
   btn.innerHTML='<span class="spinner"></span> Buscando...'; btn.disabled=true;
   setMsg('','');
-
-  // Dispara o refresh no proxy em background
   try {
-    await fetch(PROXY+'/refresh', {method:'POST'});
-    // Bloqueia por 5 minutos
-    refreshBlockedUntil = new Date(now.getTime() + 5 * 60 * 1000);
-    const hora = refreshBlockedUntil.toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
-    setMsg('info', `🔄 Atualização iniciada no servidor. Clique novamente após ${hora} para carregar os dados frescos.`);
+    await fetch(PROXY+'/refresh',{method:'POST'});
+    refreshBlockedUntil=new Date(now.getTime()+5*60*1000);
+    const hora=refreshBlockedUntil.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+    setMsg('info',`🔄 Atualização iniciada no servidor. Clique novamente após ${hora} para carregar os dados frescos.`);
   } catch(e) {}
-
-  // Busca os dados atuais do cache
   try {
-    const resp = await fetch(PROXY+'/deals');
+    const resp=await fetch(PROXY+'/deals');
     if(!resp.ok) throw new Error('HTTP '+resp.status);
-    const result = await resp.json();
-    const newDeals = result.data||[];
-    if (newDeals.length > 0) {
-      baseDeals = newDeals;
-      const horaAtual = new Date().toLocaleTimeString('pt-BR', {hour:'2-digit', minute:'2-digit'});
-      document.getElementById('lastUpdated').textContent = 'Atualizado às ' + horaAtual;
-      if (!refreshBlockedUntil || now >= refreshBlockedUntil) {
-        setMsg('success', '✓ ' + baseDeals.length.toLocaleString('pt-BR') + ' negócios carregados');
-      }
-      applyFilter();
-      initLeadsOrigem();
+    const result=await resp.json();
+    const newDeals=result.data||[];
+    if(newDeals.length>0){
+      baseDeals=newDeals;
+      const horaAtual=new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+      document.getElementById('lastUpdated').textContent='Atualizado às '+horaAtual;
+      if(!refreshBlockedUntil||now>=refreshBlockedUntil) setMsg('success','✓ '+baseDeals.length.toLocaleString('pt-BR')+' negócios carregados');
+      applyFilter(); initLeadsOrigem();
     } else {
-      setMsg('error', '⚠ Proxy ainda carregando dados. Tente novamente em instantes.');
+      setMsg('error','⚠ Proxy ainda carregando dados. Tente novamente em instantes.');
     }
-  } catch(e) { setMsg('error', '❌ Não foi possível conectar ao proxy. (' + e.message + ')'); }
-
+  } catch(e) { setMsg('error','❌ Não foi possível conectar ao proxy. ('+e.message+')'); }
   document.getElementById('chartLoading').classList.remove('visible');
   btn.innerHTML='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg> Atualizar base';
   btn.disabled=false;
+  // Busca tasks em paralelo (não bloqueia deals)
+  fetchTasks(false);
 }
 
 initDates();
+initAtividades();
 fetchAll();
 setInterval(()=>fetchAll(), 60*60*1000);
 setInterval(()=>{fetch(PROXY+'/').catch(()=>{});}, 10*60*1000);
 </script>
+
 <!-- ❓ Botão flutuante de regras -->
 <button class="help-btn" id="helpBtn" onclick="document.getElementById('rulesModal').classList.add('open')" title="Ver regras de comissão">❓</button>
 
@@ -2261,7 +1995,6 @@ setInterval(()=>{fetch(PROXY+'/').catch(()=>{});}, 10*60*1000);
       <div style="font-size:18px;font-weight:700;color:#0E1428;font-family:'Comfortaa',cursive;">📋 Regras de Comissão</div>
       <button onclick="document.getElementById('rulesModal').classList.remove('open')" style="background:#EBF0F3;color:#0E1428;padding:6px 14px;font-size:12px;">Fechar</button>
     </div>
-
     <div class="rules-section">
       <div class="rules-section-title">Regras por Responsável</div>
       <div class="rules-person"><span class="rules-person-name">Ronaldo Junior</span><span>Tabela padrão — 100% da comissão para si</span></div>
@@ -2271,7 +2004,6 @@ setInterval(()=>{fetch(PROXY+'/').catch(()=>{});}, 10*60*1000);
       <div class="rules-person"><span class="rules-person-name">Diogo Vieira <span class="rules-tag legacy">Legado até 01/06/2026</span></span><span>Regra por origem: 80% indicação colaborador · 15% demais origens · 0% diretoria</span></div>
       <div class="rules-person"><span class="rules-person-name">Luiz Santos</span><span style="color:#999;">Diretoria — sem comissão</span></div>
     </div>
-
     <div class="rules-section">
       <div class="rules-section-title">Tabela Padrão (Ronaldo, Everton e demais)</div>
       <table class="rules-table">
@@ -2288,7 +2020,6 @@ setInterval(()=>{fetch(PROXY+'/').catch(()=>{});}, 10*60*1000);
         </tbody>
       </table>
     </div>
-
     <div class="rules-section">
       <div class="rules-section-title">Tabela Fabíola Carvalho</div>
       <table class="rules-table">
@@ -2307,7 +2038,6 @@ setInterval(()=>{fetch(PROXY+'/').catch(()=>{});}, 10*60*1000);
       </table>
       <div style="font-size:11px;color:#657786;margin-top:6px;">Comissão = Valor × (1 − desconto) + R$30 por reunião agendada (campo manual)</div>
     </div>
-
     <div class="rules-section">
       <div class="rules-section-title">Regra por Origem (Brenda / Diogo)</div>
       <table class="rules-table">
@@ -2319,7 +2049,6 @@ setInterval(()=>{fetch(PROXY+'/').catch(()=>{});}, 10*60*1000);
         </tbody>
       </table>
     </div>
-
     <div style="font-size:11px;color:#999;text-align:right;margin-top:0.5rem;">Ciclo de comissão: dia 26 do mês anterior ao dia 25 do mês atual</div>
   </div>
 </div>
