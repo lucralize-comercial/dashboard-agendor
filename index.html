@@ -374,6 +374,16 @@
     <div class="chart-wrap h220"><canvas id="origemAnualChart" role="img" aria-label="Leads anuais por origem"></canvas></div>
   </div>
 
+  <!-- Trimestral por semana -->
+  <div class="card" style="margin-bottom:1.5rem;">
+    <div class="card-header">
+      <span class="card-title">Leads por trimestre — por semana</span>
+      <select id="origem-trim-select" onchange="renderLeadsTrimestral()" style="font-size:12px;padding:4px 8px;border-radius:8px;border:1px solid var(--border);font-family:'Poppins',sans-serif;background:#1a2540;color:white;"></select>
+    </div>
+    <div id="origem-trim-legend" style="display:flex;flex-wrap:wrap;gap:10px;margin-bottom:8px;font-size:11px;color:var(--muted);"></div>
+    <div class="chart-wrap h240"><canvas id="origemTrimChart" role="img" aria-label="Leads trimestrais por semana e origem"></canvas></div>
+  </div>
+
   <div class="two-col">
     <div class="card" style="margin-bottom:0;">
       <div class="card-header">
@@ -984,7 +994,7 @@ function initLeadsOrigem() {
   }
   const selMes = document.getElementById('origem-mes-select');
   if (selMes) selMes.innerHTML = mesesDisp.map((m,i) => `<option value="${i}">${m.label}</option>`).join('');
-  renderLeadsSemanal(); renderLeadsMensal(); renderLeadsAnual();
+  renderLeadsSemanal(); renderLeadsMensal(); renderLeadsAnual(); renderLeadsTrimestral();
 }
 
 function renderLeadsSemanal() {
@@ -1030,6 +1040,95 @@ function renderLeadsMensal() {
     type: 'line', data: { labels: meses, datasets },
     options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
       scales: { x:{grid:{display:false},ticks:{font:{size:11}}}, y:{beginAtZero:true,ticks:{font:{size:11}}} } }
+  });
+}
+
+let origemTrimChart = null;
+
+function getISOWeek(date) {
+  const d = new Date(date);
+  d.setHours(0,0,0,0);
+  d.setDate(d.getDate() + 4 - (d.getDay()||7));
+  const yearStart = new Date(d.getFullYear(),0,1);
+  return Math.ceil((((d - yearStart) / 86400000) + 1)/7);
+}
+
+function getWeekLabel(date) {
+  const d = new Date(date);
+  const day = d.getDate(), month = d.getMonth();
+  const MONTHS = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+  return `${day} ${MONTHS[month]}`;
+}
+
+function renderLeadsTrimestral() {
+  const now = new Date();
+  const selIdx = parseInt(document.getElementById('origem-trim-select')?.value ?? 0);
+
+  // Calcula trimestres disponíveis (últimos 8)
+  const trims = [];
+  for (let i = 0; i < 8; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - (i * 3), 1);
+    const q = Math.floor(d.getMonth() / 3);
+    const ano = d.getFullYear();
+    const mesInicio = q * 3;
+    const inicio = new Date(ano, mesInicio, 1);
+    const fim = new Date(ano, mesInicio + 3, 0);
+    trims.push({ label: `Q${q+1}/${ano}`, inicio, fim, ano, q });
+  }
+
+  // Popula select
+  const sel = document.getElementById('origem-trim-select');
+  if (sel && sel.options.length === 0) {
+    sel.innerHTML = trims.map((t,i) => `<option value="${i}">${t.label}</option>`).join('');
+  }
+
+  const trim = trims[selIdx] || trims[0];
+  const { inicio, fim } = trim;
+
+  // Filtra deals do trimestre
+  const deals = baseDeals.filter(d => {
+    const dt = new Date(d.startTime || d.createdAt);
+    return dt >= inicio && dt <= fim;
+  });
+
+  // Gera semanas do trimestre
+  const semanas = [];
+  let cur = new Date(inicio);
+  while (cur <= fim) {
+    const semFim = new Date(cur);
+    semFim.setDate(semFim.getDate() + 6);
+    if (semFim > fim) semFim.setTime(fim.getTime());
+    semanas.push({ label: getWeekLabel(cur), de: new Date(cur), ate: semFim });
+    cur.setDate(cur.getDate() + 7);
+  }
+
+  const origens = getTopOrigens(deals, 8);
+  buildOrigemLegend(origens, 'origem-trim-legend');
+
+  const datasets = origens.map((o, i) => ({
+    label: o,
+    data: semanas.map(s => deals.filter(d => {
+      const dt = new Date(d.startTime || d.createdAt);
+      return getOrigemLabel(d) === o && dt >= s.de && dt <= s.ate;
+    }).length),
+    borderColor: ORIGEM_CORES[i % ORIGEM_CORES.length],
+    backgroundColor: ORIGEM_CORES[i % ORIGEM_CORES.length] + '18',
+    borderWidth: 2, pointRadius: 4, tension: 0.3, fill: false,
+    pointBackgroundColor: ORIGEM_CORES[i % ORIGEM_CORES.length],
+  }));
+
+  if (origemTrimChart) origemTrimChart.destroy();
+  origemTrimChart = new Chart(document.getElementById('origemTrimChart'), {
+    type: 'line',
+    data: { labels: semanas.map(s => s.label), datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        x: { grid: { display: false }, ticks: { font: { size: 11 }, color: 'rgba(255,255,255,0.5)' } },
+        y: { beginAtZero: true, ticks: { font: { size: 11 }, color: 'rgba(255,255,255,0.5)', stepSize: 1 }, grid: { color: 'rgba(255,255,255,0.06)' } }
+      }
+    }
   });
 }
 
