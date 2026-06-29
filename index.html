@@ -1877,14 +1877,14 @@ function renderAtividades() {
     if (from && ref && new Date(ref) < from) return;
     if (to && ref && new Date(ref) > to) return;
     const name = getTaskOwner(t) || 'Sem responsável';
-    if (!ownerMap[name]) ownerMap[name] = { total: 0, done: 0, pending: 0, overdue: 0, tipos: { WhatsApp: 0, Ligação: 0, Reunião: 0, Outros: 0 }, auto: { WhatsApp: 0, Ligação: 0, Reunião: 0, Outros: 0 } };
+    if (!ownerMap[name]) ownerMap[name] = { total: 0, done: 0, pending: 0, overdue: 0, tipos: { WhatsApp: 0, Ligacao: 0, Reuniao: 0, Outros: 0 }, auto: { WhatsApp: 0, Ligacao: 0, Reuniao: 0, Outros: 0 } };
     ownerMap[name].total++;
     const tipo = t.type || '';
     const isAuto = (t.text || '').startsWith('A seguinte mensagem foi enviada via automação');
     const tipoMap_ = isAuto ? ownerMap[name].auto : ownerMap[name].tipos;
     if (tipo === 'WhatsApp') tipoMap_.WhatsApp++;
-    else if (tipo === 'Ligação' || tipo.toLowerCase().includes('lig') || tipo.toLowerCase().includes('call') || tipo.toLowerCase().includes('phone')) tipoMap_.Ligação++;
-    else if (tipo === 'Reunião' || tipo.toLowerCase().includes('reun') || tipo.toLowerCase().includes('meet')) tipoMap_.Reunião++;
+    else if (tipo === 'Ligação' || tipo === 'Ligacao' || tipo.toLowerCase().includes('lig') || tipo.toLowerCase().includes('call') || tipo.toLowerCase().includes('phone')) tipoMap_.Ligacao++;
+    else if (tipo === 'Reunião' || tipo === 'Reuniao' || tipo.toLowerCase().includes('reun') || tipo.toLowerCase().includes('meet')) tipoMap_.Reuniao++;
     else tipoMap_.Outros++;
     if (isDone(t)) ownerMap[name].done++; else ownerMap[name].pending++;
     if (isOverdue(t)) ownerMap[name].overdue++;
@@ -1897,33 +1897,38 @@ function renderAtividades() {
   const rowsTipos = ownerEntries.map(([name, s]) => {
     const m = s.tipos, a = s.auto || {};
     const tot = s.total || 1;
-    const mWa=m.WhatsApp||0, mCall=m.Ligação||0, mMeet=m.Reunião||0, mOther=m.Outros||0;
-    const aWa=a.WhatsApp||0, aCall=a.Ligação||0, aMeet=a.Reunião||0, aOther=a.Outros||0;
-    const mTotal=mWa+mCall+mMeet+mOther, aTotal=aWa+aCall+aMeet+aOther;
+    const mWa=m.WhatsApp||0, mCall=m.Ligacao||0, mMeet=m.Reuniao||0, mOther=m.Outros||0;
+    const aWa=a.WhatsApp||0, aCall=a.Ligacao||0, aMeet=a.Reuniao||0, aOther=a.Outros||0;
     const bTop='border-top:0.5px solid rgba(255,255,255,0.1);';
-    const bMid='border-top:0.5px solid rgba(255,255,255,0.04);';
     const bBot='border-bottom:0.5px solid rgba(255,255,255,0.1);';
     const badge=(label,color,bg)=>'<span style="font-size:9px;background:'+bg+';color:'+color+';padding:1px 6px;border-radius:8px;white-space:nowrap;">'+label+'</span>';
-    const cell=(v,color)=>v>0?('<td style="padding:3px 6px;text-align:right;color:'+color+';">'+v+'</td>'):'<td style="padding:3px 6px;text-align:right;color:rgba(255,255,255,0.18);">—</td>';
-    const pctCell=(v,tot_,color)=>'<td style="padding:1px 6px 4px;text-align:right;font-size:10px;color:'+color+';">'+(tot_>0&&v>0?Math.round(v/tot_*100)+'%':'—')+'</td>';
-    return '<tr style="'+bTop+'">'
-      + '<td rowspan="6" style="padding:6px 8px;color:white;font-weight:500;vertical-align:middle;">'+name+'</td>'
-      + '<td style="padding:3px 6px;text-align:center;">'+badge('Manual','#5DCAA5','rgba(92,202,165,0.15)')+'</td>'
-      + cell(mWa,'#5DCAA5')+cell(mCall,'#91DBE4')+cell(mMeet,'#EF9F27')+cell(mOther,'rgba(255,255,255,0.55)')
-      + '<td rowspan="2" style="padding:6px 8px;text-align:right;vertical-align:middle;color:white;font-weight:600;">'+s.total+'</td>'
+    const cell=(v,color)=>'<td style="padding:4px 6px;text-align:right;color:'+(v>0?color:'rgba(255,255,255,0.18)')+';">'+(v>0?v:'—')+'</td>';
+    const pct=(v)=>tot>0&&v>0?Math.round(v/tot*100)+'%':'—';
+    return ''
+      + '<tr style="'+bTop+'">'
+      +   '<td rowspan="4" style="padding:6px 8px;color:white;font-weight:500;vertical-align:middle;white-space:nowrap;">'+name+'</td>'
+      +   '<td style="padding:4px 6px;text-align:center;">'+badge('Manual','#5DCAA5','rgba(92,202,165,0.15)')+'</td>'
+      +   cell(mWa,'#5DCAA5')+cell(mCall,'#91DBE4')+cell(mMeet,'#EF9F27')+cell(mOther,'rgba(255,255,255,0.55)')
+      +   '<td rowspan="2" style="padding:6px 8px;text-align:right;vertical-align:middle;color:white;font-weight:600;">'+s.total+'</td>'
       + '</tr>'
       + '<tr>'
-      + '<td style="padding:3px 6px;text-align:center;">'+badge('Auto','#AFA9EC','rgba(127,119,221,0.15)')+'</td>'
-      + cell(aWa,'#7F77DD')+cell(aCall,'rgba(127,119,221,0.7)')+cell(aMeet,'rgba(127,119,221,0.7)')+cell(aOther,'rgba(127,119,221,0.7)')
+      +   '<td style="padding:4px 6px;text-align:center;">'+badge('Auto','#AFA9EC','rgba(127,119,221,0.15)')+'</td>'
+      +   cell(aWa,'#7F77DD')+cell(aCall,'rgba(127,119,221,0.7)')+cell(aMeet,'rgba(127,119,221,0.7)')+cell(aOther,'rgba(127,119,221,0.7)')
       + '</tr>'
-      + '<tr style="'+bMid+'">'
-      + '<td style="padding:1px 6px 3px;text-align:center;font-size:9px;color:rgba(255,255,255,0.2);">%</td>'
-      + pctCell(mWa,tot,'rgba(92,202,165,0.5)')+pctCell(mCall,tot,'rgba(145,219,228,0.5)')+pctCell(mMeet,tot,'rgba(239,159,39,0.5)')+pctCell(mOther,tot,'rgba(255,255,255,0.2)')
-      + '<td rowspan="2" style="padding:0;"></td>'
+      + '<tr>'
+      +   '<td style="padding:1px 6px 3px;text-align:center;font-size:9px;color:rgba(255,255,255,0.2);">%</td>'
+      +   '<td style="padding:1px 6px 3px;text-align:right;font-size:10px;color:rgba(92,202,165,0.45);">'+pct(mWa)+'</td>'
+      +   '<td style="padding:1px 6px 3px;text-align:right;font-size:10px;color:rgba(145,219,228,0.45);">'+pct(mCall)+'</td>'
+      +   '<td style="padding:1px 6px 3px;text-align:right;font-size:10px;color:rgba(239,159,39,0.45);">'+pct(mMeet)+'</td>'
+      +   '<td style="padding:1px 6px 3px;text-align:right;font-size:10px;color:rgba(255,255,255,0.2);">'+pct(mOther)+'</td>'
+      +   '<td rowspan="2"></td>'
       + '</tr>'
       + '<tr style="'+bBot+'">'
-      + '<td style="padding:1px 6px 5px;text-align:center;font-size:9px;color:rgba(255,255,255,0.2);">%</td>'
-      + pctCell(aWa,tot,'rgba(127,119,221,0.5)')+pctCell(aCall,tot,'rgba(127,119,221,0.4)')+pctCell(aMeet,tot,'rgba(127,119,221,0.4)')+pctCell(aOther,tot,'rgba(127,119,221,0.4)')
+      +   '<td style="padding:1px 6px 5px;text-align:center;font-size:9px;color:rgba(255,255,255,0.2);">%</td>'
+      +   '<td style="padding:1px 6px 5px;text-align:right;font-size:10px;color:rgba(127,119,221,0.5);">'+pct(aWa)+'</td>'
+      +   '<td style="padding:1px 6px 5px;text-align:right;font-size:10px;color:rgba(127,119,221,0.4);">'+pct(aCall)+'</td>'
+      +   '<td style="padding:1px 6px 5px;text-align:right;font-size:10px;color:rgba(127,119,221,0.4);">'+pct(aMeet)+'</td>'
+      +   '<td style="padding:1px 6px 5px;text-align:right;font-size:10px;color:rgba(127,119,221,0.4);">'+pct(aOther)+'</td>'
       + '</tr>';
   }).join('');
 
