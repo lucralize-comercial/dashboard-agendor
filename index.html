@@ -661,9 +661,10 @@
       <div style="overflow-x:auto;">
         <div style="font-size:11px;font-weight:600;color:rgba(255,255,255,0.4);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px;">Tipos de atividade</div>
         <table style="width:100%;border-collapse:collapse;font-size:11px;table-layout:fixed;">
-          <colgroup><col style="width:26%"><col style="width:17%"><col style="width:15%"><col style="width:15%"><col style="width:13%"><col style="width:14%"></colgroup>
+          <colgroup><col style="width:22%"><col style="width:14%"><col style="width:13%"><col style="width:13%"><col style="width:13%"><col style="width:11%"><col style="width:14%"></colgroup>
           <thead><tr style="border-bottom:0.5px solid rgba(255,255,255,0.12);">
             <th style="padding:6px;text-align:left;color:rgba(255,255,255,0.4);font-weight:500;">Responsável</th>
+            <th style="padding:6px;text-align:right;color:#7F77DD;font-weight:500;">Automação</th>
             <th style="padding:6px;text-align:right;color:#5DCAA5;font-weight:500;">WhatsApp</th>
             <th style="padding:6px;text-align:right;color:#91DBE4;font-weight:500;">Ligação</th>
             <th style="padding:6px;text-align:right;color:#EF9F27;font-weight:500;">Reunião</th>
@@ -1876,10 +1877,12 @@ function renderAtividades() {
     if (from && ref && new Date(ref) < from) return;
     if (to && ref && new Date(ref) > to) return;
     const name = getTaskOwner(t) || 'Sem responsável';
-    if (!ownerMap[name]) ownerMap[name] = { total: 0, done: 0, pending: 0, overdue: 0, tipos: { WhatsApp: 0, Ligação: 0, Reunião: 0, Outros: 0 } };
+    if (!ownerMap[name]) ownerMap[name] = { total: 0, done: 0, pending: 0, overdue: 0, tipos: { Automação: 0, WhatsApp: 0, Ligação: 0, Reunião: 0, Outros: 0 } };
     ownerMap[name].total++;
     const tipo = t.type || '';
-    if (tipo === 'WhatsApp') ownerMap[name].tipos.WhatsApp++;
+    const isAuto = (t.text || '').startsWith('A seguinte mensagem foi enviada via automação');
+    if (isAuto) ownerMap[name].tipos.Automação++;
+    else if (tipo === 'WhatsApp') ownerMap[name].tipos.WhatsApp++;
     else if (tipo === 'Ligação' || tipo.toLowerCase().includes('lig') || tipo.toLowerCase().includes('call') || tipo.toLowerCase().includes('phone')) ownerMap[name].tipos.Ligação++;
     else if (tipo === 'Reunião' || tipo.toLowerCase().includes('reun') || tipo.toLowerCase().includes('meet')) ownerMap[name].tipos.Reunião++;
     else ownerMap[name].tipos.Outros++;
@@ -1888,19 +1891,20 @@ function renderAtividades() {
   });
 
   const ownerEntries = Object.entries(ownerMap).sort((a,b) => b[1].total - a[1].total);
-  const EMPTY_ROW_TIPOS = '<tr><td colspan="6" class="empty" style="text-align:center;">Nenhum dado</td></tr>';
+  const EMPTY_ROW_TIPOS = '<tr><td colspan="7" class="empty" style="text-align:center;">Nenhum dado</td></tr>';
   const EMPTY_ROW_STATUS = '<tr><td colspan="5" class="empty" style="text-align:center;">Nenhum dado</td></tr>';
 
   const rowsTipos = ownerEntries.map(([name, s]) => {
     const t = s.tipos;
     const tot = s.total || 1;
-    const waV = t['WhatsApp']||0, callV = t['Ligação']||0, meetV = t['Reunião']||0, otherV = t['Outros']||0;
-    const waPct = Math.round(waV/tot*100), callPct = Math.round(callV/tot*100);
+    const autoV = t['Automação']||0, waV = t['WhatsApp']||0, callV = t['Ligação']||0, meetV = t['Reunião']||0, otherV = t['Outros']||0;
+    const autoPct = Math.round(autoV/tot*100), waPct = Math.round(waV/tot*100), callPct = Math.round(callV/tot*100);
     const meetPct = Math.round(meetV/tot*100), otherPct = Math.round(otherV/tot*100);
     const bTop = 'border-top:0.5px solid rgba(255,255,255,0.08);';
     const bBot = 'border-bottom:0.5px solid rgba(255,255,255,0.08);';
     return '<tr>'
       + '<td rowspan="2" style="padding:6px;color:white;font-weight:500;vertical-align:middle;'+bTop+'">'+name+'</td>'
+      + '<td style="padding:5px 6px 1px;text-align:right;color:#7F77DD;'+bTop+'">'+autoV+'</td>'
       + '<td style="padding:5px 6px 1px;text-align:right;color:#5DCAA5;'+bTop+'">'+waV+'</td>'
       + '<td style="padding:5px 6px 1px;text-align:right;color:#91DBE4;'+bTop+'">'+callV+'</td>'
       + '<td style="padding:5px 6px 1px;text-align:right;color:#EF9F27;'+bTop+'">'+meetV+'</td>'
@@ -1908,6 +1912,7 @@ function renderAtividades() {
       + '<td rowspan="2" style="padding:6px;text-align:right;vertical-align:middle;color:white;font-weight:600;'+bTop+'">'+s.total+'</td>'
       + '</tr>'
       + '<tr style="'+bBot+'">'
+      + '<td style="padding:1px 6px 6px;text-align:right;font-size:10px;color:rgba(127,119,221,0.5);">'+autoPct+'%</td>'
       + '<td style="padding:1px 6px 6px;text-align:right;font-size:10px;color:rgba(92,202,165,0.5);">'+waPct+'%</td>'
       + '<td style="padding:1px 6px 6px;text-align:right;font-size:10px;color:rgba(145,219,228,0.5);">'+callPct+'%</td>'
       + '<td style="padding:1px 6px 6px;text-align:right;font-size:10px;color:rgba(239,159,39,0.5);">'+meetPct+'%</td>'
