@@ -691,6 +691,25 @@
     </div>
   </div>
 
+  <!-- Reuniões por consultor - semana a semana -->
+  <div class="card" style="margin-bottom:1.5rem;">
+    <div class="card-header">
+      <span class="card-title">Reuniões por consultor — semana a semana</span>
+      <select id="reunioes-trim-select" onchange="renderReunioesConsultor()" style="font-size:12px;padding:4px 8px;border-radius:8px;border:0.5px solid rgba(255,255,255,0.15);font-family:'Poppins',sans-serif;background:#1a2540;color:white;"></select>
+    </div>
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:11px;min-width:500px;" id="reunioes-table">
+        <thead id="reunioes-thead"></thead>
+        <tbody id="reunioes-tbody"></tbody>
+      </table>
+    </div>
+    <div style="display:flex;gap:20px;margin-top:10px;flex-wrap:wrap;">
+      <span style="font-size:11px;color:#91DBE4;">Ag. = agendadas (todas)</span>
+      <span style="font-size:11px;color:#5DCAA5;">Real. = realizadas (concluídas)</span>
+      <span style="font-size:11px;color:#EF9F27;">Pend. = pendentes</span>
+    </div>
+  </div>
+
   <!-- Visão por tipo de última atividade -->
   <div class="card" style="margin-bottom:1.5rem;">
     <div class="card-header"><span class="card-title">Negócios por tipo de última atividade</span></div>
@@ -920,7 +939,7 @@ function switchTab(id, btn) {
 
   if (id === 'contratos') fetchProductsForDeals(baseDeals).then(() => renderContratos());
   if (id === 'analise') initFunilEtapas();
-  if (id === 'atividades') renderAtividades();
+  if (id === 'atividades') { renderAtividades(); renderReunioesConsultor(); }
 }
 
 function toggleFunnelMenu(e) { e.stopPropagation(); document.getElementById('funnelMenu').classList.toggle('open'); document.getElementById('funnelBtn').classList.toggle('open'); }
@@ -1633,6 +1652,135 @@ async function fetchTasks(forceRefresh) {
   }
   if (btn) { btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg> Recarregar'; btn.disabled = false; }
   renderAtividades();
+  renderReunioesConsultor();
+}
+
+function renderReunioesConsultor() {
+  const tasks = atvTasksCache || baseTasks || [];
+  const reunioes = tasks.filter(t => t.type === 'Reunião');
+  if (!reunioes.length) {
+    document.getElementById('reunioes-tbody').innerHTML = '<tr><td colspan="20" class="empty" style="text-align:center;padding:1rem;">Nenhuma reunião encontrada. Clique em Recarregar na aba Atividades.</td></tr>';
+    return;
+  }
+
+  // Trimestres disponíveis (últimos 8)
+  const now = new Date();
+  const trims = [];
+  for (let i = 0; i < 8; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - (i * 3), 1);
+    const q = Math.floor(d.getMonth() / 3);
+    const ano = d.getFullYear();
+    const mesInicio = q * 3;
+    const inicio = new Date(ano, mesInicio, 1);
+    const fim = new Date(ano, mesInicio + 3, 0, 23, 59, 59);
+    trims.push({ label: 'Q' + (q+1) + '/' + ano, inicio, fim });
+  }
+
+  const sel = document.getElementById('reunioes-trim-select');
+  if (sel && sel.options.length === 0) {
+    sel.innerHTML = trims.map((t,i) => '<option value="' + i + '">' + t.label + '</option>').join('');
+  }
+  const selIdx = parseInt(sel?.value || 0);
+  const trim = trims[selIdx] || trims[0];
+  const { inicio, fim } = trim;
+
+  // Filtra reuniões do trimestre
+  const reunioesTrim = reunioes.filter(t => {
+    const ref = new Date(t.dueDate || t.createdAt || 0);
+    return ref >= inicio && ref <= fim;
+  });
+
+  // Gera semanas do trimestre
+  const semanas = [];
+  let cur = new Date(inicio);
+  while (cur <= fim) {
+    const semFim = new Date(cur);
+    semFim.setDate(semFim.getDate() + 6);
+    if (semFim > fim) semFim.setTime(fim.getTime());
+    const d = cur.getDate(), m = cur.getMonth();
+    const MONTHS_SHORT = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    semanas.push({ label: d + ' ' + MONTHS_SHORT[m], de: new Date(cur), ate: semFim });
+    cur = new Date(cur);
+    cur.setDate(cur.getDate() + 7);
+  }
+
+  // Responsáveis com reuniões no trimestre
+  const getOwner = t => (t.assignedUsers?.[0]?.name) || t.user?.name || 'Sem responsável';
+  const isDone = t => !!(t.finishedAt);
+
+  const consultores = [...new Set(reunioesTrim.map(getOwner))].sort();
+  if (!consultores.length) {
+    document.getElementById('reunioes-tbody').innerHTML = '<tr><td colspan="20" class="empty" style="text-align:center;padding:1rem;">Nenhuma reunião no trimestre selecionado.</td></tr>';
+    return;
+  }
+
+  // Monta cabeçalho
+  const bTop = 'border-top:0.5px solid rgba(255,255,255,0.08);';
+  const bLeft = 'border-left:0.5px solid rgba(255,255,255,0.1);';
+  const bBot = 'border-bottom:0.5px solid rgba(255,255,255,0.08);';
+
+  let thead = '<tr style="border-bottom:0.5px solid rgba(255,255,255,0.15);">'
+    + '<th style="text-align:left;padding:6px 8px;color:rgba(255,255,255,0.4);font-weight:500;min-width:100px;"></th>';
+  semanas.forEach(s => {
+    thead += '<th colspan="3" style="text-align:center;padding:6px 4px;color:rgba(255,255,255,0.4);font-weight:500;' + bLeft + '">' + s.label + '</th>';
+  });
+  thead += '<th style="text-align:right;padding:6px 8px;color:rgba(255,255,255,0.7);font-weight:500;' + bLeft + '">Total</th></tr>';
+
+  thead += '<tr style="border-bottom:0.5px solid rgba(255,255,255,0.12);">'
+    + '<th style="padding:4px 8px;color:rgba(255,255,255,0.3);font-weight:400;font-size:10px;text-align:left;">Consultor</th>';
+  semanas.forEach(() => {
+    thead += '<th style="text-align:center;padding:4px 4px;color:#91DBE4;font-size:10px;font-weight:500;' + bLeft + '">Ag.</th>'
+           + '<th style="text-align:center;padding:4px 4px;color:#5DCAA5;font-size:10px;font-weight:500;">Real.</th>'
+           + '<th style="text-align:center;padding:4px 4px;color:#EF9F27;font-size:10px;font-weight:500;">Pend.</th>';
+  });
+  thead += '<th style="' + bLeft + '"></th></tr>';
+  document.getElementById('reunioes-thead').innerHTML = thead;
+
+  // Monta linhas
+  let tbody = '';
+  const totais = semanas.map(() => ({ ag: 0, real: 0, pend: 0 }));
+  let totalAg = 0, totalReal = 0, totalPend = 0;
+
+  consultores.forEach(consultor => {
+    const minhas = reunioesTrim.filter(t => getOwner(t) === consultor);
+    let cTotalAg = 0, cTotalReal = 0, cTotalPend = 0;
+
+    tbody += '<tr style="' + bTop + '">'
+      + '<td style="padding:7px 8px;font-weight:500;color:white;">' + consultor + '</td>';
+
+    semanas.forEach((s, i) => {
+      const desta = minhas.filter(t => {
+        const ref = new Date(t.dueDate || t.createdAt || 0);
+        return ref >= s.de && ref <= s.ate;
+      });
+      const ag = desta.length;
+      const real = desta.filter(isDone).length;
+      const pend = ag - real;
+
+      totais[i].ag += ag; totais[i].real += real; totais[i].pend += pend;
+      cTotalAg += ag; cTotalReal += real; cTotalPend += pend;
+
+      tbody += '<td style="text-align:center;padding:7px 4px;color:#91DBE4;' + bLeft + '">' + (ag || '—') + '</td>'
+             + '<td style="text-align:center;padding:7px 4px;color:#5DCAA5;">' + (real || '—') + '</td>'
+             + '<td style="text-align:center;padding:7px 4px;color:' + (pend > 0 ? '#EF9F27' : 'rgba(255,255,255,0.25)') + ';">' + (pend || '—') + '</td>';
+    });
+
+    totalAg += cTotalAg; totalReal += cTotalReal; totalPend += cTotalPend;
+
+    tbody += '<td style="text-align:right;padding:7px 8px;font-weight:600;color:white;' + bLeft + '">' + cTotalAg + '</td></tr>';
+  });
+
+  // Linha total
+  tbody += '<tr style="background:rgba(255,255,255,0.04);border-top:0.5px solid rgba(255,255,255,0.15);">'
+    + '<td style="padding:7px 8px;font-weight:600;color:white;">Total</td>';
+  totais.forEach((t, i) => {
+    tbody += '<td style="text-align:center;padding:7px 4px;color:#91DBE4;font-weight:600;' + bLeft + '">' + (t.ag || '—') + '</td>'
+           + '<td style="text-align:center;padding:7px 4px;color:#5DCAA5;font-weight:600;">' + (t.real || '—') + '</td>'
+           + '<td style="text-align:center;padding:7px 4px;color:' + (t.pend > 0 ? '#EF9F27' : 'rgba(255,255,255,0.25)') + ';font-weight:600;">' + (t.pend || '—') + '</td>';
+  });
+  tbody += '<td style="text-align:right;padding:7px 8px;font-weight:700;color:white;' + bLeft + '">' + totalAg + '</td></tr>';
+
+  document.getElementById('reunioes-tbody').innerHTML = tbody;
 }
 
 function renderAtividades() {
