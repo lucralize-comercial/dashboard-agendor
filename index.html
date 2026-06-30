@@ -2629,17 +2629,15 @@ async function fetchAutentique(force=false) {
 
 function autDocStatus(doc) {
   const sigs = doc.signatures || [];
-  if (sigs.some(s => s.signed === false && s.signed_at === null && s.name !== 'Lucralize')) return 'refused';
-  if (sigs.every(s => s.signed)) return 'signed';
+  if (sigs.some(s => s.rejected && s.rejected.created_at)) return 'refused';
+  if (sigs.every(s => s.signed && s.signed.created_at)) return 'signed';
   return 'pending';
 }
 
 function autSignedAt(doc) {
   const sigs = doc.signatures || [];
-  if (!sigs.every(s => s.signed)) return null;
-  const datas = sigs.map(s => s.signed_at).filter(Boolean);
-  if (!datas.length) return null;
-  return datas.sort().reverse()[0];
+  if (!sigs.every(s => s.signed && s.signed.created_at)) return null;
+  return sigs.map(s => s.signed.created_at).sort().reverse()[0];
 }
 
 function renderAutentique() {
@@ -2690,13 +2688,14 @@ function renderAutentique() {
     };
 
     const sigRows = sigs.map(s => {
-      const dot = s.signed
-        ? 'background:#5DCAA5'
-        : (s.signed === false && !s.signed_at ? 'background:#F62642' : 'background:#EF9F27');
-      const nameColor = s.signed ? '#e0e0e0' : '#888';
+      const assinou = s.signed && s.signed.created_at;
+      const recusou = s.rejected && s.rejected.created_at;
+      const dot = assinou ? 'background:#5DCAA5' : recusou ? 'background:#F62642' : 'background:#EF9F27';
+      const nameColor = assinou ? '#e0e0e0' : '#888';
+      const sigName = s.name || s.email || '—';
       return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
         <span style="width:7px;height:7px;border-radius:50%;flex-shrink:0;${dot}"></span>
-        <span style="font-size:12px;color:${nameColor};">${s.name||'—'}</span>
+        <span style="font-size:12px;color:${nameColor};">${sigName}</span>
       </div>`;
     }).join('');
 
