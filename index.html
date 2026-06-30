@@ -2320,7 +2320,7 @@ function renderComissoes() {
   const detailProduto=document.getElementById('com-detail-produto')?.value||'all';
   const detailCondicao=document.getElementById('com-detail-condicao')?.value||'all';
   const detailOrigem=document.getElementById('com-detail-origem')?.value||'all';
-  const from=fromVal?new Date(fromVal+'T00:00:00'):null, to=toVal?new Date(toVal+'T23:59:59'):null;
+  const from=fromVal?new Date(fromVal+'T00:00:00Z'):null, to=toVal?new Date(toVal+'T23:59:59Z'):null;
   const owners=[...new Set(baseDeals.filter(d=>d.dealStatus?.id===2).map(d=>d.owner?.name).filter(Boolean))].sort();
   const sel=document.getElementById('com-owner');
   const curVal=sel.value;
