@@ -229,6 +229,7 @@
     <button class="tab-btn" onclick="switchTab('acompanhamento',this)">Acompanhamento</button>
     <button class="tab-btn" onclick="switchTab('contratos',this)">Contratos Ganhos</button>
     <button class="tab-btn" onclick="switchTab('atividades',this)">📋 Atividades</button>
+    <button class="tab-btn" onclick="switchTab('contratos-autentique',this)">📄 Contratos Autentique</button>
     <button class="tab-btn comissoes-tab" onclick="openComissoes(this)">💰 Comissões</button>
   </div>
   <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
@@ -762,6 +763,52 @@
   </div>
 </div>
 
+<!-- ===== ABA 7: CONTRATOS AUTENTIQUE ===== -->
+<div id="tab-contratos-autentique" class="tab-content">
+  <div style="display:flex;align-items:center;gap:10px;margin-bottom:1.25rem;flex-wrap:wrap;">
+    <select id="aut-status" onchange="renderAutentique()" style="font-size:12px;padding:5px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.12);background:#1a2540;color:#e0e0e0;height:32px;">
+      <option value="all">Todos os status</option>
+      <option value="signed">Assinado</option>
+      <option value="pending">Pendente</option>
+      <option value="refused">Recusado</option>
+    </select>
+    <div style="width:1px;height:20px;background:rgba(255,255,255,0.12);"></div>
+    <span style="font-size:12px;color:#a8b3c7;">Período:</span>
+    <input type="date" id="aut-from" onchange="renderAutentique()" style="padding:5px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:#0E1428;color:#e0e0e0;font-size:12px;font-family:'Poppins',sans-serif;color-scheme:dark;height:32px;">
+    <span style="font-size:12px;color:#a8b3c7;">→</span>
+    <input type="date" id="aut-to" onchange="renderAutentique()" style="padding:5px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:#0E1428;color:#e0e0e0;font-size:12px;font-family:'Poppins',sans-serif;color-scheme:dark;height:32px;">
+    <select id="aut-filtro-tipo" onchange="renderAutentique()" style="font-size:12px;padding:5px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.12);background:#1a2540;color:#e0e0e0;height:32px;">
+      <option value="created">Por data de criação</option>
+      <option value="signed">Por data de assinatura</option>
+    </select>
+    <button onclick="fetchAutentique(true)" style="margin-left:auto;background:#1a2540;color:#e0e0e0;border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:6px 14px;font-size:12px;cursor:pointer;">↻ Atualizar</button>
+  </div>
+
+  <div class="metrics" style="margin-bottom:1.25rem;" id="aut-metrics">
+    <div class="metric-card"><div class="metric-label">Total documentos</div><div class="metric-value" id="aut-total">—</div></div>
+    <div class="metric-card"><div class="metric-label">Assinados</div><div class="metric-value success" id="aut-signed">—</div></div>
+    <div class="metric-card"><div class="metric-label">Pendentes</div><div class="metric-value warning" id="aut-pending">—</div></div>
+    <div class="metric-card"><div class="metric-label">Recusados</div><div class="metric-value danger" id="aut-refused">—</div></div>
+  </div>
+
+  <div class="card">
+    <div style="overflow-x:auto;">
+      <table class="std-table" id="aut-table">
+        <thead>
+          <tr>
+            <th style="text-align:left;min-width:220px;">Documento</th>
+            <th>Status</th>
+            <th style="min-width:220px;">Signatários</th>
+            <th style="text-align:right;min-width:110px;">Criação</th>
+            <th style="text-align:right;min-width:110px;">Assinatura</th>
+          </tr>
+        </thead>
+        <tbody id="aut-body"><tr><td colspan="5" class="empty">Carregando...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
 <!-- ===== ABA 6: COMISSÕES ===== -->
 <div id="tab-comissoes" class="tab-content">
   <div style="background:#1a2540;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:1rem 1.4rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
@@ -966,6 +1013,7 @@ function switchTab(id, btn) {
   if (id === 'contratos') fetchProductsForDeals(baseDeals).then(() => renderContratos());
   if (id === 'analise') initFunilEtapas();
   if (id === 'atividades') { renderAtividades(); renderReunioesConsultor(); }
+  if (id === 'contratos-autentique') fetchAutentique();
 }
 
 function toggleFunnelMenu(e) { e.stopPropagation(); document.getElementById('funnelMenu').classList.toggle('open'); document.getElementById('funnelBtn').classList.toggle('open'); }
@@ -2562,6 +2610,106 @@ function renderFechamentoParceiros() {
   const totalGeralRow = `<tr class="total-row"><td colspan="3" style="text-align:right;font-weight:700;">Total</td><td></td><td style="text-align:right;font-weight:700;color:#5DCAA5;font-family:'DM Mono',monospace;">${fmtBRL(totalGeral)}</td></tr>`;
 
   tbody.innerHTML = rows + totalRows + totalGeralRow;
+}
+
+let autentiqueCache = [];
+
+async function fetchAutentique(force=false) {
+  if (autentiqueCache.length && !force) { renderAutentique(); return; }
+  document.getElementById('aut-body').innerHTML = '<tr><td colspan="5" class="empty">Carregando...</td></tr>';
+  try {
+    const r = await fetch(PROXY + '/autentique');
+    const d = await r.json();
+    autentiqueCache = d.data || [];
+    renderAutentique();
+  } catch(e) {
+    document.getElementById('aut-body').innerHTML = '<tr><td colspan="5" class="empty">Erro ao carregar documentos.</td></tr>';
+  }
+}
+
+function autDocStatus(doc) {
+  const sigs = doc.signatures || [];
+  if (sigs.some(s => s.signed === false && s.signed_at === null && s.name !== 'Lucralize')) return 'refused';
+  if (sigs.every(s => s.signed)) return 'signed';
+  return 'pending';
+}
+
+function autSignedAt(doc) {
+  const sigs = doc.signatures || [];
+  if (!sigs.every(s => s.signed)) return null;
+  const datas = sigs.map(s => s.signed_at).filter(Boolean);
+  if (!datas.length) return null;
+  return datas.sort().reverse()[0];
+}
+
+function renderAutentique() {
+  const statusSel = document.getElementById('aut-status')?.value || 'all';
+  const fromVal = document.getElementById('aut-from')?.value;
+  const toVal = document.getElementById('aut-to')?.value;
+  const tipoFiltro = document.getElementById('aut-filtro-tipo')?.value || 'created';
+  const from = fromVal ? new Date(fromVal + 'T00:00:00Z') : null;
+  const to = toVal ? new Date(toVal + 'T23:59:59Z') : null;
+
+  const docs = autentiqueCache.filter(doc => {
+    const status = autDocStatus(doc);
+    if (statusSel !== 'all' && status !== statusSel) return false;
+    if (from || to) {
+      const refDate = tipoFiltro === 'signed' ? autSignedAt(doc) : doc.created_at;
+      if (!refDate) return false;
+      const dt = new Date(refDate);
+      if (from && dt < from) return false;
+      if (to && dt > to) return false;
+    }
+    return true;
+  });
+
+  let nSigned = 0, nPending = 0, nRefused = 0;
+  docs.forEach(d => {
+    const s = autDocStatus(d);
+    if (s === 'signed') nSigned++;
+    else if (s === 'pending') nPending++;
+    else nRefused++;
+  });
+
+  document.getElementById('aut-total').textContent = docs.length;
+  document.getElementById('aut-signed').textContent = nSigned;
+  document.getElementById('aut-pending').textContent = nPending;
+  document.getElementById('aut-refused').textContent = nRefused;
+
+  const fmtDt = v => { if (!v) return '—'; const d = new Date(v); return d.toLocaleDateString('pt-BR'); };
+
+  const rows = docs.map(doc => {
+    const status = autDocStatus(doc);
+    const signedAt = autSignedAt(doc);
+    const sigs = doc.signatures || [];
+
+    const badgeMap = {
+      signed: '<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:3px 9px;border-radius:20px;background:#1a3a2a;color:#5DCAA5;font-weight:500;">✓ Assinado</span>',
+      pending: '<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:3px 9px;border-radius:20px;background:#2a2a1a;color:#EF9F27;font-weight:500;">⏳ Pendente</span>',
+      refused: '<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:3px 9px;border-radius:20px;background:#2a1a1a;color:#F62642;font-weight:500;">✗ Recusado</span>',
+    };
+
+    const sigRows = sigs.map(s => {
+      const dot = s.signed
+        ? 'background:#5DCAA5'
+        : (s.signed === false && !s.signed_at ? 'background:#F62642' : 'background:#EF9F27');
+      const nameColor = s.signed ? '#e0e0e0' : '#888';
+      return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:3px;">
+        <span style="width:7px;height:7px;border-radius:50%;flex-shrink:0;${dot}"></span>
+        <span style="font-size:12px;color:${nameColor};">${s.name||'—'}</span>
+      </div>`;
+    }).join('');
+
+    return `<tr>
+      <td style="max-width:240px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${doc.name||''}">${doc.name||'—'}</td>
+      <td>${badgeMap[status]||''}</td>
+      <td>${sigRows}</td>
+      <td style="text-align:right;font-family:'DM Mono',monospace;font-size:12px;color:#999;">${fmtDt(doc.created_at)}</td>
+      <td style="text-align:right;font-family:'DM Mono',monospace;font-size:12px;">${fmtDt(signedAt)}</td>
+    </tr>`;
+  }).join('');
+
+  document.getElementById('aut-body').innerHTML = rows || '<tr><td colspan="5" class="empty">Nenhum documento no período</td></tr>';
 }
 
 function exportarFechamentoFabiola() {
