@@ -2638,17 +2638,24 @@ async function fetchAutentique(force=false) {
   }
 }
 
+function getSigsCriador(doc) {
+  const sigs = doc.signatures || [];
+  const signatarios = sigs.filter(s => s.type !== 'AUTHOR' && s.type !== 'WITNESS');
+  return {
+    criador: doc.author || null,
+    signatarios: signatarios.length ? signatarios : sigs
+  };
+}
+
 function autDocStatus(doc) {
-  const sigs = (doc.signatures || []).filter(s => s.action !== 'SIGN_AS_AUTHOR' && s.action !== 'WITNESS');
-  const signatarios = sigs.length ? sigs : doc.signatures || [];
+  const { signatarios } = getSigsCriador(doc);
   if (signatarios.some(s => s.rejected && s.rejected.created_at)) return 'refused';
   if (signatarios.every(s => s.signed && s.signed.created_at)) return 'signed';
   return 'pending';
 }
 
 function autSignedAt(doc) {
-  const sigs = (doc.signatures || []).filter(s => s.action !== 'SIGN_AS_AUTHOR' && s.action !== 'WITNESS');
-  const signatarios = sigs.length ? sigs : doc.signatures || [];
+  const { signatarios } = getSigsCriador(doc);
   if (!signatarios.every(s => s.signed && s.signed.created_at)) return null;
   return signatarios.map(s => s.signed.created_at).sort().reverse()[0];
 }
@@ -2700,9 +2707,8 @@ function renderAutentique() {
       refused: '<span style="display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:3px 9px;border-radius:20px;background:#2a1a1a;color:#F62642;font-weight:500;">✗ Recusado</span>',
     };
 
-    const criador = doc.created_by ? (doc.created_by.name || doc.created_by.email || '—') : '—';
-    const sigsFiltradas = (sigs).filter(s => s.action !== 'SIGN_AS_AUTHOR' && s.action !== 'WITNESS');
-    const sigsExibir = sigsFiltradas.length ? sigsFiltradas : sigs;
+    const { criador, signatarios: sigsExibir } = getSigsCriador(doc);
+    const criadorLabel = criador ? (criador.name || criador.email || '—') : '—';
 
     const sigRows = sigsExibir.map(s => {
       const assinou = s.signed && s.signed.created_at;
@@ -2719,7 +2725,7 @@ function renderAutentique() {
     return `<tr>
       <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${doc.name||''}">${doc.name||'—'}</td>
       <td>${badgeMap[status]||''}</td>
-      <td style="font-size:12px;color:#a8b3c7;">${criador}</td>
+      <td style="font-size:12px;color:#a8b3c7;">${criadorLabel}</td>
       <td>${sigRows}</td>
       <td style="text-align:right;font-family:'DM Mono',monospace;font-size:12px;color:#999;">${fmtDt(doc.created_at)}</td>
       <td style="text-align:right;font-family:'DM Mono',monospace;font-size:12px;">${fmtDt(signedAt)}</td>
