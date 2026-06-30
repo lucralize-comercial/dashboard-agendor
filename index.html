@@ -854,7 +854,6 @@
         <select id="com-detail-origem" onchange="renderComissoes()" style="font-size:12px;padding:5px 8px;border-radius:8px;border:1px solid rgba(14,20,40,0.1);font-family:'Poppins',sans-serif;background:#1a2540;"><option value="all">Todas origens</option></select>
       </div>
     </div>
-    <div id="com-detail-count" style="font-size:12px;color:#657786;padding:0 4px 10px;">—</div>
     <div style="overflow-x:auto;">
       <table class="std-table">
         <thead><tr>
@@ -2306,7 +2305,7 @@ function getProdutoNome(d) {
 }
 function fmtBRL(v) { return 'R$ ' + Number(v).toLocaleString('pt-BR', {minimumFractionDigits:0, maximumFractionDigits:0}); }
 function fmtDate(s) { if (!s) return '—'; const d = new Date(s); return d.toLocaleDateString('pt-BR'); }
-function getWonDate(d) { return d.endTime || d.wonAt || null; }
+function getWonDate(d) { return d.endTime || d.wonAt || d.finishedAt || d.closedAt || null; }
 function getOwnerDisplay(d) {
   const owner = d.owner?.name || '—';
   if (owner === 'Matheus Augusto') { const wonDate = getWonDate(d); if (wonDate && new Date(wonDate) < LEGADO_DIOGO_CORTE) return 'Diogo Vieira'; }
@@ -2328,7 +2327,7 @@ function renderComissoes() {
   sel.innerHTML='<option value="all">Todos responsáveis</option>'+owners.map(o=>`<option value="${o}" ${o===curVal?'selected':''}>${o}</option>`).join('');
   let deals=baseDeals.filter(d=>{
     if(d.dealStatus?.id!==2) return false;
-    const wonAt=d.endTime?new Date(d.endTime):(d.wonAt?new Date(d.wonAt):null);
+    const wonAt=getWonDate(d)?new Date(getWonDate(d)):null;
     if((from||to)&&!wonAt) return false;
     if(from&&wonAt&&wonAt<from) return false;
     if(to&&wonAt&&wonAt>to) return false;
@@ -2406,10 +2405,8 @@ function renderComissoes() {
     return `<tr><td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${d.title||''}">${d.title||d.person?.name||'—'}</td><td>${ownerDisplay}</td><td style="color:#0C7488;font-size:12px;">${produto}</td><td>${condDisplay}</td><td>${origemDisplay}</td><td style="text-align:right;">${fmtBRL(valor)}</td><td style="text-align:right;">${taxaDisplay}</td><td style="text-align:right;">${comissao!==null?'<strong>'+fmtBRL(comTotal)+'</strong>':'<span style="color:#999;">—</span>'}</td><td style="text-align:center;">${reuniaoCell}</td><td style="text-align:right;color:#0C7488;">${bonusRonaldo>0?(totalParaRonaldo>0?Math.round((bonusRonaldo/totalParaRonaldo)*100)+'%':'—'):'<span style="color:#999;">—</span>'}</td><td style="text-align:right;color:#0C7488;">${bonusRonaldo>0?'<strong>'+fmtBRL(bonusRonaldo)+'</strong>':'<span style="color:#999;">—</span>'}</td><td style="text-align:right;font-family:'DM Mono',monospace;font-size:12px;">${fmtDate(getWonDate(d))}</td><td style="text-align:right;font-family:'DM Mono',monospace;font-size:12px;color:#999;">${fmtDate(d.wonAt)}</td></tr>`;
   }).join('');
   document.getElementById('com-detail-body').innerHTML=rows||'<tr><td colspan="13" class="empty">Nenhum negócio no período</td></tr>';
-  const detailCountEl=document.getElementById('com-detail-count');
-  if(detailCountEl) detailCountEl.textContent='Mostrando '+dealsDetail.length+' negócio'+(dealsDetail.length===1?'':'s');
   renderFechamentoFabiola(deals);
-  const semWonAt=baseDeals.filter(d=>d.dealStatus?.id===2&&!d.endTime&&!d.wonAt).length;
+  const semWonAt=baseDeals.filter(d=>d.dealStatus?.id===2&&!getWonDate(d)).length;
   document.getElementById('com-total').textContent=deals.length;
   document.getElementById('com-total-sub').textContent='de '+(deals.length+semWonAt)+' ganhos totais';
   document.getElementById('com-valor').textContent=fmtBRL(totalValor);
