@@ -2640,7 +2640,12 @@ async function fetchAutentique(force=false) {
 
 function getSigsCriador(doc) {
   const sigs = doc.signatures || [];
-  const signatarios = sigs.filter(s => s.type !== 'AUTHOR' && s.type !== 'WITNESS');
+  const authorEmail = doc.author?.email || null;
+  const authorSig = authorEmail ? sigs.find(s => s.email === authorEmail) : null;
+  const autorAssinou = authorSig && authorSig.signed && authorSig.signed.created_at;
+  const signatarios = (authorEmail && !autorAssinou)
+    ? sigs.filter(s => s.email !== authorEmail)
+    : sigs;
   return {
     criador: doc.author || null,
     signatarios: signatarios.length ? signatarios : sigs
