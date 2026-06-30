@@ -764,16 +764,16 @@
 
 <!-- ===== ABA 6: COMISSÕES ===== -->
 <div id="tab-comissoes" class="tab-content">
-  <div style="background:white;border:1px solid rgba(14,20,40,0.1);border-radius:12px;padding:1rem 1.4rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
-    <span style="font-size:13px;font-weight:500;color:#657786;">Período:</span>
+  <div style="background:#1a2540;border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:1rem 1.4rem;margin-bottom:1.5rem;display:flex;align-items:center;gap:16px;flex-wrap:wrap;">
+    <span style="font-size:13px;font-weight:500;color:#a8b3c7;">Período:</span>
     <button class="period-btn active" id="com-btn-atual" onclick="setComCiclo(0,this)" style="font-size:12px;">Mês atual</button>
     <button class="period-btn" id="com-btn-anterior" onclick="setComCiclo(-1,this)" style="font-size:12px;">Mês anterior</button>
-    <span style="width:1px;height:24px;background:rgba(14,20,40,0.1);"></span>
-    <input type="date" id="com-dateFrom" onchange="clearComBtns();renderComissoes()" style="padding:5px 8px;border-radius:8px;border:1px solid rgba(14,20,40,0.1);font-size:12px;font-family:'Poppins',sans-serif;">
-    <span style="font-size:12px;color:#657786;">→</span>
-    <input type="date" id="com-dateTo" onchange="clearComBtns();renderComissoes()" style="padding:5px 8px;border-radius:8px;border:1px solid rgba(14,20,40,0.1);font-size:12px;font-family:'Poppins',sans-serif;">
-    <span style="width:1px;height:24px;background:rgba(14,20,40,0.1);"></span>
-    <select id="com-owner" onchange="renderComissoes()" style="font-size:12px;padding:5px 8px;border-radius:8px;border:1px solid rgba(14,20,40,0.1);font-family:'Poppins',sans-serif;">
+    <span style="width:1px;height:24px;background:rgba(255,255,255,0.12);"></span>
+    <input type="date" id="com-dateFrom" onchange="clearComBtns();renderComissoes()" style="padding:5px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:#0E1428;color:#e0e0e0;font-size:12px;font-family:'Poppins',sans-serif;color-scheme:dark;">
+    <span style="font-size:12px;color:#a8b3c7;">→</span>
+    <input type="date" id="com-dateTo" onchange="clearComBtns();renderComissoes()" style="padding:5px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:#0E1428;color:#e0e0e0;font-size:12px;font-family:'Poppins',sans-serif;color-scheme:dark;">
+    <span style="width:1px;height:24px;background:rgba(255,255,255,0.12);"></span>
+    <select id="com-owner" onchange="renderComissoes()" style="font-size:12px;padding:5px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:#0E1428;color:#e0e0e0;font-family:'Poppins',sans-serif;">
       <option value="all">Todos responsáveis</option>
     </select>
     <button onclick="exportarExcelComissoes()" style="background:#1e7e4a;color:white;font-size:12px;padding:6px 14px;display:inline-flex;align-items:center;gap:6px;">
@@ -788,10 +788,10 @@
     <div class="metric-card"><div class="metric-label">Valor total contratos</div><div class="metric-value success" id="com-valor">—</div></div>
     <div class="metric-card"><div class="metric-label">Total comissões</div><div class="metric-value warning" id="com-comissao">—</div></div>
     <div class="metric-card"><div class="metric-label">Pendentes preenchimento</div><div class="metric-value danger" id="com-pendentes">—</div></div>
-    <div class="metric-card" style="border:1px dashed #e0b840;background:#fef9ee;" title="Negócios marcados como ganhos no Agendor mas sem data de conclusão preenchida — não entram no período filtrado">
-      <div class="metric-label" style="color:#a05c00;">⚠ Sem data de ganho</div>
-      <div class="metric-value" id="com-sem-wonat" style="color:#a05c00;">—</div>
-      <div class="metric-sub" style="color:#a05c00;">excluídos do filtro</div>
+    <div class="metric-card" style="border:1px dashed #e0b840;background:#2b2410;" title="Negócios marcados como ganhos no Agendor mas sem data de conclusão preenchida — não entram no período filtrado">
+      <div class="metric-label" style="color:#e0b840;">⚠ Sem data de ganho</div>
+      <div class="metric-value" id="com-sem-wonat" style="color:#e0b840;">—</div>
+      <div class="metric-sub" style="color:#e0b840;">excluídos do filtro</div>
     </div>
   </div>
 
