@@ -911,6 +911,31 @@
       </table>
     </div>
   </div>
+
+  <!-- FECHAMENTO PARCEIROS -->
+  <div class="card" id="card-fechamento-parceiros" style="margin-bottom:1.5rem;">
+    <div class="card-header" style="flex-wrap:wrap;gap:8px;">
+      <span class="card-title">Fechamento Parceiros</span>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+        <span style="font-size:12px;color:#a8b3c7;">Mês:</span>
+        <input type="month" id="parceiros-mes" onchange="renderFechamentoParceiros()" style="padding:5px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:#0E1428;color:#e0e0e0;font-size:12px;font-family:'Poppins',sans-serif;color-scheme:dark;">
+      </div>
+    </div>
+    <div style="overflow-x:auto;">
+      <table class="std-table" id="fechamento-parceiros-table">
+        <thead>
+          <tr>
+            <th style="text-align:left;min-width:100px;">Data</th>
+            <th style="text-align:left;min-width:200px;">Negócio</th>
+            <th style="text-align:left;min-width:160px;">Parceira</th>
+            <th style="text-align:right;">Valor contrato</th>
+            <th style="text-align:right;color:#0C7488;font-weight:700;">50% (1ª mensalidade)</th>
+          </tr>
+        </thead>
+        <tbody id="fechamento-parceiros-body"><tr><td colspan="5" class="empty">—</td></tr></tbody>
+      </table>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -2406,6 +2431,7 @@ function renderComissoes() {
   }).join('');
   document.getElementById('com-detail-body').innerHTML=rows||'<tr><td colspan="13" class="empty">Nenhum negócio no período</td></tr>';
   renderFechamentoFabiola(deals);
+  renderFechamentoParceiros();
   const semWonAt=baseDeals.filter(d=>d.dealStatus?.id===2&&!getWonDate(d)).length;
   document.getElementById('com-total').textContent=deals.length;
   document.getElementById('com-total-sub').textContent='de '+(deals.length+semWonAt)+' ganhos totais';
@@ -2469,6 +2495,73 @@ function renderFechamentoFabiola(deals) {
     return `<tr><td style="white-space:nowrap;font-family:'DM Mono',monospace;font-size:12px;">${fmtDate(getWonDate(d))}</td><td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.title||d.person?.name||'—'}</td><td style="color:#0C7488;font-size:12px;">${produto}</td><td>${condDisplay}</td><td style="font-size:11px;color:#657786;">${origem}</td><td style="text-align:right;font-family:'DM Mono',monospace;">${fmtBRL(valor)}</td><td style="text-align:right;color:#657786;">${descPct!==null?(descPct*100).toFixed(0)+'%':'—'}</td><td style="text-align:right;">${bonusReuniao>0?`<span style="color:#0C7488;">${fmtBRL(bonusReuniao)}</span>`:'<span style="color:#999;">—</span>'}</td><td style="text-align:right;font-weight:700;color:#0C7488;font-family:'DM Mono',monospace;">${fmtBRL(comissaoTotal)}</td><td style="text-align:center;color:#185FA5;font-size:12px;">33%</td><td style="text-align:right;color:#185FA5;font-weight:700;font-family:'DM Mono',monospace;">${fmtBRL(comRonaldo)}</td><td style="text-align:center;font-family:'DM Mono',monospace;font-size:12px;">${fmtDate(getWonDate(d))}</td><td style="text-align:center;font-family:'DM Mono',monospace;font-size:12px;color:#999;">${fmtDate(d.wonAt)}</td></tr>`;
   }).join('');
   tbody.innerHTML=rows+`<tr class="total-row"><td colspan="8" style="text-align:right;font-weight:700;">Total</td><td style="text-align:right;font-weight:700;color:#0C7488;font-family:'DM Mono',monospace;">${fmtBRL(totalComissao)}</td><td></td><td style="text-align:right;font-weight:700;color:#185FA5;font-family:'DM Mono',monospace;">${fmtBRL(totalRonaldo)}</td><td colspan="2"></td></tr>`;
+}
+
+const PARCEIRAS = [
+  { label: 'Alexia Zoppo', termos: ['alexia', 'zoppo'] },
+  { label: 'Laura Caroline', termos: ['laura caroline', 'laura marciano', 'leo-marconi'] }
+];
+
+function getParceira(d) {
+  const origem = (d.customFields?.origem_do_negocio?.value || '').toLowerCase();
+  return PARCEIRAS.find(p => p.termos.some(t => origem.includes(t))) || null;
+}
+
+function renderFechamentoParceiros() {
+  const mesVal = document.getElementById('parceiros-mes')?.value;
+  const tbody = document.getElementById('fechamento-parceiros-body');
+  if (!tbody) return;
+
+  // Inicializa o mês com o mês atual se estiver vazio
+  if (!mesVal) {
+    const now = new Date();
+    document.getElementById('parceiros-mes').value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    return renderFechamentoParceiros();
+  }
+
+  const [ano, mes] = mesVal.split('-').map(Number);
+  const de = new Date(Date.UTC(ano, mes-1, 1));
+  const ate = new Date(Date.UTC(ano, mes, 0, 23, 59, 59));
+
+  const deals = baseDeals.filter(d => {
+    if (d.dealStatus?.id !== 2) return false;
+    const parceira = getParceira(d);
+    if (!parceira) return false;
+    const data = getWonDate(d);
+    if (!data) return false;
+    const dt = new Date(data);
+    return dt >= de && dt <= ate;
+  });
+
+  const totais = {};
+  const rows = [...deals].sort((a,b) => new Date(getWonDate(a)||0) - new Date(getWonDate(b)||0)).map(d => {
+    const parceira = getParceira(d);
+    const valor = d.value || 0;
+    const comissao = valor * 0.5;
+    if (!totais[parceira.label]) totais[parceira.label] = 0;
+    totais[parceira.label] += comissao;
+    return `<tr>
+      <td style="white-space:nowrap;font-family:'DM Mono',monospace;font-size:12px;">${fmtDate(getWonDate(d))}</td>
+      <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.title||d.person?.name||'—'}</td>
+      <td style="color:#91DBE4;font-size:12px;">${parceira.label}</td>
+      <td style="text-align:right;font-family:'DM Mono',monospace;">${fmtBRL(valor)}</td>
+      <td style="text-align:right;font-weight:700;color:#0C7488;font-family:'DM Mono',monospace;">${fmtBRL(comissao)}</td>
+    </tr>`;
+  }).join('');
+
+  if (!rows) {
+    tbody.innerHTML = '<tr><td colspan="5" class="empty">Nenhuma conversão no período</td></tr>';
+    return;
+  }
+
+  // Linha de total por parceira
+  const totalRows = Object.entries(totais).map(([nome, val]) =>
+    `<tr class="total-row"><td colspan="3" style="text-align:right;font-weight:700;">${nome}</td><td></td><td style="text-align:right;font-weight:700;color:#0C7488;font-family:'DM Mono',monospace;">${fmtBRL(val)}</td></tr>`
+  ).join('');
+  const totalGeral = Object.values(totais).reduce((s,v)=>s+v,0);
+  const totalGeralRow = `<tr class="total-row"><td colspan="3" style="text-align:right;font-weight:700;">Total</td><td></td><td style="text-align:right;font-weight:700;color:#5DCAA5;font-family:'DM Mono',monospace;">${fmtBRL(totalGeral)}</td></tr>`;
+
+  tbody.innerHTML = rows + totalRows + totalGeralRow;
 }
 
 function exportarFechamentoFabiola() {
