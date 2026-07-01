@@ -650,6 +650,7 @@
     <div class="metric-card"><div class="metric-label">Concluídas</div><div class="metric-value success" id="atv-done">—</div><div class="metric-footer"><div class="metric-pct success" id="atv-done-pct">—</div><div class="progress-bar"><div class="progress-fill success" id="atv-done-bar" style="width:0%"></div></div></div></div>
     <div class="metric-card"><div class="metric-label">Pendentes</div><div class="metric-value warning" id="atv-pending">—</div><div class="metric-footer"><div class="metric-pct warning" id="atv-pending-pct">—</div><div class="progress-bar"><div class="progress-fill" id="atv-pending-bar" style="width:0%;background:var(--warning)"></div></div></div></div>
     <div class="metric-card"><div class="metric-label">Taxa de conclusão</div><div class="metric-value success" id="atv-taxa">—</div></div>
+    <div class="metric-card"><div class="metric-label">Média por dia</div><div class="metric-value" id="atv-media-dia">—</div><div class="metric-sub">no período filtrado</div></div>
     <div class="metric-card"><div class="metric-label">Atrasadas</div><div class="metric-value danger" id="atv-overdue">—</div><div class="metric-sub">pendentes com prazo vencido</div></div>
     <div class="metric-card" style="border-color:rgba(246,38,66,0.3);"><div class="metric-label" style="color:#F62642;">Sem atividade</div><div class="metric-value danger" id="atv-sem-count-card">—</div><div class="metric-sub">negócios em andamento</div></div>
   </div>
@@ -766,6 +767,9 @@
 <!-- ===== ABA 7: CONTRATOS AUTENTIQUE ===== -->
 <div id="tab-contratos-autentique" class="tab-content">
   <div style="display:flex;align-items:center;gap:10px;margin-bottom:1.25rem;flex-wrap:wrap;">
+    <select id="aut-consultor" onchange="renderAutentique()" style="font-size:12px;padding:5px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.12);background:#1a2540;color:#e0e0e0;height:32px;">
+      <option value="all">Todos os criadores</option>
+    </select>
     <select id="aut-status" onchange="renderAutentique()" style="font-size:12px;padding:5px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.12);background:#1a2540;color:#e0e0e0;height:32px;">
       <option value="all">Todos os status</option>
       <option value="signed">Assinado</option>
@@ -928,8 +932,10 @@
     <div class="card-header" style="flex-wrap:wrap;gap:8px;">
       <span class="card-title">Fechamento Fabíola Carvalho</span>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
-        <select id="fab-filter-produto" onchange="renderFechamentoFabiola(window._lastDeals||[])" style="font-size:12px;padding:5px 8px;border-radius:8px;border:1px solid rgba(14,20,40,0.1);font-family:'Poppins',sans-serif;background:#1a2540;"><option value="all">Todos produtos</option></select>
-        <select id="fab-filter-condicao" onchange="renderFechamentoFabiola(window._lastDeals||[])" style="font-size:12px;padding:5px 8px;border-radius:8px;border:1px solid rgba(14,20,40,0.1);font-family:'Poppins',sans-serif;background:#1a2540;"><option value="all">Todas condições</option></select>
+        <span style="font-size:12px;color:#a8b3c7;">Mês:</span>
+        <input type="month" id="fab-mes" onchange="renderFechamentoFabiola(window._lastDeals||[])" style="padding:5px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:#0E1428;color:#e0e0e0;font-size:12px;font-family:'Poppins',sans-serif;color-scheme:dark;">
+        <select id="fab-filter-produto" onchange="renderFechamentoFabiola(window._lastDeals||[])" style="font-size:12px;padding:5px 8px;border-radius:8px;border:1px solid rgba(14,20,40,0.1);font-family:'Poppins',sans-serif;background:#1a2540;color:#e0e0e0;"><option value="all">Todos produtos</option></select>
+        <select id="fab-filter-condicao" onchange="renderFechamentoFabiola(window._lastDeals||[])" style="font-size:12px;padding:5px 8px;border-radius:8px;border:1px solid rgba(14,20,40,0.1);font-family:'Poppins',sans-serif;background:#1a2540;color:#e0e0e0;"><option value="all">Todas condições</option></select>
         <button onclick="exportarFechamentoFabiola()" style="background:#1e7e4a;color:white;font-size:12px;padding:6px 14px;display:inline-flex;align-items:center;gap:6px;border-radius:8px;border:none;cursor:pointer;">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           Exportar Excel
@@ -967,6 +973,10 @@
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
         <span style="font-size:12px;color:#a8b3c7;">Mês:</span>
         <input type="month" id="parceiros-mes" onchange="renderFechamentoParceiros()" style="padding:5px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:#0E1428;color:#e0e0e0;font-size:12px;font-family:'Poppins',sans-serif;color-scheme:dark;">
+        <button onclick="exportarFechamentoParceiros()" style="background:#1e7e4a;color:white;font-size:12px;padding:6px 14px;display:inline-flex;align-items:center;gap:6px;border-radius:8px;border:none;cursor:pointer;">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Exportar Excel
+        </button>
       </div>
     </div>
     <div style="overflow-x:auto;">
@@ -976,11 +986,12 @@
             <th style="text-align:left;min-width:100px;">Data</th>
             <th style="text-align:left;min-width:200px;">Negócio</th>
             <th style="text-align:left;min-width:160px;">Parceira</th>
+            <th style="text-align:left;min-width:160px;">Condição Comercial</th>
             <th style="text-align:right;">Valor contrato</th>
             <th style="text-align:right;color:#0C7488;font-weight:700;">50% (1ª mensalidade)</th>
           </tr>
         </thead>
-        <tbody id="fechamento-parceiros-body"><tr><td colspan="5" class="empty">—</td></tr></tbody>
+        <tbody id="fechamento-parceiros-body"><tr><td colspan="6" class="empty">—</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -1070,7 +1081,7 @@ function getTopOrigens(deals, max) {
 function buildOrigemLegend(origens, elId) {
   const el = document.getElementById(elId);
   if (!el) return;
-  el.innerHTML = origens.map((o,i) => `<span style="display:flex;align-items:center;gap:4px;"><span style="width:10px;height:10px;border-radius:2px;background:${ORIGEM_CORES[i%ORIGEM_CORES.length]};display:inline-block;"></span>${o}</span>`).join('');
+  el.innerHTML = origens.map((o,i) => `<span style="display:flex;align-items:center;gap:4px;color:#e0e0e0;"><span style="width:10px;height:10px;border-radius:2px;background:${ORIGEM_CORES[i%ORIGEM_CORES.length]};display:inline-block;flex-shrink:0;"></span>${o}</span>`).join('');
 }
 
 function initLeadsOrigem() {
@@ -1922,11 +1933,21 @@ function renderAtividades() {
   const overdue = filtered.filter(isOverdue).length;
   const taxa = total > 0 ? Math.round((done / total) * 100) : 0;
 
+  // Média por dia no período
+  let mediaDia = '—';
+  if (from && to && total > 0) {
+    const diffMs = to - from;
+    const dias = Math.max(1, Math.round(diffMs / (1000 * 60 * 60 * 24)) + 1);
+    mediaDia = (total / dias).toFixed(1);
+  }
+
   document.getElementById('atv-total').textContent = total;
   document.getElementById('atv-done').textContent = done;
   document.getElementById('atv-pending').textContent = pending;
   document.getElementById('atv-taxa').textContent = taxa + '%';
   document.getElementById('atv-overdue').textContent = overdue;
+  const mediaDiaEl = document.getElementById('atv-media-dia');
+  if (mediaDiaEl) mediaDiaEl.textContent = mediaDia;
   document.getElementById('atv-done-pct').textContent = taxa + '%';
   document.getElementById('atv-done-bar').style.width = taxa + '%';
   const pendPct = total > 0 ? Math.round((pending / total) * 100) : 0;
@@ -2363,6 +2384,7 @@ const LEGADO_DIOGO_CORTE = new Date('2026-06-01T00:00:00');
 function isRegraOrigemDeal(owner, d) {
   if (owner === 'Brenda Medeiros') return true;
   if (owner === 'Diogo Vieira') return true;
+  if (owner === 'Juan Dias') return true;
   if (owner === 'Matheus Augusto') { const wonDate = getWonDate(d); return wonDate ? new Date(wonDate) < LEGADO_DIOGO_CORTE : false; }
   return false;
 }
@@ -2419,7 +2441,7 @@ function renderComissoes() {
   refreshSelect('com-detail-produto',[...new Set(deals.map(d=>getProdutoNome(d)).filter(v=>v!=='—'))].sort(),detailProduto);
   refreshSelect('com-detail-condicao',[...new Set(deals.map(d=>getCondicao(d)).filter(Boolean))].sort(),detailCondicao);
   refreshSelect('com-detail-origem',[...new Set(deals.map(d=>d.customFields&&d.customFields.origem_do_negocio&&d.customFields.origem_do_negocio.value).filter(Boolean))].sort(),detailOrigem);
-  const GERAM_BONUS_RONALDO=['Everton Silva','Fabíola Carvalho'];
+  const GERAM_BONUS_RONALDO=['Everton Silva','Fabíola Carvalho','Giovanna Silva'];
   const NOME_RONALDO='Ronaldo Junior';
   let totalValor=0,totalComissao=0,pendentes=0;
   const porResponsavel={};
@@ -2527,11 +2549,31 @@ function renderFechamentoFabiola(deals) {
   const card=document.getElementById('card-fechamento-fabiola'),tbody=document.getElementById('fechamento-fabiola-body');
   if(!allFab.length){card.style.display='none';return;}
   card.style.display='';
+
+  // Inicializa mês se vazio
+  const fabMesEl = document.getElementById('fab-mes');
+  if (fabMesEl && !fabMesEl.value) {
+    const now = new Date();
+    fabMesEl.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+  }
+  const fabMesVal = fabMesEl?.value;
+  let fabDe = null, fabAte = null;
+  if (fabMesVal) {
+    const [fabAno, fabMes] = fabMesVal.split('-').map(Number);
+    fabDe = new Date(Date.UTC(fabAno, fabMes-1, 1));
+    fabAte = new Date(Date.UTC(fabAno, fabMes, 0, 23, 59, 59));
+  }
+
   const selProd=document.getElementById('fab-filter-produto'),selCond=document.getElementById('fab-filter-condicao');
   const curProd=selProd?.value||'all',curCond=selCond?.value||'all';
   if(selProd){const prods=[...new Set(allFab.map(d=>getProdutoNome(d)).filter(Boolean))].sort();selProd.innerHTML='<option value="all">Todos produtos</option>'+prods.map(p=>`<option value="${p}" ${p===curProd?'selected':''}>${p}</option>`).join('');}
   if(selCond){const conds=[...new Set(allFab.map(d=>getCondicao(d)).filter(Boolean))].sort();selCond.innerHTML='<option value="all">Todas condições</option>'+conds.map(c=>`<option value="${c}" ${c===curCond?'selected':''}>${c}</option>`).join('');}
-  const fabDeals=allFab.filter(d=>{if(curProd!=='all'&&getProdutoNome(d)!==curProd)return false;if(curCond!=='all'&&getCondicao(d)!==curCond)return false;return true;});
+  const fabDeals=allFab.filter(d=>{
+    if(curProd!=='all'&&getProdutoNome(d)!==curProd)return false;
+    if(curCond!=='all'&&getCondicao(d)!==curCond)return false;
+    if(fabDe && fabAte){const dt=new Date(getWonDate(d)||0);if(dt<fabDe||dt>fabAte)return false;}
+    return true;
+  });
   let totalComissao=0,totalRonaldo=0;
   const rows=[...fabDeals].sort((a,b)=>new Date(getWonDate(a)||0)-new Date(getWonDate(b)||0)).map(d=>{
     const condicao=getCondicao(d),taxa=getTaxaFabiola(condicao),valor=d.value||0,produto=getProdutoNome(d),origem=d.customFields?.origem_do_negocio?.value||'—';
@@ -2583,40 +2625,58 @@ function renderFechamentoParceiros() {
   });
 
   const totais = {};
+  const parceiroDeals = [];
   const rows = [...deals].sort((a,b) => new Date(getWonDate(a)||0) - new Date(getWonDate(b)||0)).map(d => {
     const parceira = getParceira(d);
     const valor = d.value || 0;
     const comissao = valor * 0.5;
+    const condicao = getCondicao(d) || '—';
     if (!totais[parceira.label]) totais[parceira.label] = 0;
     totais[parceira.label] += comissao;
+    parceiroDeals.push({ data: fmtDate(getWonDate(d)), negocio: d.title||d.person?.name||'—', parceira: parceira.label, condicao, valor, comissao });
     return `<tr>
       <td style="white-space:nowrap;font-family:'DM Mono',monospace;font-size:12px;">${fmtDate(getWonDate(d))}</td>
-      <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.title||d.person?.name||'—'}</td>
+      <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${d.title||d.person?.name||'—'}</td>
       <td style="color:#91DBE4;font-size:12px;">${parceira.label}</td>
+      <td style="font-size:12px;">${condicao}</td>
       <td style="text-align:right;font-family:'DM Mono',monospace;">${fmtBRL(valor)}</td>
       <td style="text-align:right;font-weight:700;color:#0C7488;font-family:'DM Mono',monospace;">${fmtBRL(comissao)}</td>
     </tr>`;
   }).join('');
+  window._parceiroDeals = parceiroDeals;
 
   if (!rows) {
-    tbody.innerHTML = '<tr><td colspan="5" class="empty">Nenhuma conversão no período</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="empty">Nenhuma conversão no período</td></tr>';
     return;
   }
 
   // Linha de total por parceira
   const totalRows = Object.entries(totais).map(([nome, val]) =>
-    `<tr class="total-row"><td colspan="3" style="text-align:right;font-weight:700;">${nome}</td><td></td><td style="text-align:right;font-weight:700;color:#0C7488;font-family:'DM Mono',monospace;">${fmtBRL(val)}</td></tr>`
+    `<tr class="total-row"><td colspan="4" style="text-align:right;font-weight:700;">${nome}</td><td></td><td style="text-align:right;font-weight:700;color:#0C7488;font-family:'DM Mono',monospace;">${fmtBRL(val)}</td></tr>`
   ).join('');
   const totalGeral = Object.values(totais).reduce((s,v)=>s+v,0);
-  const totalGeralRow = `<tr class="total-row"><td colspan="3" style="text-align:right;font-weight:700;">Total</td><td></td><td style="text-align:right;font-weight:700;color:#5DCAA5;font-family:'DM Mono',monospace;">${fmtBRL(totalGeral)}</td></tr>`;
+  const totalGeralRow = `<tr class="total-row"><td colspan="4" style="text-align:right;font-weight:700;">Total</td><td></td><td style="text-align:right;font-weight:700;color:#5DCAA5;font-family:'DM Mono',monospace;">${fmtBRL(totalGeral)}</td></tr>`;
 
   tbody.innerHTML = rows + totalRows + totalGeralRow;
+}
+
+function exportarFechamentoParceiros() {
+  const dados = window._parceiroDeals || [];
+  if (!dados.length) return alert('Nenhum dado para exportar.');
+  const mes = document.getElementById('parceiros-mes')?.value || 'periodo';
+  let csv = 'Data,Negócio,Parceira,Condição Comercial,Valor,50% (1ª mensalidade)\n';
+  dados.forEach(r => {
+    csv += [r.data, `"${r.negocio}"`, r.parceira, `"${r.condicao}"`, r.valor, r.comissao].join(',') + '\n';
+  });
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = `parceiros_${mes}.csv`; a.click();
+  URL.revokeObjectURL(url);
 }
 
 let autentiqueCache = [];
 
 async function fetchAutentique(force=false) {
-  // Inicializa datas com início e fim do mês atual
   const fromEl = document.getElementById('aut-from');
   const toEl = document.getElementById('aut-to');
   if (fromEl && !fromEl.value) {
@@ -2627,14 +2687,14 @@ async function fetchAutentique(force=false) {
     toEl.value = fmt(new Date(y, m+1, 0));
   }
   if (autentiqueCache.length && !force) { renderAutentique(); return; }
-  document.getElementById('aut-body').innerHTML = '<tr><td colspan="5" class="empty">Carregando...</td></tr>';
+  document.getElementById('aut-body').innerHTML = '<tr><td colspan="6" class="empty">Carregando...</td></tr>';
   try {
     const r = await fetch(PROXY + '/autentique');
     const d = await r.json();
     autentiqueCache = d.data || [];
     renderAutentique();
   } catch(e) {
-    document.getElementById('aut-body').innerHTML = '<tr><td colspan="5" class="empty">Erro ao carregar documentos.</td></tr>';
+    document.getElementById('aut-body').innerHTML = '<tr><td colspan="6" class="empty">Erro ao carregar documentos.</td></tr>';
   }
 }
 
@@ -2666,6 +2726,8 @@ function autSignedAt(doc) {
 }
 
 function renderAutentique() {
+  const consultorSel = document.getElementById('aut-consultor');
+  const consultorVal = consultorSel?.value || 'all';
   const statusSel = document.getElementById('aut-status')?.value || 'all';
   const fromVal = document.getElementById('aut-from')?.value;
   const toVal = document.getElementById('aut-to')?.value;
@@ -2673,9 +2735,20 @@ function renderAutentique() {
   const from = fromVal ? new Date(fromVal + 'T00:00:00Z') : null;
   const to = toVal ? new Date(toVal + 'T23:59:59Z') : null;
 
+  // Popula select de criadores
+  if (consultorSel) {
+    const criadores = [...new Set(autentiqueCache.map(d => d.author?.name || d.author?.email || '—').filter(Boolean))].sort();
+    const cur = consultorSel.value;
+    consultorSel.innerHTML = '<option value="all">Todos os criadores</option>' + criadores.map(c => `<option value="${c}" ${c===cur?'selected':''}>${c}</option>`).join('');
+  }
+
   const docs = autentiqueCache.filter(doc => {
     const status = autDocStatus(doc);
     if (statusSel !== 'all' && status !== statusSel) return false;
+    if (consultorVal !== 'all') {
+      const criador = doc.author?.name || doc.author?.email || '—';
+      if (criador !== consultorVal) return false;
+    }
     if (from || to) {
       const refDate = tipoFiltro === 'signed' ? autSignedAt(doc) : doc.created_at;
       if (!refDate) return false;
