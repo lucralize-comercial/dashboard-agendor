@@ -711,6 +711,7 @@
       <span style="font-size:11px;color:#91DBE4;">Ag. = agendadas (todas)</span>
       <span style="font-size:11px;color:#5DCAA5;">Real. = realizadas (concluídas)</span>
       <span style="font-size:11px;color:#EF9F27;">Pend. = pendentes</span>
+      <span id="reunioes-luca-resumo" style="font-size:11px;color:#B79CED;"></span>
     </div>
   </div>
 
@@ -730,6 +731,7 @@
       <span style="font-size:11px;color:#91DBE4;">Ag. = agendadas (todas)</span>
       <span style="font-size:11px;color:#5DCAA5;">Real. = realizadas (concluídas)</span>
       <span style="font-size:11px;color:#EF9F27;">Pend. = pendentes</span>
+      <span id="reunioes-canal-luca-resumo" style="font-size:11px;color:#B79CED;"></span>
     </div>
   </div>
 
@@ -1903,6 +1905,14 @@ function renderReunioesConsultor() {
   tbody += '<td style="text-align:right;padding:7px 8px;font-weight:700;color:white;' + bLeft + '">' + totalAg + '</td></tr>';
 
   document.getElementById('reunioes-tbody').innerHTML = tbody;
+
+  // Recorte: reuniões pré-agendadas pelo Luca (prefixo [Luca] no título)
+  const lucaEl = document.getElementById('reunioes-luca-resumo');
+  if (lucaEl) {
+    const lucaCount = reunioesTrim.filter(t => ((t.text || t.title || '')).includes('[Luca]')).length;
+    const pct = reunioesTrim.length > 0 ? Math.round((lucaCount / reunioesTrim.length) * 100) : 0;
+    lucaEl.textContent = lucaCount > 0 ? `🤖 Agendadas pelo Luca: ${lucaCount} (${pct}%)` : '';
+  }
 }
 
 function renderReunioesCanal() {
@@ -1988,6 +1998,14 @@ function renderReunioesCanal() {
     + '<td style="padding:8px;color:rgba(255,255,255,0.5);font-size:10px;">100%</td></tr>';
 
   mtbody.innerHTML = html;
+
+  // Recorte: reuniões pré-agendadas pelo Luca no mês (prefixo [Luca])
+  const lucaCanalEl = document.getElementById('reunioes-canal-luca-resumo');
+  if (lucaCanalEl) {
+    const lucaCount = noMes.filter(t => ((t.text || t.title || '')).includes('[Luca]')).length;
+    const pct = noMes.length > 0 ? Math.round((lucaCount / noMes.length) * 100) : 0;
+    lucaCanalEl.textContent = lucaCount > 0 ? `🤖 Agendadas pelo Luca: ${lucaCount} (${pct}%)` : '';
+  }
 }
 
 function renderAtividades() {
