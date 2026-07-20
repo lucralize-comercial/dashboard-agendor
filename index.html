@@ -704,6 +704,7 @@
         <select id="leads-trim-select" onchange="renderLeadsReunioesConversao()" style="font-size:12px;padding:4px 8px;border-radius:8px;border:0.5px solid rgba(255,255,255,0.15);font-family:'Poppins',sans-serif;background:#1a2540;color:white;"></select>
       </div>
     </div>
+    <div id="leads-cobertura-aviso" style="display:none;font-size:11px;color:#EF9F27;margin-bottom:8px;padding:6px 10px;background:rgba(239,159,39,0.08);border-radius:6px;">⚠ Este trimestre está parcial ou totalmente fora da janela de dados disponível (últimos 60 dias). Semanas mais antigas podem aparecer vazias mesmo tendo tido reuniões.</div>
     <div style="overflow-x:auto;">
       <table style="width:100%;border-collapse:collapse;font-size:11px;min-width:500px;" id="leads-reunioes-table">
         <thead id="leads-reunioes-thead"></thead>
@@ -726,6 +727,7 @@
         <select id="reunioes-trim-select" onchange="renderReunioesConsultor()" style="font-size:12px;padding:4px 8px;border-radius:8px;border:0.5px solid rgba(255,255,255,0.15);font-family:'Poppins',sans-serif;background:#1a2540;color:white;"></select>
       </div>
     </div>
+    <div id="reunioes-cobertura-aviso" style="display:none;font-size:11px;color:#EF9F27;margin-bottom:8px;padding:6px 10px;background:rgba(239,159,39,0.08);border-radius:6px;">⚠ Este trimestre está parcial ou totalmente fora da janela de dados disponível (últimos 60 dias). Semanas mais antigas podem aparecer vazias mesmo tendo tido reuniões.</div>
     <div style="overflow-x:auto;">
       <table style="width:100%;border-collapse:collapse;font-size:11px;min-width:500px;" id="reunioes-table">
         <thead id="reunioes-thead"></thead>
@@ -1917,6 +1919,12 @@ function renderReunioesConsultor() {
   const trim = trims[selIdx] || trims[0];
   const { inicio, fim } = trim;
 
+  const avisoR = document.getElementById('reunioes-cobertura-aviso');
+  if (avisoR) {
+    const limiteCacheR = new Date(); limiteCacheR.setDate(limiteCacheR.getDate() - 60);
+    avisoR.style.display = inicio < limiteCacheR ? 'block' : 'none';
+  }
+
   const slotR = document.getElementById('localFunilSlot-reunioes');
   if (slotR && !slotR.dataset.built) { slotR.innerHTML = localFunilHTML('reunioes'); slotR.dataset.built = '1'; }
 
@@ -2066,6 +2074,12 @@ function renderLeadsReunioesConversao() {
   const selIdx = parseInt(sel?.value || 0);
   const trim = trims[selIdx] || trims[0];
   const { inicio, fim } = trim;
+
+  const avisoL = document.getElementById('leads-cobertura-aviso');
+  if (avisoL) {
+    const limiteCacheL = new Date(); limiteCacheL.setDate(limiteCacheL.getDate() - 60);
+    avisoL.style.display = inicio < limiteCacheL ? 'block' : 'none';
+  }
 
   const dealById = {};
   deals.forEach(d => { dealById[d.id] = d; });
