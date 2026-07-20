@@ -2076,10 +2076,9 @@ function renderLeadsReunioesConversao() {
   const { inicio, fim } = trim;
 
   const avisoL = document.getElementById('leads-cobertura-aviso');
-  if (avisoL) {
-    const limiteCacheL = new Date(); limiteCacheL.setDate(limiteCacheL.getDate() - 30);
-    avisoL.style.display = inicio < limiteCacheL ? 'block' : 'none';
-  }
+  const limiteCacheL = new Date(); limiteCacheL.setDate(limiteCacheL.getDate() - 30);
+  const foraDaJanelaL = inicio < limiteCacheL;
+  if (avisoL) avisoL.style.display = foraDaJanelaL ? 'block' : 'none';
 
   const dealById = {};
   deals.forEach(d => { dealById[d.id] = d; });
@@ -2182,10 +2181,11 @@ function renderLeadsReunioesConversao() {
     });
 
     totalLeads += cLeads; totalReun += cReun;
-    const cConvTotal = cLeads > 0 ? Math.round((cReun / cLeads) * 100) : null;
+    const cConvTotal = (!foraDaJanelaL && cLeads > 0) ? Math.round((cReun / cLeads) * 100) : null;
+    const cReunTexto = foraDaJanelaL ? '—' : cReun;
 
     tbody += '<td style="text-align:right;padding:7px 8px;font-weight:600;color:white;' + bLeft + '">'
-           + cLeads + ' / ' + cReun + ' · ' + (cConvTotal === null ? '—' : cConvTotal + '%') + '</td></tr>';
+           + cLeads + ' / ' + cReunTexto + ' · ' + (cConvTotal === null ? '—' : cConvTotal + '%') + '</td></tr>';
   });
 
   // Linha total
@@ -2197,9 +2197,10 @@ function renderLeadsReunioesConversao() {
            + '<td style="text-align:center;padding:7px 4px;color:#5DCAA5;font-weight:600;">' + (t.reun || '—') + '</td>'
            + '<td style="text-align:center;padding:7px 4px;color:#EF9F27;font-weight:600;">' + (conv === null ? '—' : conv + '%') + '</td>';
   });
-  const convGeral = totalLeads > 0 ? Math.round((totalReun / totalLeads) * 100) : null;
+  const convGeral = (!foraDaJanelaL && totalLeads > 0) ? Math.round((totalReun / totalLeads) * 100) : null;
+  const totalReunTexto = foraDaJanelaL ? '—' : totalReun;
   tbody += '<td style="text-align:right;padding:7px 8px;font-weight:700;color:white;' + bLeft + '">'
-         + totalLeads + ' / ' + totalReun + ' · ' + (convGeral === null ? '—' : convGeral + '%') + '</td></tr>';
+         + totalLeads + ' / ' + totalReunTexto + ' · ' + (convGeral === null ? '—' : convGeral + '%') + '</td></tr>';
 
   document.getElementById('leads-reunioes-tbody').innerHTML = tbody;
 }
