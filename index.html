@@ -697,9 +697,12 @@
 
   <!-- Reuniões por consultor - semana a semana -->
   <div class="card" style="margin-bottom:1.5rem;">
-    <div class="card-header">
+    <div class="card-header" style="flex-wrap:wrap;gap:8px;">
       <span class="card-title">Reuniões por consultor — semana a semana</span>
-      <select id="reunioes-trim-select" onchange="renderReunioesConsultor()" style="font-size:12px;padding:4px 8px;border-radius:8px;border:0.5px solid rgba(255,255,255,0.15);font-family:'Poppins',sans-serif;background:#1a2540;color:white;"></select>
+      <div style="display:flex;align-items:center;gap:8px;margin-left:auto;">
+        <div id="localFunilSlot-reunioes"></div>
+        <select id="reunioes-trim-select" onchange="renderReunioesConsultor()" style="font-size:12px;padding:4px 8px;border-radius:8px;border:0.5px solid rgba(255,255,255,0.15);font-family:'Poppins',sans-serif;background:#1a2540;color:white;"></select>
+      </div>
     </div>
     <div style="overflow-x:auto;">
       <table style="width:100%;border-collapse:collapse;font-size:11px;min-width:500px;" id="reunioes-table">
@@ -712,6 +715,28 @@
       <span style="font-size:11px;color:#5DCAA5;">Real. = realizadas (concluídas)</span>
       <span style="font-size:11px;color:#EF9F27;">Pend. = pendentes</span>
       <span id="reunioes-luca-resumo" style="font-size:11px;color:#B79CED;"></span>
+    </div>
+  </div>
+
+  <!-- Leads x reuniões x conversão - semana a semana -->
+  <div class="card" style="margin-bottom:1.5rem;">
+    <div class="card-header" style="flex-wrap:wrap;gap:8px;">
+      <span class="card-title">Leads x reuniões x conversão — semana a semana</span>
+      <div style="display:flex;align-items:center;gap:8px;margin-left:auto;">
+        <div id="localFunilSlot-leads"></div>
+        <select id="leads-trim-select" onchange="renderLeadsReunioesConversao()" style="font-size:12px;padding:4px 8px;border-radius:8px;border:0.5px solid rgba(255,255,255,0.15);font-family:'Poppins',sans-serif;background:#1a2540;color:white;"></select>
+      </div>
+    </div>
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:11px;min-width:500px;" id="leads-reunioes-table">
+        <thead id="leads-reunioes-thead"></thead>
+        <tbody id="leads-reunioes-tbody"></tbody>
+      </table>
+    </div>
+    <div style="display:flex;gap:20px;margin-top:10px;flex-wrap:wrap;">
+      <span style="font-size:11px;color:#91DBE4;">Leads = leads criados</span>
+      <span style="font-size:11px;color:#5DCAA5;">Reun. = reuniões geradas</span>
+      <span style="font-size:11px;color:#EF9F27;">Conv. = reuniões / leads da mesma semana</span>
     </div>
   </div>
 
@@ -1061,12 +1086,16 @@ function switchTab(id, btn) {
 
   if (id === 'contratos') fetchProductsForDeals(baseDeals).then(() => renderContratos());
   if (id === 'analise') initFunilEtapas();
-  if (id === 'atividades') { renderAtividades(); renderReunioesConsultor(); renderReunioesCanal(); }
+  if (id === 'atividades') { renderAtividades(); renderReunioesConsultor(); renderLeadsReunioesConversao(); renderReunioesCanal(); }
   if (id === 'contratos-autentique') fetchAutentique();
 }
 
 function toggleFunnelMenu(e) { e.stopPropagation(); document.getElementById('funnelMenu').classList.toggle('open'); document.getElementById('funnelBtn').classList.toggle('open'); }
-document.addEventListener('click', () => { document.getElementById('funnelMenu').classList.remove('open'); document.getElementById('funnelBtn').classList.remove('open'); });
+document.addEventListener('click', () => {
+  document.getElementById('funnelMenu').classList.remove('open');
+  document.getElementById('funnelBtn').classList.remove('open');
+  document.querySelectorAll('.funnel-menu.local').forEach(m => m.classList.remove('open'));
+});
 function toggleFunnel(el) { el.classList.toggle('checked'); updateFunnelBtnLabel(); applyFilter(); }
 function selectAllFunnels() { document.querySelectorAll('.funnel-option').forEach(el => el.classList.add('checked')); updateFunnelBtnLabel(); applyFilter(); }
 function clearAllFunnels() { document.querySelectorAll('.funnel-option').forEach(el => el.classList.remove('checked')); updateFunnelBtnLabel(); applyFilter(); }
@@ -1776,7 +1805,87 @@ async function fetchTasks(forceRefresh) {
   if (btn) { btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M23 4v6h-6M1 20v-6h6"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg> Recarregar'; btn.disabled = false; }
   renderAtividades();
   renderReunioesConsultor();
+  renderLeadsReunioesConversao();
   renderReunioesCanal();
+}
+
+// ===== Filtro de funil LOCAL (independente do filtro global do topo) =====
+// Usado nas tabelas "Reuniões por consultor" e "Leads x reuniões x conversão"
+const FUNIS_LISTA = [
+  { nome: 'Funil Comercial', sigla: 'COM' },
+  { nome: 'Funil de Prospecção Ativa', sigla: 'PAT' },
+  { nome: 'Funil de Legalização', sigla: 'LGL' },
+  { nome: 'Funil de Perdas Lucralize', sigla: 'FPL' },
+  { nome: 'Funil Prospecção Eventos', sigla: 'PEV' },
+  { nome: 'Funil de GDG BH e Uberlândia', sigla: 'GDG' },
+  { nome: 'Funil de BPO Jurídico', sigla: 'JUR' },
+  { nome: 'Funil de Reativação', sigla: 'REA' }
+];
+const localFunilState = {
+  reunioes: new Set(FUNIS_LISTA.map(f => f.nome)),
+  leads: new Set(FUNIS_LISTA.map(f => f.nome))
+};
+
+function localFunilHTML(instanceId) {
+  const opts = FUNIS_LISTA.map(f =>
+    '<div class="funnel-option checked" data-funnel="' + f.nome + '" onclick="toggleLocalFunil(\'' + instanceId + '\', this)">'
+    + '<div class="funnel-check"></div><span style="flex:1;">' + f.nome + '</span>'
+    + '<span class="funnel-sigla">' + f.sigla + '</span></div>'
+  ).join('');
+  return '<div class="funnel-dropdown">'
+    + '<button class="funnel-btn" style="min-width:150px;font-size:11px;padding:5px 10px;" onclick="toggleLocalFunilMenu(event,\'' + instanceId + '\')">'
+    + '<span id="localFunilLabel-' + instanceId + '">Todos os funis</span>'
+    + '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>'
+    + '</button>'
+    + '<div class="funnel-menu local" id="localFunilMenu-' + instanceId + '">' + opts
+    + '<div class="funnel-menu-footer">'
+    + '<button class="secondary" onclick="selectAllLocalFunis(\'' + instanceId + '\')">Todos</button>'
+    + '<button class="secondary" onclick="clearAllLocalFunis(\'' + instanceId + '\')">Limpar</button>'
+    + '</div></div></div>';
+}
+
+function toggleLocalFunilMenu(e, instanceId) {
+  e.stopPropagation();
+  document.querySelectorAll('.funnel-menu').forEach(m => {
+    if (m.id !== 'localFunilMenu-' + instanceId) m.classList.remove('open');
+  });
+  document.getElementById('localFunilMenu-' + instanceId).classList.toggle('open');
+}
+
+function toggleLocalFunil(instanceId, el) {
+  el.classList.toggle('checked');
+  const nome = el.dataset.funnel, set = localFunilState[instanceId];
+  if (el.classList.contains('checked')) set.add(nome); else set.delete(nome);
+  updateLocalFunilLabel(instanceId);
+  rerenderLocalFunilInstance(instanceId);
+}
+
+function selectAllLocalFunis(instanceId) {
+  document.querySelectorAll('#localFunilMenu-' + instanceId + ' .funnel-option').forEach(el => el.classList.add('checked'));
+  localFunilState[instanceId] = new Set(FUNIS_LISTA.map(f => f.nome));
+  updateLocalFunilLabel(instanceId);
+  rerenderLocalFunilInstance(instanceId);
+}
+
+function clearAllLocalFunis(instanceId) {
+  document.querySelectorAll('#localFunilMenu-' + instanceId + ' .funnel-option').forEach(el => el.classList.remove('checked'));
+  localFunilState[instanceId] = new Set();
+  updateLocalFunilLabel(instanceId);
+  rerenderLocalFunilInstance(instanceId);
+}
+
+function updateLocalFunilLabel(instanceId) {
+  const set = localFunilState[instanceId], label = document.getElementById('localFunilLabel-' + instanceId);
+  if (!label) return;
+  if (set.size === 0) label.textContent = 'Nenhum funil';
+  else if (set.size === FUNIS_LISTA.length) label.textContent = 'Todos os funis';
+  else if (set.size === 1) label.textContent = [...set][0].replace('Funil de ', '').replace('Funil ', '');
+  else label.textContent = set.size + ' funis';
+}
+
+function rerenderLocalFunilInstance(instanceId) {
+  if (instanceId === 'reunioes') renderReunioesConsultor();
+  if (instanceId === 'leads') renderLeadsReunioesConversao();
 }
 
 function renderReunioesConsultor() {
@@ -1808,10 +1917,21 @@ function renderReunioesConsultor() {
   const trim = trims[selIdx] || trims[0];
   const { inicio, fim } = trim;
 
+  const slotR = document.getElementById('localFunilSlot-reunioes');
+  if (slotR && !slotR.dataset.built) { slotR.innerHTML = localFunilHTML('reunioes'); slotR.dataset.built = '1'; }
+
+  const dealByIdR = {};
+  (baseDeals || []).forEach(d => { dealByIdR[d.id] = d; });
+  const funisSelR = localFunilState.reunioes;
+
   // Filtra reuniões do trimestre
   const reunioesTrim = reunioes.filter(t => {
     const ref = new Date(t.dueDate || t.createdAt || 0);
-    return ref >= inicio && ref <= fim;
+    if (!(ref >= inicio && ref <= fim)) return false;
+    const deal = t.deal && t.deal.id ? dealByIdR[t.deal.id] : null;
+    const funil = deal?.dealStage?.funnel?.name;
+    if (!funil) return true; // sem negócio vinculado: não exclui pelo filtro
+    return funisSelR.has(funil);
   });
 
   // Gera semanas do trimestre
@@ -1913,6 +2033,157 @@ function renderReunioesConsultor() {
     const pct = reunioesTrim.length > 0 ? Math.round((lucaCount / reunioesTrim.length) * 100) : 0;
     lucaEl.textContent = lucaCount > 0 ? `🤖 Agendadas pelo Luca: ${lucaCount} (${pct}%)` : '';
   }
+}
+
+function renderLeadsReunioesConversao() {
+  const slotL = document.getElementById('localFunilSlot-leads');
+  if (slotL && !slotL.dataset.built) { slotL.innerHTML = localFunilHTML('leads'); slotL.dataset.built = '1'; }
+
+  const tasks = atvTasksCache || baseTasks || [];
+  const reunioes = tasks.filter(t => t.type === 'Reunião');
+  const deals = baseDeals || [];
+
+  // Trimestres disponíveis (últimos 8) — mesma lógica da tabela de reuniões
+  const now = new Date();
+  const trims = [];
+  for (let i = 0; i < 8; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - (i * 3), 1);
+    const q = Math.floor(d.getMonth() / 3);
+    const ano = d.getFullYear();
+    const mesInicio = q * 3;
+    const inicio = new Date(ano, mesInicio, 1);
+    const fim = new Date(ano, mesInicio + 3, 0, 23, 59, 59);
+    trims.push({ label: 'Q' + (q + 1) + '/' + ano, inicio, fim });
+  }
+
+  const sel = document.getElementById('leads-trim-select');
+  if (sel && sel.options.length === 0) {
+    sel.innerHTML = trims.map((t, i) => '<option value="' + i + '">' + t.label + '</option>').join('');
+  }
+  const selIdx = parseInt(sel?.value || 0);
+  const trim = trims[selIdx] || trims[0];
+  const { inicio, fim } = trim;
+
+  const dealById = {};
+  deals.forEach(d => { dealById[d.id] = d; });
+  const funisSel = localFunilState.leads;
+  const passaFunil = funil => !funil || funisSel.has(funil);
+
+  // Leads criados no trimestre, dentro dos funis selecionados
+  const leadsTrim = deals.filter(d => {
+    const ref = new Date(d.createdAt || 0);
+    if (!(ref >= inicio && ref <= fim)) return false;
+    return passaFunil(d.dealStage?.funnel?.name);
+  });
+
+  // Reuniões do trimestre, dentro dos funis selecionados (via negócio vinculado)
+  const reunioesTrim = reunioes.filter(t => {
+    const ref = new Date(t.dueDate || t.createdAt || 0);
+    if (!(ref >= inicio && ref <= fim)) return false;
+    const deal = t.deal && t.deal.id ? dealById[t.deal.id] : null;
+    return passaFunil(deal?.dealStage?.funnel?.name);
+  });
+
+  if (!leadsTrim.length && !reunioesTrim.length) {
+    document.getElementById('leads-reunioes-thead').innerHTML = '';
+    document.getElementById('leads-reunioes-tbody').innerHTML = '<tr><td class="empty" style="text-align:center;padding:1rem;">Nenhum lead ou reunião no trimestre/funis selecionados.</td></tr>';
+    return;
+  }
+
+  // Gera semanas do trimestre (mesma lógica da tabela de reuniões)
+  const semanas = [];
+  let cur = new Date(inicio);
+  while (cur <= fim) {
+    const semFim = new Date(cur);
+    semFim.setDate(semFim.getDate() + 6);
+    if (semFim > fim) semFim.setTime(fim.getTime());
+    const d = cur.getDate(), m = cur.getMonth();
+    const MONTHS_SHORT = ['Jan','Fev','Mar','Abr','Mai','Jun','Jul','Ago','Set','Out','Nov','Dez'];
+    semanas.push({ label: d + ' ' + MONTHS_SHORT[m], de: new Date(cur), ate: semFim });
+    cur = new Date(cur);
+    cur.setDate(cur.getDate() + 7);
+  }
+
+  const getOwnerDeal = d => d.owner?.name || 'Sem responsável';
+  const getOwnerTask = t => (t.assignedUsers?.[0]?.name) || t.user?.name || 'Sem responsável';
+
+  const bLeft = 'border-left:0.5px solid rgba(255,255,255,0.1);';
+  const bTop = 'border-top:0.5px solid rgba(255,255,255,0.08);';
+
+  let thead = '<tr style="border-bottom:0.5px solid rgba(255,255,255,0.15);">'
+    + '<th style="text-align:left;padding:6px 8px;color:rgba(255,255,255,0.4);font-weight:500;min-width:100px;"></th>';
+  semanas.forEach(s => {
+    thead += '<th colspan="3" style="text-align:center;padding:6px 4px;color:rgba(255,255,255,0.4);font-weight:500;' + bLeft + '">' + s.label + '</th>';
+  });
+  thead += '<th style="text-align:right;padding:6px 8px;color:rgba(255,255,255,0.7);font-weight:500;' + bLeft + '">Total</th></tr>';
+
+  thead += '<tr style="border-bottom:0.5px solid rgba(255,255,255,0.12);">'
+    + '<th style="padding:4px 8px;color:rgba(255,255,255,0.3);font-weight:400;font-size:10px;text-align:left;">Consultor</th>';
+  semanas.forEach(() => {
+    thead += '<th style="text-align:center;padding:4px 4px;color:#91DBE4;font-size:10px;font-weight:500;' + bLeft + '">Leads</th>'
+           + '<th style="text-align:center;padding:4px 4px;color:#5DCAA5;font-size:10px;font-weight:500;">Reun.</th>'
+           + '<th style="text-align:center;padding:4px 4px;color:#EF9F27;font-size:10px;font-weight:500;">Conv.</th>';
+  });
+  thead += '<th style="' + bLeft + '"></th></tr>';
+  document.getElementById('leads-reunioes-thead').innerHTML = thead;
+
+  const consultores = [...new Set([
+    ...leadsTrim.map(getOwnerDeal),
+    ...reunioesTrim.map(getOwnerTask)
+  ])].sort();
+
+  let tbody = '';
+  const totais = semanas.map(() => ({ leads: 0, reun: 0 }));
+  let totalLeads = 0, totalReun = 0;
+
+  consultores.forEach(consultor => {
+    const meusLeads = leadsTrim.filter(d => getOwnerDeal(d) === consultor);
+    const minhasReun = reunioesTrim.filter(t => getOwnerTask(t) === consultor);
+    let cLeads = 0, cReun = 0;
+
+    tbody += '<tr style="' + bTop + '">'
+      + '<td style="padding:7px 8px;font-weight:500;color:white;">' + consultor + '</td>';
+
+    semanas.forEach((s, i) => {
+      const leadsSemana = meusLeads.filter(d => {
+        const ref = new Date(d.createdAt || 0);
+        return ref >= s.de && ref <= s.ate;
+      }).length;
+      const reunSemana = minhasReun.filter(t => {
+        const ref = new Date(t.dueDate || t.createdAt || 0);
+        return ref >= s.de && ref <= s.ate;
+      }).length;
+      const conv = leadsSemana > 0 ? Math.round((reunSemana / leadsSemana) * 100) : null;
+
+      totais[i].leads += leadsSemana; totais[i].reun += reunSemana;
+      cLeads += leadsSemana; cReun += reunSemana;
+
+      tbody += '<td style="text-align:center;padding:7px 4px;color:#91DBE4;' + bLeft + '">' + (leadsSemana || '—') + '</td>'
+             + '<td style="text-align:center;padding:7px 4px;color:#5DCAA5;">' + (reunSemana || '—') + '</td>'
+             + '<td style="text-align:center;padding:7px 4px;color:#EF9F27;">' + (conv === null ? '—' : conv + '%') + '</td>';
+    });
+
+    totalLeads += cLeads; totalReun += cReun;
+    const cConvTotal = cLeads > 0 ? Math.round((cReun / cLeads) * 100) : null;
+
+    tbody += '<td style="text-align:right;padding:7px 8px;font-weight:600;color:white;' + bLeft + '">'
+           + cLeads + ' / ' + cReun + ' · ' + (cConvTotal === null ? '—' : cConvTotal + '%') + '</td></tr>';
+  });
+
+  // Linha total
+  tbody += '<tr style="background:rgba(255,255,255,0.04);border-top:0.5px solid rgba(255,255,255,0.15);">'
+    + '<td style="padding:7px 8px;font-weight:600;color:white;">Total</td>';
+  totais.forEach(t => {
+    const conv = t.leads > 0 ? Math.round((t.reun / t.leads) * 100) : null;
+    tbody += '<td style="text-align:center;padding:7px 4px;color:#91DBE4;font-weight:600;' + bLeft + '">' + (t.leads || '—') + '</td>'
+           + '<td style="text-align:center;padding:7px 4px;color:#5DCAA5;font-weight:600;">' + (t.reun || '—') + '</td>'
+           + '<td style="text-align:center;padding:7px 4px;color:#EF9F27;font-weight:600;">' + (conv === null ? '—' : conv + '%') + '</td>';
+  });
+  const convGeral = totalLeads > 0 ? Math.round((totalReun / totalLeads) * 100) : null;
+  tbody += '<td style="text-align:right;padding:7px 8px;font-weight:700;color:white;' + bLeft + '">'
+         + totalLeads + ' / ' + totalReun + ' · ' + (convGeral === null ? '—' : convGeral + '%') + '</td></tr>';
+
+  document.getElementById('leads-reunioes-tbody').innerHTML = tbody;
 }
 
 function renderReunioesCanal() {
