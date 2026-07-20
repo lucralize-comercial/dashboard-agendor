@@ -695,6 +695,28 @@
     </div>
   </div>
 
+  <!-- Leads x reuniões x conversão - semana a semana -->
+  <div class="card" style="margin-bottom:1.5rem;">
+    <div class="card-header" style="flex-wrap:wrap;gap:8px;">
+      <span class="card-title">Leads x reuniões x conversão — semana a semana</span>
+      <div style="display:flex;align-items:center;gap:8px;margin-left:auto;">
+        <div id="localFunilSlot-leads"></div>
+        <select id="leads-trim-select" onchange="renderLeadsReunioesConversao()" style="font-size:12px;padding:4px 8px;border-radius:8px;border:0.5px solid rgba(255,255,255,0.15);font-family:'Poppins',sans-serif;background:#1a2540;color:white;"></select>
+      </div>
+    </div>
+    <div style="overflow-x:auto;">
+      <table style="width:100%;border-collapse:collapse;font-size:11px;min-width:500px;" id="leads-reunioes-table">
+        <thead id="leads-reunioes-thead"></thead>
+        <tbody id="leads-reunioes-tbody"></tbody>
+      </table>
+    </div>
+    <div style="display:flex;gap:20px;margin-top:10px;flex-wrap:wrap;">
+      <span style="font-size:11px;color:#91DBE4;">Leads = leads criados</span>
+      <span style="font-size:11px;color:#5DCAA5;">Reun. = reuniões geradas</span>
+      <span style="font-size:11px;color:#EF9F27;">Conv. = reuniões / leads da mesma semana</span>
+    </div>
+  </div>
+
   <!-- Reuniões por consultor - semana a semana -->
   <div class="card" style="margin-bottom:1.5rem;">
     <div class="card-header" style="flex-wrap:wrap;gap:8px;">
@@ -715,28 +737,6 @@
       <span style="font-size:11px;color:#5DCAA5;">Real. = realizadas (concluídas)</span>
       <span style="font-size:11px;color:#EF9F27;">Pend. = pendentes</span>
       <span id="reunioes-luca-resumo" style="font-size:11px;color:#B79CED;"></span>
-    </div>
-  </div>
-
-  <!-- Leads x reuniões x conversão - semana a semana -->
-  <div class="card" style="margin-bottom:1.5rem;">
-    <div class="card-header" style="flex-wrap:wrap;gap:8px;">
-      <span class="card-title">Leads x reuniões x conversão — semana a semana</span>
-      <div style="display:flex;align-items:center;gap:8px;margin-left:auto;">
-        <div id="localFunilSlot-leads"></div>
-        <select id="leads-trim-select" onchange="renderLeadsReunioesConversao()" style="font-size:12px;padding:4px 8px;border-radius:8px;border:0.5px solid rgba(255,255,255,0.15);font-family:'Poppins',sans-serif;background:#1a2540;color:white;"></select>
-      </div>
-    </div>
-    <div style="overflow-x:auto;">
-      <table style="width:100%;border-collapse:collapse;font-size:11px;min-width:500px;" id="leads-reunioes-table">
-        <thead id="leads-reunioes-thead"></thead>
-        <tbody id="leads-reunioes-tbody"></tbody>
-      </table>
-    </div>
-    <div style="display:flex;gap:20px;margin-top:10px;flex-wrap:wrap;">
-      <span style="font-size:11px;color:#91DBE4;">Leads = leads criados</span>
-      <span style="font-size:11px;color:#5DCAA5;">Reun. = reuniões geradas</span>
-      <span style="font-size:11px;color:#EF9F27;">Conv. = reuniões / leads da mesma semana</span>
     </div>
   </div>
 
@@ -1923,6 +1923,7 @@ function renderReunioesConsultor() {
   const dealByIdR = {};
   (baseDeals || []).forEach(d => { dealByIdR[d.id] = d; });
   const funisSelR = localFunilState.reunioes;
+  const nomesConhecidosR = FUNIS_LISTA.map(f => f.nome);
 
   // Filtra reuniões do trimestre
   const reunioesTrim = reunioes.filter(t => {
@@ -1930,7 +1931,9 @@ function renderReunioesConsultor() {
     if (!(ref >= inicio && ref <= fim)) return false;
     const deal = t.deal && t.deal.id ? dealByIdR[t.deal.id] : null;
     const funil = deal?.dealStage?.funnel?.name;
-    if (!funil) return true; // sem negócio vinculado: não exclui pelo filtro
+    // Sem negócio vinculado, ou funil fora da lista conhecida: nunca oculta
+    // (só exclui quando o funil está na lista E foi desmarcado pelo usuário)
+    if (!funil || !nomesConhecidosR.includes(funil)) return true;
     return funisSelR.has(funil);
   });
 
@@ -2067,7 +2070,8 @@ function renderLeadsReunioesConversao() {
   const dealById = {};
   deals.forEach(d => { dealById[d.id] = d; });
   const funisSel = localFunilState.leads;
-  const passaFunil = funil => !funil || funisSel.has(funil);
+  const nomesConhecidos = FUNIS_LISTA.map(f => f.nome);
+  const passaFunil = funil => !funil || !nomesConhecidos.includes(funil) || funisSel.has(funil);
 
   // Leads criados no trimestre, dentro dos funis selecionados
   const leadsTrim = deals.filter(d => {
