@@ -701,6 +701,7 @@
       <span class="card-title">Leads x reuniões x conversão — semana a semana</span>
       <div style="display:flex;align-items:center;gap:8px;margin-left:auto;">
         <div id="localFunilSlot-leads"></div>
+        <div id="localConsultorSlot-leads"></div>
         <select id="leads-trim-select" onchange="renderLeadsReunioesConversao()" style="font-size:12px;padding:4px 8px;border-radius:8px;border:0.5px solid rgba(255,255,255,0.15);font-family:'Poppins',sans-serif;background:#1a2540;color:white;"></select>
       </div>
     </div>
@@ -724,6 +725,7 @@
       <span class="card-title">Reuniões por consultor — semana a semana</span>
       <div style="display:flex;align-items:center;gap:8px;margin-left:auto;">
         <div id="localFunilSlot-reunioes"></div>
+        <div id="localConsultorSlot-reunioes"></div>
         <select id="reunioes-trim-select" onchange="renderReunioesConsultor()" style="font-size:12px;padding:4px 8px;border-radius:8px;border:0.5px solid rgba(255,255,255,0.15);font-family:'Poppins',sans-serif;background:#1a2540;color:white;"></select>
       </div>
     </div>
@@ -1890,6 +1892,86 @@ function rerenderLocalFunilInstance(instanceId) {
   if (instanceId === 'leads') renderLeadsReunioesConversao();
 }
 
+// ===== Filtro de consultor LOCAL (mesmo padrão do filtro de funil) =====
+// Lista dinâmica: consultor não é fixo como funil, muda com o tempo.
+// Fonte: donos de negócio + responsáveis por reunião, olhando TODO o
+// histórico disponível (não só o trimestre selecionado), pra a lista do
+// dropdown não pular de opção conforme troca de trimestre.
+const localConsultorState = { reunioes: new Set(), leads: new Set() };
+
+function obterConsultoresGlobais() {
+  const nomes = new Set();
+  (baseDeals || []).forEach(d => nomes.add(d.owner?.name || 'Sem responsável'));
+  const tasks = atvTasksCache || baseTasks || [];
+  tasks.filter(t => t.type === 'Reunião').forEach(t => {
+    nomes.add((t.assignedUsers?.[0]?.name) || t.user?.name || 'Sem responsável');
+  });
+  return [...nomes].sort((a, b) => {
+    if (a === 'Sem responsável') return 1;
+    if (b === 'Sem responsável') return -1;
+    return a.localeCompare(b);
+  });
+}
+
+function localConsultorHTML(instanceId) {
+  const lista = obterConsultoresGlobais();
+  localConsultorState[instanceId] = new Set(lista);
+  const opts = lista.map(nome =>
+    '<div class="funnel-option checked" data-consultor="' + nome + '" onclick="toggleLocalConsultor(\'' + instanceId + '\', this)">'
+    + '<div class="funnel-check"></div><span style="flex:1;">' + nome + '</span></div>'
+  ).join('');
+  return '<div class="funnel-dropdown">'
+    + '<button class="funnel-btn" style="min-width:150px;font-size:11px;padding:5px 10px;" onclick="toggleLocalConsultorMenu(event,\'' + instanceId + '\')">'
+    + '<span id="localConsultorLabel-' + instanceId + '">Todos os consultores</span>'
+    + '<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"/></svg>'
+    + '</button>'
+    + '<div class="funnel-menu local" id="localConsultorMenu-' + instanceId + '">' + opts
+    + '<div class="funnel-menu-footer">'
+    + '<button class="secondary" onclick="selectAllLocalConsultores(\'' + instanceId + '\')">Todos</button>'
+    + '<button class="secondary" onclick="clearAllLocalConsultores(\'' + instanceId + '\')">Limpar</button>'
+    + '</div></div></div>';
+}
+
+function toggleLocalConsultorMenu(e, instanceId) {
+  e.stopPropagation();
+  document.querySelectorAll('.funnel-menu').forEach(m => {
+    if (m.id !== 'localConsultorMenu-' + instanceId) m.classList.remove('open');
+  });
+  document.getElementById('localConsultorMenu-' + instanceId).classList.toggle('open');
+}
+
+function toggleLocalConsultor(instanceId, el) {
+  el.classList.toggle('checked');
+  const nome = el.dataset.consultor, set = localConsultorState[instanceId];
+  if (el.classList.contains('checked')) set.add(nome); else set.delete(nome);
+  updateLocalConsultorLabel(instanceId);
+  rerenderLocalFunilInstance(instanceId);
+}
+
+function selectAllLocalConsultores(instanceId) {
+  document.querySelectorAll('#localConsultorMenu-' + instanceId + ' .funnel-option').forEach(el => el.classList.add('checked'));
+  localConsultorState[instanceId] = new Set(obterConsultoresGlobais());
+  updateLocalConsultorLabel(instanceId);
+  rerenderLocalFunilInstance(instanceId);
+}
+
+function clearAllLocalConsultores(instanceId) {
+  document.querySelectorAll('#localConsultorMenu-' + instanceId + ' .funnel-option').forEach(el => el.classList.remove('checked'));
+  localConsultorState[instanceId] = new Set();
+  updateLocalConsultorLabel(instanceId);
+  rerenderLocalFunilInstance(instanceId);
+}
+
+function updateLocalConsultorLabel(instanceId) {
+  const set = localConsultorState[instanceId], label = document.getElementById('localConsultorLabel-' + instanceId);
+  if (!label) return;
+  const total = obterConsultoresGlobais().length;
+  if (set.size === 0) label.textContent = 'Nenhum consultor';
+  else if (set.size === total) label.textContent = 'Todos os consultores';
+  else if (set.size === 1) label.textContent = [...set][0];
+  else label.textContent = set.size + ' consultores';
+}
+
 function renderReunioesConsultor() {
   const tasks = atvTasksCache || baseTasks || [];
   const reunioes = tasks.filter(t => t.type === 'Reunião');
@@ -1927,11 +2009,16 @@ function renderReunioesConsultor() {
 
   const slotR = document.getElementById('localFunilSlot-reunioes');
   if (slotR && !slotR.dataset.built) { slotR.innerHTML = localFunilHTML('reunioes'); slotR.dataset.built = '1'; }
+  const slotCR = document.getElementById('localConsultorSlot-reunioes');
+  if (slotCR && !slotCR.dataset.built) { slotCR.innerHTML = localConsultorHTML('reunioes'); slotCR.dataset.built = '1'; }
 
   const dealByIdR = {};
   (baseDeals || []).forEach(d => { dealByIdR[d.id] = d; });
   const funisSelR = localFunilState.reunioes;
   const nomesConhecidosR = FUNIS_LISTA.map(f => f.nome);
+  const getOwner = t => (t.assignedUsers?.[0]?.name) || t.user?.name || 'Sem responsável';
+  const consultorSelR = localConsultorState.reunioes;
+  const nomesConsultorConhecidosR = obterConsultoresGlobais();
 
   // Filtra reuniões do trimestre
   const reunioesTrim = reunioes.filter(t => {
@@ -1941,8 +2028,12 @@ function renderReunioesConsultor() {
     const funil = deal?.dealStage?.funnel?.name;
     // Sem negócio vinculado, ou funil fora da lista conhecida: nunca oculta
     // (só exclui quando o funil está na lista E foi desmarcado pelo usuário)
-    if (!funil || !nomesConhecidosR.includes(funil)) return true;
-    return funisSelR.has(funil);
+    if (funil && nomesConhecidosR.includes(funil) && !funisSelR.has(funil)) return false;
+    // Mesma regra fail-open para consultor: só exclui se o nome está na
+    // lista conhecida do dropdown E foi desmarcado
+    const dono = getOwner(t);
+    if (nomesConsultorConhecidosR.includes(dono) && !consultorSelR.has(dono)) return false;
+    return true;
   });
 
   // Gera semanas do trimestre
@@ -1960,7 +2051,6 @@ function renderReunioesConsultor() {
   }
 
   // Responsáveis com reuniões no trimestre
-  const getOwner = t => (t.assignedUsers?.[0]?.name) || t.user?.name || 'Sem responsável';
   const isDone = t => !!(t.finishedAt);
 
   // Monta cabeçalho
@@ -2049,6 +2139,8 @@ function renderReunioesConsultor() {
 function renderLeadsReunioesConversao() {
   const slotL = document.getElementById('localFunilSlot-leads');
   if (slotL && !slotL.dataset.built) { slotL.innerHTML = localFunilHTML('leads'); slotL.dataset.built = '1'; }
+  const slotCL = document.getElementById('localConsultorSlot-leads');
+  if (slotCL && !slotCL.dataset.built) { slotCL.innerHTML = localConsultorHTML('leads'); slotCL.dataset.built = '1'; }
 
   const tasks = atvTasksCache || baseTasks || [];
   const reunioes = tasks.filter(t => t.type === 'Reunião');
@@ -2086,19 +2178,27 @@ function renderLeadsReunioesConversao() {
   const nomesConhecidos = FUNIS_LISTA.map(f => f.nome);
   const passaFunil = funil => !funil || !nomesConhecidos.includes(funil) || funisSel.has(funil);
 
-  // Leads criados no trimestre, dentro dos funis selecionados
+  const getOwnerDeal = d => d.owner?.name || 'Sem responsável';
+  const getOwnerTask = t => (t.assignedUsers?.[0]?.name) || t.user?.name || 'Sem responsável';
+  const consultorSelL = localConsultorState.leads;
+  const nomesConsultorConhecidosL = obterConsultoresGlobais();
+  const passaConsultor = nome => !nomesConsultorConhecidosL.includes(nome) || consultorSelL.has(nome);
+
+  // Leads criados no trimestre, dentro dos funis/consultores selecionados
   const leadsTrim = deals.filter(d => {
     const ref = new Date(d.createdAt || 0);
     if (!(ref >= inicio && ref <= fim)) return false;
-    return passaFunil(d.dealStage?.funnel?.name);
+    if (!passaFunil(d.dealStage?.funnel?.name)) return false;
+    return passaConsultor(getOwnerDeal(d));
   });
 
-  // Reuniões do trimestre, dentro dos funis selecionados (via negócio vinculado)
+  // Reuniões do trimestre, dentro dos funis/consultores selecionados
   const reunioesTrim = reunioes.filter(t => {
     const ref = new Date(t.dueDate || t.createdAt || 0);
     if (!(ref >= inicio && ref <= fim)) return false;
     const deal = t.deal && t.deal.id ? dealById[t.deal.id] : null;
-    return passaFunil(deal?.dealStage?.funnel?.name);
+    if (!passaFunil(deal?.dealStage?.funnel?.name)) return false;
+    return passaConsultor(getOwnerTask(t));
   });
 
   if (!leadsTrim.length && !reunioesTrim.length) {
@@ -2120,9 +2220,6 @@ function renderLeadsReunioesConversao() {
     cur = new Date(cur);
     cur.setDate(cur.getDate() + 7);
   }
-
-  const getOwnerDeal = d => d.owner?.name || 'Sem responsável';
-  const getOwnerTask = t => (t.assignedUsers?.[0]?.name) || t.user?.name || 'Sem responsável';
 
   const bLeft = 'border-left:0.5px solid rgba(255,255,255,0.1);';
   const bTop = 'border-top:0.5px solid rgba(255,255,255,0.08);';
