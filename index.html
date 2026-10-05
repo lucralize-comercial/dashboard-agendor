@@ -134,6 +134,13 @@
   .std-table td:first-child { text-align: left; font-family: 'Poppins', sans-serif; font-weight: 500; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: white; }
   .std-table tr:last-child td { border-bottom: none; }
   .std-table tr:hover td { background: rgba(255,255,255,0.04); }
+  .resumo-tbl { table-layout: fixed; }
+  .resumo-tbl td, .resumo-tbl th { padding: 10px 14px; }
+  .resumo-tbl td:first-child { max-width: none; }
+  .resumo-tbl .rs-pct { display: inline-block; width: 38px; text-align: right; margin-left: 6px; font-size: 11px; color: rgba(255,255,255,0.4); }
+  .resumo-tbl .rs-com { color: var(--info); font-weight: 600; }
+  .resumo-tbl .rs-tag { display: block; font-size: 10px; color: rgba(255,255,255,0.45); margin-top: 2px; }
+  .resumo-tbl .badge-dir { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.65); padding: 2px 8px; border-radius: 8px; font-size: 10px; font-family: 'Poppins', sans-serif; font-weight: 500; margin-left: 6px; }
   .std-table tr.total-row td { border-top: 0.5px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.06); font-weight: 600; color: white; }
 
   .row { display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 0.5px solid rgba(255,255,255,0.08); }
@@ -999,13 +1006,13 @@
   <div class="card" style="margin-bottom:1.5rem;">
     <div class="card-header"><span class="card-title">Resumo por responsável</span></div>
     <div style="overflow-x:auto;">
-      <table class="std-table">
+      <table class="std-table resumo-tbl">
         <thead><tr>
-          <th style="text-align:left;">Responsável</th>
-          <th style="text-align:right;">Negócios</th>
-          <th style="text-align:right;">Valor total</th>
-          <th style="text-align:right;">Comissão</th>
-          <th style="text-align:right;">Pendentes</th>
+          <th style="text-align:left;width:30%;">Responsável</th>
+          <th style="text-align:right;width:17%;">Negócios</th>
+          <th style="text-align:right;width:23%;">Valor total</th>
+          <th style="text-align:right;width:20%;">Comissão</th>
+          <th style="text-align:right;width:10%;">Pendentes</th>
         </tr></thead>
         <tbody id="com-resumo-body"><tr><td colspan="5" class="empty">—</td></tr></tbody>
       </table>
@@ -3652,15 +3659,22 @@ function renderComissoes() {
     const isDiretoria=origem.trim().toLowerCase()==='relacionamento diretoria';
     const isRegraOrigem=isRegraOrigemDeal(owner,d),isFabiola=owner==='Fabíola Carvalho';
     let taxa;
-    if(isDiretoria) taxa=null;
+    const origemNorm=origem.trim().toLowerCase();
+    const isDiretoriaTrab=origemNorm.startsWith('relacionamento diretoria')&&origemNorm.includes('trabalhado');
+    const isLuizTrab=isDiretoriaTrab&&owner==='Luiz Santos';
+    if(isDiretoria||isLuizTrab) taxa=null;
     else if(isRegraOrigem) taxa=getComissaoEspecial(d);
     else if(isFabiola) taxa=getTaxaFabiola(condicao);
     else taxa=getTaxaComissao(condicao);
     const valor=d.value||0,isPendente=!isRegraOrigem&&!isDiretoria&&!condicao;
     const comissao=taxa!==null?valor*taxa:null;
     const reunioes=BONUS_REUNIAO[d.id]||0,bonusReuniao=isFabiola?reunioes*VALOR_BONUS_REUNIAO:0;
-    const totalParaRonaldo2=(comissao||0)+(GERAM_BONUS_RONALDO.includes(owner)?bonusReuniao:0);
-    const bonusRonaldo2=(comissao!==null&&GERAM_BONUS_RONALDO.includes(owner))?totalParaRonaldo2/3:0;
+    // Luiz Santos + Relacionamento Diretoria (Trabalhado comercial): sem comissão para o Luiz, mas o Ronaldo recebe 1/3 da comissão pela tabela padrão
+    const taxaNormalLuiz=isLuizTrab?getTaxaComissao(condicao):null;
+    const baseRonaldo2=isLuizTrab?(taxaNormalLuiz!==null?valor*taxaNormalLuiz:null):comissao;
+    const geraBonus2=isLuizTrab||GERAM_BONUS_RONALDO.includes(owner);
+    const totalParaRonaldo2=(baseRonaldo2||0)+(GERAM_BONUS_RONALDO.includes(owner)?bonusReuniao:0);
+    const bonusRonaldo2=(baseRonaldo2!==null&&geraBonus2)?totalParaRonaldo2/3:0;
     totalValor+=valor;
     if(comissao!==null) totalComissao+=comissao;
     if(bonusReuniao>0) totalComissao+=bonusReuniao;
@@ -3689,15 +3703,21 @@ function renderComissoes() {
     const isDiretoria=origem.trim().toLowerCase()==='relacionamento diretoria';
     const isRegraOrigem=isRegraOrigemDeal(owner,d),isFabiola=owner==='Fabíola Carvalho';
     let taxa;
-    if(isDiretoria) taxa=null;
+    const origemNorm=origem.trim().toLowerCase();
+    const isDiretoriaTrab=origemNorm.startsWith('relacionamento diretoria')&&origemNorm.includes('trabalhado');
+    const isLuizTrab=isDiretoriaTrab&&owner==='Luiz Santos';
+    if(isDiretoria||isLuizTrab) taxa=null;
     else if(isRegraOrigem) taxa=getComissaoEspecial(d);
     else if(isFabiola) taxa=getTaxaFabiola(condicao);
     else taxa=getTaxaComissao(condicao);
     const valor=d.value||0,isPendente=!isRegraOrigem&&!isDiretoria&&!condicao,comissao=taxa!==null?valor*taxa:null;
     const reunioes=BONUS_REUNIAO[d.id]||0,bonusReuniao=isFabiola?reunioes*VALOR_BONUS_REUNIAO:0;
-    const totalParaRonaldo=(comissao||0)+(GERAM_BONUS_RONALDO.includes(owner)?bonusReuniao:0);
-    const bonusRonaldo=(comissao!==null&&GERAM_BONUS_RONALDO.includes(owner))?totalParaRonaldo/3:0;
-    const condDisplay=isDiretoria?'<span style="background:#f5f5f5;color:#999;padding:2px 8px;border-radius:12px;font-size:11px;">Diretoria</span>':isRegraOrigem?'—':isPendente?'<span style="color:#F62642;font-size:11px;font-weight:600;">⚠ Pendente</span>':`<span style="background:#e0f5f7;color:#0C7488;padding:2px 8px;border-radius:12px;font-size:11px;">${condicao}</span>`;
+    const taxaNormalLuiz=isLuizTrab?getTaxaComissao(condicao):null;
+    const baseRonaldo=isLuizTrab?(taxaNormalLuiz!==null?valor*taxaNormalLuiz:null):comissao;
+    const geraBonus=isLuizTrab||GERAM_BONUS_RONALDO.includes(owner);
+    const totalParaRonaldo=(baseRonaldo||0)+(GERAM_BONUS_RONALDO.includes(owner)?bonusReuniao:0);
+    const bonusRonaldo=(baseRonaldo!==null&&geraBonus)?totalParaRonaldo/3:0;
+    const condDisplay=isDiretoria?'<span style="background:#f5f5f5;color:#999;padding:2px 8px;border-radius:12px;font-size:11px;">Diretoria</span>':isRegraOrigem?(condicao?`<span style=\"background:#e0f5f7;color:#0C7488;padding:2px 8px;border-radius:12px;font-size:11px;\">${condicao}</span>`:'—'):isPendente?'<span style="color:#F62642;font-size:11px;font-weight:600;">⚠ Pendente</span>':`<span style="background:#e0f5f7;color:#0C7488;padding:2px 8px;border-radius:12px;font-size:11px;">${condicao}</span>`;
     const origemDisplay=origem?`<span style="font-size:11px;color:#657786;">${origem}</span>`:'—';
     const taxaDisplay=taxa!==null?(isFabiola?`${(taxa*100).toFixed(0)}%<span style="font-size:10px;color:#999;"> (desc. ${(100-(taxa*100)).toFixed(0)}%)</span>`:`${(taxa*100).toFixed(0)}%`):'<span style="color:#999;">—</span>';
     const comTotal=(comissao||0)+bonusReuniao;
@@ -3706,7 +3726,7 @@ function renderComissoes() {
       negocio: d.title||d.person?.name||'—',
       responsavel: ownerDisplay,
       produto: produto,
-      condicao: isDiretoria?'Diretoria':(isRegraOrigem?'—':(isPendente?'Pendente':(condicao||'—'))),
+      condicao: isDiretoria?'Diretoria':(isRegraOrigem?(condicao||'—'):(isPendente?'Pendente':(condicao||'—'))),
       origem: origem||'—',
       valor: valor,
       pctComissao: taxa!==null?taxa*100:null,
@@ -3732,21 +3752,32 @@ function renderComissoes() {
   if(pendentes>0) document.getElementById('com-pendentes').style.color='#F62642';
   else document.getElementById('com-pendentes').style.color='';
   const semWonAtEl=document.getElementById('com-sem-wonat');
-  if(semWonAtEl){semWonAtEl.textContent=semWonAt;semWonAtEl.style.color=semWonAt>0?'#a05c00':'#1e7e4a';if(semWonAt===0){semWonAtEl.closest('.metric-card').style.borderColor='rgba(14,20,40,0.1)';semWonAtEl.closest('.metric-card').style.background='white';}}
+  if(semWonAtEl){
+    semWonAtEl.textContent=semWonAt;
+    const cardSW=semWonAtEl.closest('.metric-card');
+    const lblSW=cardSW.querySelector('.metric-label'),subSW=cardSW.querySelector('.metric-sub');
+    if(semWonAt>0){ // alerta: âmbar
+      cardSW.style.border='1px dashed #e0b840';cardSW.style.background='#2b2410';
+      semWonAtEl.style.color='#e0b840';lblSW.style.color='#e0b840';subSW.style.color='#e0b840';
+    } else { // tudo certo: igual aos demais cards
+      cardSW.style.border='';cardSW.style.background='';
+      semWonAtEl.style.color='var(--success)';lblSW.style.color='';subSW.style.color='';
+    }
+  }
   const DIRETORIA_NOMES=['Luiz Santos'];
   const totalNegociosR=Object.values(porResponsavel).reduce((s,r)=>s+r.negocios,0);
   const totalValorResumo=Object.values(porResponsavel).reduce((s,r)=>s+r.valor,0);
   const resumoRows=Object.entries(porResponsavel).sort((a,b)=>(b[1].comissao+b[1].bonusReuniao)-(a[1].comissao+a[1].bonusReuniao)).map(([name,r])=>{
     const total=r.comissao+(r.bonusReuniao||0);
-    const bonusTag=r.bonusReuniao>0?` <span style="font-size:10px;color:#657786;">(+${fmtBRL2(r.bonusReuniao)} reunião)</span>`:'';
+    const bonusTag=r.bonusReuniao>0?`<span class="rs-tag">(+${fmtBRL2(r.bonusReuniao)} reunião)</span>`:'';
     const pctNeg=totalNegociosR>0?((r.negocios/totalNegociosR)*100).toFixed(0):0;
     const pctVal=totalValorResumo>0?((r.valor/totalValorResumo)*100).toFixed(0):0;
     const isDiretoriaResumo=DIRETORIA_NOMES.includes(name);
-    const nomeDisplay=isDiretoriaResumo?`${name} <span style="background:#f5f5f5;color:#999;padding:1px 6px;border-radius:8px;font-size:10px;">Diretoria</span>`:name;
-    return `<tr><td><strong>${nomeDisplay}</strong></td><td style="text-align:right;">${r.negocios} <span style="color:#657786;font-size:11px;">${pctNeg}%</span></td><td style="text-align:right;">${fmtBRL2(r.valor)} <span style="color:#657786;font-size:11px;">${pctVal}%</span></td><td style="text-align:right;"><strong style="color:${isDiretoriaResumo?'#999':'#0C7488'};">${isDiretoriaResumo?'—':fmtBRL2(total)}</strong>${bonusTag}</td><td style="text-align:right;">${r.pendentes>0?`<span style="color:#F62642;">${r.pendentes}</span>`:'0'}</td></tr>`;
+    const nomeDisplay=isDiretoriaResumo?`${name}<span class="badge-dir">Diretoria</span>`:name;
+    return `<tr><td>${nomeDisplay}</td><td>${r.negocios}<span class="rs-pct">${pctNeg}%</span></td><td>${fmtBRL2(r.valor)}<span class="rs-pct">${pctVal}%</span></td><td>${isDiretoriaResumo?'<span style="color:rgba(255,255,255,0.4);">—</span>':'<span class="rs-com">'+fmtBRL2(total)+'</span>'}${bonusTag}</td><td>${r.pendentes>0?`<span style="color:var(--danger);font-weight:600;">${r.pendentes}</span>`:'0'}</td></tr>`;
   }).join('');
   const totalComissaoResumo=Object.values(porResponsavel).reduce((s,r)=>s+r.comissao+(r.bonusReuniao||0),0);
-  const totalRowR=`<tr class="total-row"><td><strong>Total</strong></td><td style="text-align:right;"><strong>${deals.length}</strong></td><td style="text-align:right;"><strong>${fmtBRL2(totalValorResumo)}</strong></td><td style="text-align:right;"><strong style="color:#0C7488;">${fmtBRL2(totalComissaoResumo)}</strong></td><td style="text-align:right;"><strong>${pendentes>0?'<span style="color:#F62642;">'+pendentes+'</span>':'0'}</strong></td></tr>`;
+  const totalRowR=`<tr class="total-row"><td>Total</td><td>${deals.length}<span class="rs-pct"></span></td><td>${fmtBRL2(totalValorResumo)}<span class="rs-pct"></span></td><td><span class="rs-com">${fmtBRL2(totalComissaoResumo)}</span></td><td>${pendentes>0?'<span style="color:var(--danger);">'+pendentes+'</span>':'0'}</td></tr>`;
   document.getElementById('com-resumo-body').innerHTML=(resumoRows||'<tr><td colspan="5" class="empty">—</td></tr>')+totalRowR;
   window._comissoesResumoRows=Object.entries(porResponsavel).sort((a,b)=>(b[1].comissao+b[1].bonusReuniao)-(a[1].comissao+a[1].bonusReuniao)).map(([name,r])=>({
     responsavel: DIRETORIA_NOMES.includes(name)?(name+' (Diretoria)'):name,
@@ -4262,7 +4293,7 @@ setInterval(()=>{fetch(PROXY+'/').catch(()=>{});}, 10*60*1000);
       <div class="rules-person"><span class="rules-person-name">Fabíola Carvalho</span><span>Tabela Fabíola — 100% para si + bônus R$30/reunião + Ronaldo recebe 1/3 do total (comissão + reunião)</span></div>
       <div class="rules-person"><span class="rules-person-name">Brenda Medeiros</span><span>Regra por origem: 80% indicação colaborador · 15% demais origens · 0% diretoria</span></div>
       <div class="rules-person"><span class="rules-person-name">Diogo Vieira <span class="rules-tag legacy">Legado até 01/06/2026</span></span><span>Regra por origem: 80% indicação colaborador · 15% demais origens · 0% diretoria</span></div>
-      <div class="rules-person"><span class="rules-person-name">Luiz Santos</span><span style="color:#999;">Diretoria — sem comissão</span></div>
+      <div class="rules-person"><span class="rules-person-name">Luiz Santos</span><span style="color:#999;">Diretoria — sem comissão própria; na origem Relacionamento Diretoria (Trabalhado comercial), Ronaldo recebe 1/3 da comissão pela tabela padrão</span></div>
     </div>
     <div class="rules-section">
       <div class="rules-section-title">Tabela Padrão (Ronaldo, Everton e demais)</div>
