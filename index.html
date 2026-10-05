@@ -611,10 +611,11 @@
     <div class="metric-card"><div class="metric-label">Total ganhos</div><div class="metric-value" id="c-total">—</div></div>
     <div class="metric-card"><div class="metric-label">Valor total</div><div class="metric-value" id="c-valor" style="color:var(--teal);">—</div></div>
     <div class="metric-card"><div class="metric-label">Ticket médio</div><div class="metric-value" id="c-ticket" style="color:var(--teal);">—</div></div>
-    <div class="metric-card"><div class="metric-label">Com produto</div><div class="metric-value" id="c-comprod">—</div></div>
     <div class="metric-card"><div class="metric-label">Tempo médio</div><div class="metric-value" id="c-tempo" style="color:var(--teal);">—</div><div class="metric-sub">dias do início ao ganho</div></div>
-    <div class="metric-card" id="c-div-card"><div class="metric-label">Por divisão</div><div style="display:flex;gap:20px;"><div><div class="metric-value" id="c-div-contab">—</div><div class="metric-sub">Contabilidade</div></div><div><div class="metric-value" id="c-div-tech" style="color:var(--teal);">—</div><div class="metric-sub">Tech</div></div></div><div class="metric-sub" id="c-div-extra"></div></div>
-  </div>
+    <div class="metric-card"><div class="metric-label">Tech</div><div class="metric-value" id="c-div-tech" style="color:var(--teal);">—</div><div class="metric-sub" id="c-div-tech-sub"></div></div>
+    <div class="metric-card"><div class="metric-label">Contabilidade</div><div class="metric-value" id="c-div-contab">—</div><div class="metric-sub" id="c-div-contab-sub"></div></div>
+    <div class="metric-card"><div class="metric-label">Sem produto</div><div class="metric-value" id="c-div-semprod" style="color:var(--warning);">—</div></div>
+    </div>
 
   <div class="card">
     <div class="card-header">
@@ -630,6 +631,7 @@
         <thead>
           <tr>
             <th style="text-align:left;min-width:180px;">Negócio</th>
+            <th style="text-align:left;">E-mail</th>
             <th style="text-align:left;">Responsável</th>
             <th style="text-align:left;">Produto</th>
             <th style="text-align:left;">Funil</th>
@@ -639,7 +641,7 @@
             <th>Duração</th>
           </tr>
         </thead>
-        <tbody id="contratosBody"><tr><td colspan="6" style="text-align:center;padding:1rem;color:var(--muted);">—</td></tr></tbody>
+        <tbody id="contratosBody"><tr><td colspan="9" style="text-align:center;padding:1rem;color:var(--muted);">—</td></tr></tbody>
       </table>
     </div>
   </div>
@@ -1862,6 +1864,10 @@ function renderAcompanhamento() {
 // Divisão do negócio pelo PRODUTO. Ajuste aqui se algum produto cair na divisão errada:
 // produto cujo nome contém alguma palavra de DIVISAO_TECH_KEYWORDS = Tech; os demais produtos = Contabilidade.
 const DIVISAO_TECH_KEYWORDS = ['tech'];
+function getEmailNegocio(d) {
+  const c = d.person?.contact || d.organization?.contact || {};
+  return c.email || d.person?.email || d.organization?.email || (Array.isArray(d.person?.emails) ? (d.person.emails[0]?.email || d.person.emails[0]) : '') || '';
+}
 function getProdutoNomes(d) {
   if (d.products_entities && d.products_entities.length) return d.products_entities.map(p => p.name || p.product?.name || p.productName || '').filter(Boolean);
   if (d.products && d.products.length) return (Array.isArray(d.products) ? d.products : [d.products]).map(p => typeof p === 'string' ? p : (p.name || '')).filter(Boolean);
@@ -1891,25 +1897,26 @@ function renderContratos() {
   if(search) deals=deals.filter(d=>(d.title||'').toLowerCase().includes(search)||(d.person?.name||'').toLowerCase().includes(search)||(d.organization?.name||'').toLowerCase().includes(search));
   if(ownerFilter!=='all') deals=deals.filter(d=>(d.owner?.name||'Sem responsável')===ownerFilter);
   const totalVal=deals.reduce((s,d)=>s+(d.value||0),0);
-  const comProd=deals.filter(d=>d.products_entities?.length>0||d.products?.length>0).length;
   const dealsComTempo=deals.filter(d=>(d.startTime||d.createdAt)&&(d.wonAt||d.endTime));
   const avgTempo=dealsComTempo.length?Math.round(dealsComTempo.reduce((s,d)=>{const ini=new Date(d.startTime||d.createdAt),fim=new Date(d.wonAt||d.endTime);return s+Math.max(0,Math.round((fim-ini)/(1000*60*60*24)));},0)/dealsComTempo.length):null;
   document.getElementById('c-total').textContent=deals.length.toLocaleString('pt-BR');
   document.getElementById('c-valor').textContent=fmt(totalVal);
   document.getElementById('c-ticket').textContent=fmt(deals.length?Math.round(totalVal/deals.length):0);
-  document.getElementById('c-comprod').textContent=comProd;
   let nContab=0,nTech=0,nAmbas=0,nSemProd=0;
   deals.forEach(d=>{const dv=getDivisoesDoNegocio(d);if(!dv.size)nSemProd++;else{if(dv.has('contab'))nContab++;if(dv.has('tech'))nTech++;if(dv.size===2)nAmbas++;}});
   document.getElementById('c-div-contab').textContent=nContab;
   document.getElementById('c-div-tech').textContent=nTech;
-  const extra=[];if(nSemProd)extra.push(nSemProd+' sem produto');if(nAmbas)extra.push(nAmbas+' nas duas');
-  document.getElementById('c-div-extra').textContent=extra.join(' · ');
+  document.getElementById('c-div-semprod').textContent=nSemProd;
+  const subAmbas=nAmbas?nAmbas+' com as duas divisões':'';
+  document.getElementById('c-div-contab-sub').textContent=subAmbas;
+  document.getElementById('c-div-tech-sub').textContent=subAmbas;
   document.getElementById('c-tempo').textContent=avgTempo!==null?avgTempo+'d':'—';
   const tbody=document.getElementById('contratosBody');
-  if(!deals.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:1rem;color:var(--muted);">Nenhum negócio ganho no período.</td></tr>';return;}
+  if(!deals.length){tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:1rem;color:var(--muted);">Nenhum negócio ganho no período.</td></tr>';return;}
   const sorted=[...deals].sort((a,b)=>new Date(getWonDate(b)||b.updatedAt)-new Date(getWonDate(a)||a.updatedAt));
   tbody.innerHTML=sorted.map(d=>{
     const name=d.title||d.person?.name||d.organization?.name||'—', owner=d.owner?.name||'—', funnel=d.dealStage?.funnel?.name||'—';
+    const email=getEmailNegocio(d);
     const wonDate=getWonDate(d)?new Date(getWonDate(d)).toLocaleDateString('pt-BR'):'—';
     let produto='—';
     if(d.products_entities&&d.products_entities.length>0) produto=d.products_entities.map(p=>p.name||p.product?.name||p.productName||JSON.stringify(p)).filter(Boolean).join(', ');
@@ -1918,7 +1925,7 @@ function renderContratos() {
     const iniStr=iniDate?new Date(iniDate).toLocaleDateString('pt-BR'):'—';
     let durStr='—',durColor='var(--muted)';
     if(iniDate&&fimDate){const dias=Math.max(0,Math.round((new Date(fimDate)-new Date(iniDate))/(1000*60*60*24)));durStr=dias+'d';durColor=dias<=7?'var(--teal)':dias<=30?'var(--warning)':'var(--red)';}
-    return `<tr><td style="font-weight:500;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${name}">${name}</td><td>${owner}</td><td style="color:var(--teal);">${produto}</td><td style="color:var(--muted);font-size:11px;">${funnel}</td><td style="font-family:'DM Mono',monospace;">${fmt(d.value)}</td><td style="font-family:'DM Mono',monospace;white-space:nowrap;color:var(--muted);">${iniStr}</td><td style="font-family:'DM Mono',monospace;white-space:nowrap;">${wonDate}</td><td style="font-weight:500;color:${durColor};">${durStr}</td></tr>`;
+    return `<tr><td style="font-weight:500;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${name}">${name}</td><td style="font-size:12px;color:#a8b3c7;max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${email}">${email||'—'}</td><td>${owner}</td><td style="color:var(--teal);">${produto}</td><td style="color:var(--muted);font-size:11px;">${funnel}</td><td style="font-family:'DM Mono',monospace;">${fmt(d.value)}</td><td style="font-family:'DM Mono',monospace;white-space:nowrap;color:var(--muted);">${iniStr}</td><td style="font-family:'DM Mono',monospace;white-space:nowrap;">${wonDate}</td><td style="font-weight:500;color:${durColor};">${durStr}</td></tr>`;
   }).join('');
   window._contratosDeals=deals;
   renderConsolidadoOrigem();
@@ -4060,7 +4067,6 @@ function exportarExcelContratosGanhos() {
   if (!deals.length) { alert('Nenhum dado para exportar.'); return; }
   const toDate = v => { if (!v) return ''; const d = new Date(v); return isNaN(d) ? '' : d; };
   const headers = ['Negócio','Cliente','E-mail','Responsável','Produto','Funil','Origem','Valor (R$)','Início','Data ganho','Duração (dias)'];
-  const getEmail = d => { const c = d.person?.contact || d.organization?.contact || {}; return c.email || d.person?.email || d.organization?.email || (Array.isArray(d.person?.emails) ? (d.person.emails[0]?.email || d.person.emails[0]) : '') || ''; };
   const sorted = [...deals].sort((a,b) => new Date(getWonDate(b)||b.updatedAt) - new Date(getWonDate(a)||a.updatedAt));
   const aoa = [headers];
   sorted.forEach(d => {
@@ -4072,7 +4078,7 @@ function exportarExcelContratosGanhos() {
     aoa.push([
       d.title || d.person?.name || d.organization?.name || '',
       d.organization?.name || d.person?.name || '',
-      getEmail(d),
+      getEmailNegocio(d),
       d.owner?.name || '',
       produto,
       d.dealStage?.funnel?.name || '',
