@@ -1128,6 +1128,8 @@
       <span class="card-title">Fechamento Parceiros</span>
       <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
         <span style="font-size:12px;color:#a8b3c7;">Mês:</span>
+        <span style="font-size:12px;color:#a8b3c7;">Parceira:</span>
+        <select id="parceiros-filtro" onchange="renderFechamentoParceiros()" style="padding:5px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:#0E1428;color:#e0e0e0;font-size:12px;font-family:'Poppins',sans-serif;color-scheme:dark;"><option value="all">Todas as parceiras</option></select>
         <input type="month" id="parceiros-mes" onchange="renderFechamentoParceiros()" style="padding:5px 8px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:#0E1428;color:#e0e0e0;font-size:12px;font-family:'Poppins',sans-serif;color-scheme:dark;">
         <button onclick="exportarFechamentoParceiros()" style="background:#1e7e4a;color:white;font-size:12px;padding:6px 14px;display:inline-flex;align-items:center;gap:6px;border-radius:8px;border:none;cursor:pointer;">
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
@@ -1144,7 +1146,7 @@
             <th style="text-align:left;min-width:160px;">Parceira</th>
             <th style="text-align:left;min-width:160px;">Condição Comercial</th>
             <th style="text-align:right;">Valor contrato</th>
-            <th style="text-align:right;color:#0C7488;font-weight:700;">50% (1ª mensalidade)</th>
+            <th style="text-align:right;color:#0C7488;font-weight:700;">80% (1ª mensalidade)</th>
           </tr>
         </thead>
         <tbody id="fechamento-parceiros-body"><tr><td colspan="6" class="empty">—</td></tr></tbody>
@@ -3854,6 +3856,8 @@ const PARCEIRAS = [
   { label: 'Leo Marconi', termos: ['leo marconi', 'leo-marconi', 'marconi'] }
 ];
 
+const PARCEIRAS_PCT = 0.8; // parceiras recebem 80% da 1ª mensalidade
+
 function getParceira(d) {
   const origem = (d.customFields?.origem_do_negocio?.value || '').toLowerCase();
   return PARCEIRAS.find(p => p.termos.some(t => origem.includes(t))) || null;
@@ -3871,6 +3875,11 @@ function renderFechamentoParceiros() {
     return renderFechamentoParceiros();
   }
 
+  // Preenche o filtro de parceira uma única vez
+  const selP = document.getElementById('parceiros-filtro');
+  if (selP && selP.options.length === 1) PARCEIRAS.forEach(p => { const o = document.createElement('option'); o.value = p.label; o.textContent = p.label; selP.appendChild(o); });
+  const filtroParceira = selP ? selP.value : 'all';
+
   const [ano, mes] = mesVal.split('-').map(Number);
   const de = new Date(Date.UTC(ano, mes-1, 1));
   const ate = new Date(Date.UTC(ano, mes, 0, 23, 59, 59));
@@ -3879,6 +3888,7 @@ function renderFechamentoParceiros() {
     if (d.dealStatus?.id !== 2) return false;
     const parceira = getParceira(d);
     if (!parceira) return false;
+    if (filtroParceira !== 'all' && parceira.label !== filtroParceira) return false;
     const data = getWonDate(d);
     if (!data) return false;
     const dt = new Date(data);
@@ -3890,7 +3900,7 @@ function renderFechamentoParceiros() {
   const rows = [...deals].sort((a,b) => new Date(getWonDate(a)||0) - new Date(getWonDate(b)||0)).map(d => {
     const parceira = getParceira(d);
     const valor = d.value || 0;
-    const comissao = valor * 0.5;
+    const comissao = valor * PARCEIRAS_PCT;
     const condicao = getCondicao(d) || '—';
     if (!totais[parceira.label]) totais[parceira.label] = 0;
     totais[parceira.label] += comissao;
@@ -3925,7 +3935,7 @@ function exportarFechamentoParceiros() {
   const dados = window._parceiroDeals || [];
   if (!dados.length) return alert('Nenhum dado para exportar.');
   const mes = document.getElementById('parceiros-mes')?.value || 'periodo';
-  let csv = 'Data,Negócio,Parceira,Condição Comercial,Valor,50% (1ª mensalidade)\n';
+  let csv = 'Data,Negócio,Parceira,Condição Comercial,Valor,80% (1ª mensalidade)\n';
   dados.forEach(r => {
     csv += [r.data, `"${r.negocio}"`, r.parceira, `"${r.condicao}"`, r.valor, r.comissao].join(',') + '\n';
   });
