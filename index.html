@@ -613,6 +613,7 @@
     <div class="metric-card"><div class="metric-label">Ticket médio</div><div class="metric-value" id="c-ticket" style="color:var(--teal);">—</div></div>
     <div class="metric-card"><div class="metric-label">Com produto</div><div class="metric-value" id="c-comprod">—</div></div>
     <div class="metric-card"><div class="metric-label">Tempo médio</div><div class="metric-value" id="c-tempo" style="color:var(--teal);">—</div><div class="metric-sub">dias do início ao ganho</div></div>
+    <div class="metric-card" id="c-div-card"><div class="metric-label">Por divisão</div><div style="display:flex;gap:20px;"><div><div class="metric-value" id="c-div-contab">—</div><div class="metric-sub">Contabilidade</div></div><div><div class="metric-value" id="c-div-tech" style="color:var(--teal);">—</div><div class="metric-sub">Tech</div></div></div><div class="metric-sub" id="c-div-extra"></div></div>
   </div>
 
   <div class="card">
@@ -621,6 +622,7 @@
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
         <input type="text" id="c-search" placeholder="Buscar negócio..." onkeyup="renderContratos()" style="padding:5px 10px;border-radius:var(--radius-sm);border:0.5px solid rgba(255,255,255,0.15);font-family:'Poppins',sans-serif;font-size:12px;background:#1a2540;color:white;width:180px;">
         <select id="c-owner" onchange="renderContratos()" style="font-size:12px;"><option value="all">Todos responsáveis</option></select>
+        <button onclick="exportarExcelContratosGanhos()" style="background:#1e7e4a;color:white;font-size:12px;padding:6px 14px;display:inline-flex;align-items:center;gap:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Exportar Excel</button>
       </div>
     </div>
     <div style="overflow-x:auto;">
@@ -928,7 +930,8 @@
       <option value="created">Por data de criação</option>
       <option value="signed">Por data de assinatura</option>
     </select>
-    <button onclick="fetchAutentique(true)" style="margin-left:auto;background:#1a2540;color:#e0e0e0;border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:0 14px;height:30px;font-size:12px;cursor:pointer;flex-shrink:0;white-space:nowrap;">↻ Atualizar</button>
+    <button onclick="exportarExcelAutentique()" style="margin-left:auto;background:#1e7e4a;color:white;border:none;border-radius:8px;padding:0 14px;height:30px;font-size:12px;cursor:pointer;flex-shrink:0;white-space:nowrap;display:inline-flex;align-items:center;gap:6px;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Exportar Excel</button>
+    <button onclick="fetchAutentique(true)" style="margin-left:8px;background:#1a2540;color:#e0e0e0;border:1px solid rgba(255,255,255,0.12);border-radius:8px;padding:0 14px;height:30px;font-size:12px;cursor:pointer;flex-shrink:0;white-space:nowrap;">↻ Atualizar</button>
   </div>
 
   <div class="metrics" style="margin-bottom:1.25rem;" id="aut-metrics">
@@ -1856,6 +1859,21 @@ function renderAcompanhamento() {
   document.getElementById('a3-tempoTable').innerHTML=Object.entries(tempoMap).map(([f,s])=>{const avgW=s.won.length?Math.round(s.won.reduce((a,b)=>a+b,0)/s.won.length):null;const avgL=s.lost.length?Math.round(s.lost.reduce((a,b)=>a+b,0)/s.lost.length):null;return `<tr><td>${f}</td><td style="color:var(--success);">${avgW!==null?avgW+'d':'—'}</td><td style="color:var(--danger);">${avgL!==null?avgL+'d':'—'}</td></tr>`;}).join('');
 }
 
+// Divisão do negócio pelo PRODUTO. Ajuste aqui se algum produto cair na divisão errada:
+// produto cujo nome contém alguma palavra de DIVISAO_TECH_KEYWORDS = Tech; os demais produtos = Contabilidade.
+const DIVISAO_TECH_KEYWORDS = ['tech'];
+function getProdutoNomes(d) {
+  if (d.products_entities && d.products_entities.length) return d.products_entities.map(p => p.name || p.product?.name || p.productName || '').filter(Boolean);
+  if (d.products && d.products.length) return (Array.isArray(d.products) ? d.products : [d.products]).map(p => typeof p === 'string' ? p : (p.name || '')).filter(Boolean);
+  return [];
+}
+function getDivisoesDoNegocio(d) {
+  const nomes = getProdutoNomes(d);
+  const div = new Set();
+  nomes.forEach(n => div.add(DIVISAO_TECH_KEYWORDS.some(k => n.toLowerCase().includes(k)) ? 'tech' : 'contab'));
+  return div;
+}
+
 function renderContratos() {
   const from=document.getElementById('dateFrom').value, to=document.getElementById('dateTo').value;
   const funis=getSelectedFunnels();
@@ -1880,6 +1898,12 @@ function renderContratos() {
   document.getElementById('c-valor').textContent=fmt(totalVal);
   document.getElementById('c-ticket').textContent=fmt(deals.length?Math.round(totalVal/deals.length):0);
   document.getElementById('c-comprod').textContent=comProd;
+  let nContab=0,nTech=0,nAmbas=0,nSemProd=0;
+  deals.forEach(d=>{const dv=getDivisoesDoNegocio(d);if(!dv.size)nSemProd++;else{if(dv.has('contab'))nContab++;if(dv.has('tech'))nTech++;if(dv.size===2)nAmbas++;}});
+  document.getElementById('c-div-contab').textContent=nContab;
+  document.getElementById('c-div-tech').textContent=nTech;
+  const extra=[];if(nSemProd)extra.push(nSemProd+' sem produto');if(nAmbas)extra.push(nAmbas+' nas duas');
+  document.getElementById('c-div-extra').textContent=extra.join(' · ');
   document.getElementById('c-tempo').textContent=avgTempo!==null?avgTempo+'d':'—';
   const tbody=document.getElementById('contratosBody');
   if(!deals.length){tbody.innerHTML='<tr><td colspan="8" style="text-align:center;padding:1rem;color:var(--muted);">Nenhum negócio ganho no período.</td></tr>';return;}
@@ -1937,7 +1961,14 @@ async function fetchTasks(forceRefresh) {
   if (btn) { btn.innerHTML = '<span class="spinner" style="border-top-color:#0C7488;border-color:rgba(14,20,40,0.2);"></span> Buscando...'; btn.disabled = true; }
   try {
     // Fonte: SharePoint (histórico completo), não mais /tasks (limitado a 30 dias no Agendor)
-    const resp = await fetch(PROXY + '/atividades-historico');
+    // Usa o filtro de período global (dateFrom/dateTo) para não baixar os ~21 mil
+    // registros inteiros a cada carregamento — reduz egress do backend.
+    const dFrom = document.getElementById('dateFrom')?.value;
+    const dTo = document.getElementById('dateTo')?.value;
+    const params = new URLSearchParams();
+    if (dFrom) params.set('desde', dFrom);
+    if (dTo) params.set('ate', dTo);
+    const resp = await fetch(PROXY + '/atividades-historico' + (params.toString() ? '?' + params.toString() : ''));
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const result = await resp.json();
     if (result.erro) console.warn('Aviso ao buscar histórico do SharePoint:', result.erro);
@@ -3968,6 +3999,7 @@ function renderAutentique() {
     return true;
   });
 
+  window._autDocsFiltrados = docs;
   let nSigned = 0, nPending = 0, nRefused = 0;
   docs.forEach(d => {
     const s = autDocStatus(d);
@@ -4020,6 +4052,83 @@ function renderAutentique() {
   }).join('');
 
   document.getElementById('aut-body').innerHTML = rows || '<tr><td colspan="6" class="empty">Nenhum documento no período</td></tr>';
+}
+
+
+function exportarExcelContratosGanhos() {
+  const deals = window._contratosDeals || [];
+  if (!deals.length) { alert('Nenhum dado para exportar.'); return; }
+  const toDate = v => { if (!v) return ''; const d = new Date(v); return isNaN(d) ? '' : d; };
+  const headers = ['Negócio','Cliente','E-mail','Responsável','Produto','Funil','Origem','Valor (R$)','Início','Data ganho','Duração (dias)'];
+  const getEmail = d => { const c = d.person?.contact || d.organization?.contact || {}; return c.email || d.person?.email || d.organization?.email || (Array.isArray(d.person?.emails) ? (d.person.emails[0]?.email || d.person.emails[0]) : '') || ''; };
+  const sorted = [...deals].sort((a,b) => new Date(getWonDate(b)||b.updatedAt) - new Date(getWonDate(a)||a.updatedAt));
+  const aoa = [headers];
+  sorted.forEach(d => {
+    let produto = '';
+    if (d.products_entities && d.products_entities.length) produto = d.products_entities.map(p => p.name || p.product?.name || p.productName || '').filter(Boolean).join(', ');
+    else if (d.products && d.products.length) produto = Array.isArray(d.products) ? d.products.join(', ') : d.products;
+    const ini = d.startTime || d.createdAt, fim = d.wonAt || d.endTime;
+    const dur = (ini && fim) ? Math.max(0, Math.round((new Date(fim) - new Date(ini)) / 86400000)) : '';
+    aoa.push([
+      d.title || d.person?.name || d.organization?.name || '',
+      d.organization?.name || d.person?.name || '',
+      getEmail(d),
+      d.owner?.name || '',
+      produto,
+      d.dealStage?.funnel?.name || '',
+      d.customFields?.origem_do_negocio?.value || '',
+      d.value || 0,
+      toDate(ini),
+      toDate(getWonDate(d)),
+      dur
+    ]);
+  });
+  const ws = XLSX.utils.aoa_to_sheet(aoa, { cellDates: true });
+  for (let r = 1; r < aoa.length; r++) {
+    const v = ws[XLSX.utils.encode_cell({ r, c: 7 })]; if (v) v.z = '"R$" #,##0.00';
+    [8, 9].forEach(c => { const cell = ws[XLSX.utils.encode_cell({ r, c })]; if (cell && cell.v instanceof Date) cell.z = 'dd/mm/yyyy'; });
+  }
+  ws['!cols'] = [{wch:38},{wch:30},{wch:32},{wch:22},{wch:28},{wch:22},{wch:22},{wch:16},{wch:12},{wch:12},{wch:14}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Contratos Ganhos');
+  const from = document.getElementById('dateFrom').value || 'inicio', to = document.getElementById('dateTo').value || 'fim';
+  XLSX.writeFile(wb, `contratos-ganhos_${from}_a_${to}.xlsx`);
+}
+
+function exportarExcelAutentique() {
+  const docs = window._autDocsFiltrados || [];
+  if (!docs.length) { alert('Nenhum dado para exportar.'); return; }
+  const toDate = v => { if (!v) return ''; const d = new Date(v); return isNaN(d) ? '' : d; };
+  const statusLabel = { signed: 'Assinado', pending: 'Pendente', refused: 'Recusado' };
+  const headers = ['Documento','Status','Criador','Signatários','E-mails dos signatários','Criação','Assinatura'];
+  const sorted = [...docs].sort((a,b) => new Date(b.created_at||0) - new Date(a.created_at||0));
+  const aoa = [headers];
+  sorted.forEach(doc => {
+    const { criador, signatarios } = getSigsCriador(doc);
+    const sigs = signatarios.map(s => {
+      const nome = s.name || s.email || '—';
+      const st = (s.signed && s.signed.created_at) ? 'assinou' : (s.rejected && s.rejected.created_at) ? 'recusou' : 'pendente';
+      return `${nome} (${st})`;
+    }).join('; ');
+    aoa.push([
+      doc.name || '',
+      statusLabel[autDocStatus(doc)] || '',
+      criador ? (criador.name || criador.email || '') : (doc.author?.name || doc.author?.email || ''),
+      sigs,
+      signatarios.map(x => x.email || '').filter(Boolean).join('; '),
+      toDate(doc.created_at),
+      toDate(autSignedAt(doc))
+    ]);
+  });
+  const ws = XLSX.utils.aoa_to_sheet(aoa, { cellDates: true });
+  for (let r = 1; r < aoa.length; r++) {
+    [5, 6].forEach(c => { const cell = ws[XLSX.utils.encode_cell({ r, c })]; if (cell && cell.v instanceof Date) cell.z = 'dd/mm/yyyy'; });
+  }
+  ws['!cols'] = [{wch:42},{wch:12},{wch:26},{wch:60},{wch:50},{wch:12},{wch:12}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Contratos Autentique');
+  const from = document.getElementById('aut-from')?.value || 'inicio', to = document.getElementById('aut-to')?.value || 'fim';
+  XLSX.writeFile(wb, `contratos-autentique_${from}_a_${to}.xlsx`);
 }
 
 function exportarFechamentoFabiola() {
