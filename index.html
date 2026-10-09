@@ -275,11 +275,18 @@
   <div class="filter-group">
     <span class="filter-label">Período:</span>
     <div class="period-btns">
-      <button class="period-btn" onclick="setPeriod(7,this)">7d</button>
-      <button class="period-btn active" onclick="setPeriod(30,this)">30d</button>
-      <button class="period-btn" onclick="setPeriod(90,this)">90d</button>
-      <button class="period-btn" onclick="setPeriod(365,this)">1 ano</button>
-      <button class="period-btn" onclick="setPeriod(0,this)">Todos</button>
+      <button class="period-btn" data-gp="1" onclick="setPeriod(7,this)">7d</button>
+      <button class="period-btn active" data-gp="1" onclick="setPeriod(30,this)">30d</button>
+      <button class="period-btn" data-gp="1" onclick="setPeriod(90,this)">90d</button>
+      <button class="period-btn" data-gp="1" onclick="setPeriod(365,this)">1 ano</button>
+      <button class="period-btn" data-gp="1" onclick="setPeriod(0,this)">Todos</button>
+    </div>
+  </div>
+  <div class="filter-sep"></div>
+  <div class="filter-group">
+    <div class="period-btns">
+      <button class="period-btn" data-gp="1" onclick="setMonth(0,this)">Mês atual</button>
+      <button class="period-btn" data-gp="1" onclick="setMonth(-1,this)">Mês anterior</button>
     </div>
   </div>
   <div class="filter-sep"></div>
@@ -337,8 +344,8 @@
     <div class="metric-card"><div class="metric-label">Taxa de conversão</div><div class="metric-value success" id="convRate">—</div><div class="metric-sub" id="convSub">—</div></div>
     <div class="metric-card"><div class="metric-label">Ticket médio</div><div class="metric-value warning" id="avgTicket">—</div></div>
     <div class="metric-card"><div class="metric-label">Em andamento</div><div class="metric-value info" id="openDeals">—</div><div class="metric-footer"><div class="metric-pct info" id="openPct">—</div><div class="progress-bar"><div class="progress-fill info" id="openBar" style="width:0%"></div></div></div></div>
-    <div class="metric-card"><div class="metric-label">Ganhos</div><div class="metric-value success" id="wonDeals">—</div><div class="metric-footer"><div class="metric-pct success" id="wonPct">—</div><div class="progress-bar"><div class="progress-fill success" id="wonBar" style="width:0%"></div></div></div></div>
-    <div class="metric-card"><div class="metric-label">Perdidos</div><div class="metric-value danger" id="lostDeals">—</div><div class="metric-footer"><div class="metric-pct danger" id="lostPct">—</div><div class="progress-bar"><div class="progress-fill danger" id="lostBar" style="width:0%"></div></div></div></div>
+    <div class="metric-card"><div class="metric-label">Ganhos</div><div class="metric-value success" id="wonDeals">—</div><div class="metric-footer"><div class="metric-pct success" id="wonPct">—</div><div class="progress-bar"><div class="progress-fill success" id="wonBar" style="width:0%"></div></div></div><div style="margin-top:8px;padding-top:8px;border-top:0.5px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:baseline;gap:8px;"><span style="font-size:11px;color:rgba(255,255,255,0.5);">Tempo médio até o ganho</span><span id="wonAvgTime" style="font-size:13px;font-weight:600;color:#5DCAA5;">—</span></div></div>
+    <div class="metric-card"><div class="metric-label">Perdidos</div><div class="metric-value danger" id="lostDeals">—</div><div class="metric-footer"><div class="metric-pct danger" id="lostPct">—</div><div class="progress-bar"><div class="progress-fill danger" id="lostBar" style="width:0%"></div></div></div><div style="margin-top:8px;padding-top:8px;border-top:0.5px solid rgba(255,255,255,0.1);display:flex;justify-content:space-between;align-items:baseline;gap:8px;"><span style="font-size:11px;color:rgba(255,255,255,0.5);">Tempo médio até a perda</span><span id="lostAvgTime" style="font-size:13px;font-weight:600;color:#F62642;">—</span></div></div>
   </div>
 
   <div class="card">
@@ -571,18 +578,24 @@
 
 <!-- ===== ABA 3: ACOMPANHAMENTO ===== -->
 <div id="tab-acompanhamento" class="tab-content">
-  <div class="metrics" style="margin-bottom:1.5rem;">
-    <div class="metric-card"><div class="metric-label">Leads parados</div><div class="metric-value danger" id="a3-parados">—</div><div class="metric-sub" id="a3-paradosSub">—</div></div>
-    <div class="metric-card"><div class="metric-label">Valor em pipeline</div><div class="metric-value info" id="a3-pipeline">—</div><div class="metric-sub">negócios em andamento</div></div>
-    <div class="metric-card"><div class="metric-label">Tempo médio — ganho</div><div class="metric-value success" id="a3-tempoGanho">—</div><div class="metric-sub">dias do lead ao ganho</div></div>
-    <div class="metric-card"><div class="metric-label">Tempo médio — perda</div><div class="metric-value danger" id="a3-tempoPerda">—</div><div class="metric-sub">dias do lead à perda</div></div>
+  <div class="card" id="card-acomp-diario">
+    <div class="card-header" style="flex-wrap:wrap;gap:8px;">
+      <span class="card-title">Acompanhamento diário</span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button onclick="mudarMesAcomp(-1)" aria-label="Mês anterior" style="width:28px;height:28px;padding:0;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:transparent;color:#e0e0e0;font-size:16px;cursor:pointer;">‹</button>
+        <span id="acomp-mes-label" style="font-size:13px;color:#fff;font-weight:500;min-width:120px;text-align:center;">—</span>
+        <button id="acomp-mes-next" onclick="mudarMesAcomp(1)" aria-label="Próximo mês" style="width:28px;height:28px;padding:0;border-radius:8px;border:1px solid rgba(255,255,255,0.2);background:transparent;color:#e0e0e0;font-size:16px;cursor:pointer;">›</button>
+      </div>
+    </div>
+    <div style="overflow-x:auto;"><table id="acomp-diario-table" style="border-collapse:collapse;font-size:12px;width:100%;"></table></div>
   </div>
 
   <div class="card">
     <div class="card-header">
       <span class="card-title">Leads parados em andamento</span>
       <div style="display:flex;align-items:center;gap:8px;">
-        <span class="filter-label">Sem atualização há mais de</span>
+        <span id="a3-paradosCount" title="Quantidade de leads parados" style="min-width:48px;text-align:center;padding:6px 10px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.04);color:#F62642;font-weight:600;font-size:13px;">—</span>
+        <span class="filter-label">leads sem atualização há mais de</span>
         <input type="number" id="paradosDias" value="7" min="1" max="365" onchange="renderAcompanhamento()" style="width:70px;">
         <span class="filter-label">dias</span>
       </div>
@@ -1247,6 +1260,16 @@ function setPeriod(days, btn) {
   document.getElementById('dateTo').value=toISO(to); document.getElementById('dateFrom').value=toISO(from); applyFilter();
 }
 function clearActive() { document.querySelectorAll('.period-btn').forEach(b=>b.classList.remove('active')); }
+function ymdLocal(d) { return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function setMonth(offset, btn) {
+  // limpa só os botões da barra global (os de Atividades/Comissões têm estado próprio)
+  document.querySelectorAll('.period-btn[data-gp]').forEach(b=>b.classList.remove('active')); btn.classList.add('active');
+  const now=new Date();
+  const from=new Date(now.getFullYear(), now.getMonth()+offset, 1);
+  // Mês atual vai até hoje (não até o fim do mês) pra não diluir médias por dia; mês anterior vai até o último dia
+  const to=offset===0 ? now : new Date(now.getFullYear(), now.getMonth()+offset+1, 0);
+  document.getElementById('dateFrom').value=ymdLocal(from); document.getElementById('dateTo').value=ymdLocal(to); applyFilter();
+}
 function toggleStatus(type, chart) {
   chartStatus[chart][type]=!chartStatus[chart][type];
   document.getElementById(chart==='funnel'?`lbl-${type}`:`lbl2-${type}`).classList.toggle('checked',chartStatus[chart][type]);
@@ -1489,6 +1512,11 @@ function updateMetrics() {
   document.getElementById('convRate').textContent=pct(won,won+lost)+'%';
   document.getElementById('convSub').textContent=won+' ganhos de '+(won+lost)+' concluídos';
   document.getElementById('avgTicket').textContent=fmt(avgTicket);
+  // Tempo médio (dias entre a criação do negócio e o ganho/perda), dentro do período filtrado
+  const mediaDias=(arr,campoFim)=>{const v=arr.filter(x=>x.createdAt&&x[campoFim]);return v.length?Math.round(v.reduce((s,x)=>s+daysBetween(x.createdAt,x[campoFim]),0)/v.length):null;};
+  const tmGanho=mediaDias(wonDeals,'wonAt'), tmPerda=mediaDias(d.filter(x=>x.dealStatus?.id===3),'lostAt');
+  document.getElementById('wonAvgTime').textContent=tmGanho!==null?tmGanho+'d':'—';
+  document.getElementById('lostAvgTime').textContent=tmPerda!==null?tmPerda+'d':'—';
   document.getElementById('openDeals').textContent=open; document.getElementById('wonDeals').textContent=won; document.getElementById('lostDeals').textContent=lost;
   const openP=pct(open,total),wonP=pct(won,total),lostP=pct(lost,total);
   document.getElementById('openPct').textContent=openP+'% do total'; document.getElementById('wonPct').textContent=wonP+'% do total'; document.getElementById('lostPct').textContent=lostP+'% do total';
@@ -1842,24 +1870,117 @@ function renderAnalise() {
   document.getElementById('a2-lossReasons').innerHTML=motivoSorted.map(([name,count])=>{const p=pct(count,motivoTotal);return `<div class="row"><div style="min-width:0;flex:1;"><div class="row-name">${name}</div><div style="height:3px;background:#1a2540;border-radius:2px;margin-top:5px;overflow:hidden;"><div style="height:100%;width:${p}%;background:var(--danger);border-radius:2px;transition:width .4s;"></div></div></div><div class="row-right" style="margin-left:16px;"><div class="row-value" style="color:var(--danger);">${count}</div><div style="font-size:11px;color:var(--muted);">${p}%</div></div></div>`;}).join('')||'<p class="empty">Nenhum negócio perdido.</p>';
 }
 
+
+// ===== Acompanhamento diário (tabela mensal) =====
+let acompMes = (() => { const n = new Date(); return { y: n.getFullYear(), m: n.getMonth() }; })();
+const MESES_PT = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+const DIAS_SEM_PT = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
+
+function mudarMesAcomp(delta) {
+  const alvo = new Date(acompMes.y, acompMes.m + delta, 1);
+  const now = new Date();
+  if (alvo > new Date(now.getFullYear(), now.getMonth(), 1)) return; // não avança para meses futuros
+  acompMes = { y: alvo.getFullYear(), m: alvo.getMonth() };
+  renderAcompDiario();
+}
+
+function renderAcompDiario() {
+  const tbl = document.getElementById('acomp-diario-table');
+  if (!tbl) return;
+  const { y, m } = acompMes;
+  const pad = n => String(n).padStart(2, '0');
+  const nDias = new Date(y, m + 1, 0).getDate();
+  const prefix = `${y}-${pad(m + 1)}-`;
+  const dayOf = v => { // dia do mês (1..31) se a data cai no mês exibido; senão 0. Usa UTC, como o resto do dashboard.
+    if (!v) return 0; const dt = new Date(v); if (isNaN(dt)) return 0;
+    const k = dt.toISOString().slice(0, 10);
+    return k.startsWith(prefix) ? parseInt(k.slice(8, 10), 10) : 0;
+  };
+  const arr = () => Array(nDias + 1).fill(0);
+  const leads = arr(), reun = arr(), ganh = arr(), perd = arr(), andam = arr();
+
+  // Negócios do(s) funil(is) selecionado(s) — o período global NÃO se aplica aqui
+  const funis = getSelectedFunnels();
+  const totalFunis = document.querySelectorAll('.funnel-option').length;
+  const filtrando = funis.length < totalFunis;
+  let deals = baseDeals || [];
+  if (funis.length > 0 && filtrando) deals = deals.filter(d => funis.includes(d.dealStage?.funnel?.name));
+  else if (funis.length === 0) deals = [];
+  const ids = new Set();
+  deals.forEach(d => {
+    ids.add(String(d.id));
+    const dl = dayOf(d.startTime || d.createdAt);
+    if (dl) { leads[dl]++; if (d.dealStatus?.id === 1) andam[dl]++; }
+    if (d.dealStatus?.id === 2) { const dg = dayOf(getWonDate(d)); if (dg) ganh[dg]++; }
+    if (d.dealStatus?.id === 3) { const dp = dayOf(d.lostAt || d.endTime); if (dp) perd[dp]++; }
+  });
+
+  // Reuniões vêm das atividades (histórico); carrega sob demanda na primeira vez
+  const carregando = atvTasksCache === null;
+  if (carregando && !window._acompTasksLoading) {
+    window._acompTasksLoading = true;
+    Promise.resolve(fetchTasks(false)).finally(() => { window._acompTasksLoading = false; renderAcompDiario(); });
+  }
+  (atvTasksCache || []).forEach(t => {
+    if (t.type !== 'Reunião') return;
+    if (filtrando && !(t.deal?.id && ids.has(String(t.deal.id)))) return;
+    const dr = dayOf(t.dueDate || t.createdAt);
+    if (dr) reun[dr]++;
+  });
+
+  const hoje = new Date(), hy = hoje.getFullYear(), hm = hoje.getMonth(), hd = hoje.getDate();
+  const futuro = d => y > hy || (y === hy && m > hm) || (y === hy && m === hm && d > hd);
+  const ehHoje = d => y === hy && m === hm && d === hd;
+  const BG = '#1c2235';
+  const sticky = `position:sticky;left:0;background:${BG};z-index:1;`;
+  const linhas = [
+    ['Leads', '#ffffff', leads], ['Reuniões', '#91DBE4', reun], ['Ganhos', '#5DCAA5', ganh],
+    ['Perdidos', '#F62642', perd], ['Em andamento', '#8aa4ff', andam]
+  ];
+
+  let h = `<thead><tr style="border-bottom:1px solid rgba(255,255,255,0.12);"><th style="${sticky}min-width:110px;"></th>`;
+  for (let d = 1; d <= nDias; d++) {
+    const wd = new Date(Date.UTC(y, m, d)).getUTCDay();
+    const dim = (wd === 0 || wd === 6 || futuro(d)) ? 'opacity:0.45;' : '';
+    const hl = ehHoje(d) ? 'background:rgba(145,219,228,0.14);border-radius:6px 6px 0 0;' : '';
+    h += `<th style="text-align:center;padding:6px 4px;min-width:40px;font-weight:500;${dim}${hl}"><div style="font-size:11px;color:#8d9ab3;">${DIAS_SEM_PT[wd]}</div><div style="font-size:12px;color:#e0e0e0;">${pad(d)}</div></th>`;
+  }
+  h += `<th style="text-align:center;padding:6px 10px;color:#fff;font-weight:600;background:rgba(255,255,255,0.07);min-width:56px;">Total</th></tr></thead><tbody>`;
+  linhas.forEach(([nome, cor, vals]) => {
+    const isReun = nome === 'Reuniões';
+    let tot = 0;
+    h += `<tr style="border-bottom:0.5px solid rgba(255,255,255,0.07);"><td style="${sticky}padding:9px 8px;color:#e0e0e0;font-weight:500;white-space:nowrap;">${nome}</td>`;
+    for (let d = 1; d <= nDias; d++) {
+      const wd = new Date(Date.UTC(y, m, d)).getUTCDay();
+      const dim = (wd === 0 || wd === 6 || futuro(d)) ? 'opacity:0.45;' : '';
+      const hl = ehHoje(d) ? 'background:rgba(145,219,228,0.14);' : '';
+      let txt;
+      if (futuro(d)) txt = '·';
+      else if (isReun && carregando) txt = '…';
+      else { txt = vals[d]; tot += vals[d]; }
+      h += `<td style="text-align:center;padding:9px 4px;font-family:'DM Mono',monospace;color:${futuro(d) ? '#8d9ab3' : cor};${dim}${hl}">${txt}</td>`;
+    }
+    h += `<td style="text-align:center;padding:9px 10px;font-family:'DM Mono',monospace;font-weight:600;color:${cor};background:rgba(255,255,255,0.07);">${isReun && carregando ? '…' : tot}</td></tr>`;
+  });
+  h += '</tbody>';
+  tbl.innerHTML = h;
+
+  document.getElementById('acomp-mes-label').textContent = `${MESES_PT[m]} ${y}`;
+  const noAtual = (y === hy && m === hm);
+  const nx = document.getElementById('acomp-mes-next');
+  nx.disabled = noAtual; nx.style.opacity = noAtual ? '0.3' : '1'; nx.style.cursor = noAtual ? 'default' : 'pointer';
+}
+
 function renderAcompanhamento() {
+  renderAcompDiario();
   const deals=filteredDeals, hoje=new Date();
   const diasParado=parseInt(document.getElementById('paradosDias').value)||7;
   const parados=deals.filter(d=>{if(d.dealStatus?.id!==1) return false;const upd=new Date(d.updatedAt||d.createdAt);return daysBetween(upd,hoje)>=diasParado;}).sort((a,b)=>new Date(a.updatedAt||a.createdAt)-new Date(b.updatedAt||b.createdAt));
-  document.getElementById('a3-parados').textContent=parados.length;
-  document.getElementById('a3-paradosSub').textContent='sem atualização há +'+diasParado+'d';
+  document.getElementById('a3-paradosCount').textContent=parados.length;
   const pipeline=deals.filter(d=>d.dealStatus?.id===1);
-  const pipelineValue=pipeline.reduce((s,d)=>s+(d.value||0),0);
-  document.getElementById('a3-pipeline').textContent=fmt(pipelineValue);
-  const wonWithDates=deals.filter(d=>d.dealStatus?.id===2&&d.createdAt&&d.wonAt);
-  const lostWithDates=deals.filter(d=>d.dealStatus?.id===3&&d.createdAt&&d.lostAt);
-  const avgWon=wonWithDates.length?Math.round(wonWithDates.reduce((s,d)=>s+daysBetween(d.createdAt,d.wonAt),0)/wonWithDates.length):null;
-  const avgLost=lostWithDates.length?Math.round(lostWithDates.reduce((s,d)=>s+daysBetween(d.createdAt,d.lostAt),0)/lostWithDates.length):null;
-  document.getElementById('a3-tempoGanho').textContent=avgWon!==null?avgWon+'d':'—';
-  document.getElementById('a3-tempoPerda').textContent=avgLost!==null?avgLost+'d':'—';
   const el=document.getElementById('a3-paradosList');
-  if(!parados.length){el.innerHTML='<p class="empty">Nenhum lead parado há mais de '+diasParado+' dias.</p>';return;}
-  el.innerHTML=parados.slice(0,15).map(d=>{const name=d.person?.name||d.organization?.name||d.title||'Sem nome';const stage=d.dealStage?.name||'—',owner=d.owner?.name||'—';const upd=new Date(d.updatedAt||d.createdAt),dias=daysBetween(upd,hoje);const origem=getOrigem(d),tag=origem?`<span style="color:var(--accent);"> · ${origem}</span>`:'';const urgColor=dias>=30?'var(--danger)':dias>=15?'var(--warning)':'var(--muted)';return `<div class="row"><div style="min-width:0;flex:1;"><div class="row-name">${name}</div><div class="row-sub">${stage} · ${owner}${tag}</div></div><div class="row-right"><div class="row-value" style="color:${urgColor};">${dias}d parado</div><div style="font-size:11px;color:var(--muted);">${upd.toLocaleDateString('pt-BR')}</div></div></div>`;}).join('');
+  if(!parados.length){el.innerHTML='<p class="empty">Nenhum lead parado há mais de '+diasParado+' dias.</p>';}
+  else el.innerHTML=parados.slice(0,15).map(d=>{const name=d.person?.name||d.organization?.name||d.title||'Sem nome';const stage=d.dealStage?.name||'—',owner=d.owner?.name||'—';const upd=new Date(d.updatedAt||d.createdAt),dias=daysBetween(upd,hoje);const origem=getOrigem(d),tag=origem?`<span style="color:var(--accent);"> · ${origem}</span>`:'';const urgColor=dias>=30?'var(--danger)':dias>=15?'var(--warning)':'var(--muted)';return `<div class="row"><div style="min-width:0;flex:1;"><div class="row-name">${name}</div><div class="row-sub">${stage} · ${owner}${tag}</div></div><div class="row-right"><div class="row-value" style="color:${urgColor};">${dias}d parado</div><div style="font-size:11px;color:var(--muted);">${upd.toLocaleDateString('pt-BR')}</div></div></div>`;}).join('');
   const pipelineMap={};
   pipeline.forEach(d=>{const name=d.owner?.name||'Sem responsável';if(!pipelineMap[name])pipelineMap[name]={total:0,value:0};pipelineMap[name].total++;pipelineMap[name].value+=d.value||0;});
   const pipelineSorted=Object.entries(pipelineMap).sort((a,b)=>b[1].value-a[1].value);
@@ -1976,15 +2097,10 @@ async function fetchTasks(forceRefresh) {
   const btn = document.getElementById('atv-refresh-btn');
   if (btn) { btn.innerHTML = '<span class="spinner" style="border-top-color:#0C7488;border-color:rgba(14,20,40,0.2);"></span> Buscando...'; btn.disabled = true; }
   try {
-    // Fonte: SharePoint (histórico completo), não mais /tasks (limitado a 30 dias no Agendor)
-    // Usa o filtro de período global (dateFrom/dateTo) para não baixar os ~21 mil
-    // registros inteiros a cada carregamento — reduz egress do backend.
-    const dFrom = document.getElementById('dateFrom')?.value;
-    const dTo = document.getElementById('dateTo')?.value;
-    const params = new URLSearchParams();
-    if (dFrom) params.set('desde', dFrom);
-    if (dTo) params.set('ate', dTo);
-    const resp = await fetch(PROXY + '/atividades-historico' + (params.toString() ? '?' + params.toString() : ''));
+    // Fonte: SharePoint (histórico completo), não mais /tasks (limitado a 30 dias no Agendor).
+    // Carrega tudo de uma vez: várias telas (reuniões por mês, tabela diária, Atividades) usam
+    // períodos diferentes do filtro global. O tráfego já é reduzido pela compressão gzip do backend.
+    const resp = await fetch(PROXY + '/atividades-historico');
     if (!resp.ok) throw new Error('HTTP ' + resp.status);
     const result = await resp.json();
     if (result.erro) console.warn('Aviso ao buscar histórico do SharePoint:', result.erro);
