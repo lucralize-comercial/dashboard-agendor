@@ -751,6 +751,7 @@
     <div class="card-header" style="flex-wrap:wrap;gap:8px;">
       <span class="card-title">Leads x reuniões x conversão — semana a semana</span>
       <div style="display:flex;align-items:center;gap:8px;margin-left:auto;">
+        <button onclick="exportarRelatorioLeadsReunioes()" style="background:#1e7e4a;color:white;font-size:12px;padding:5px 12px;border-radius:8px;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap;"><svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Extrair relatório</button>
         <div id="localFunilSlot-leads"></div>
         <div id="localConsultorSlot-leads"></div>
         <select id="leads-trim-select" onchange="renderLeadsReunioesConversao()" style="font-size:12px;padding:4px 8px;border-radius:8px;border:0.5px solid rgba(255,255,255,0.15);font-family:'Poppins',sans-serif;background:#1a2540;color:white;"></select>
@@ -2558,6 +2559,90 @@ function renderLeadsReunioesResumo({ leadsCur, reunCur, foraJanelaCur, leadsPrev
   );
 
   el.innerHTML = card1 + card2;
+}
+
+
+// ===== Relatório "Leads do período" (leads x reuniões), segue os filtros da tabela semana a semana =====
+function _normTxt(v) { return String(v || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[^a-z0-9]/g, ''); }
+
+// Lê um campo personalizado do negócio procurando pelo nome (ex.: "Reunião agendada por")
+function getCampoPersonalizado(d, partesDoNome) {
+  const cf = d.customFields || {};
+  const chave = Object.keys(cf).find(k => { const n = _normTxt(k); return partesDoNome.every(p => n.includes(p)); });
+  if (!chave) return '';
+  let v = cf[chave];
+  if (v && typeof v === 'object' && !Array.isArray(v)) v = ('value' in v) ? v.value : (v.name || '');
+  if (Array.isArray(v)) v = v.map(x => (x && typeof x === 'object') ? (x.name || x.value || '') : x).filter(Boolean).join(', ');
+  if (v && typeof v === 'object') v = v.name || v.value || '';
+  return v == null ? '' : String(v);
+}
+
+async function exportarRelatorioLeadsReunioes() {
+  if (atvTasksCache === null) { try { await fetchTasks(false); } catch (e) {} }
+  if (atvTasksCache === null) { alert('Não foi possível carregar as reuniões agora. Tente novamente em instantes.'); return; }
+
+  // Trimestre selecionado (mesma lógica da tabela)
+  const now = new Date(), trims = [];
+  for (let i = 0; i < 8; i++) {
+    const d = new Date(now.getFullYear(), now.getMonth() - (i * 3), 1);
+    const q = Math.floor(d.getMonth() / 3), ano = d.getFullYear();
+    trims.push({ label: 'Q' + (q + 1) + '/' + ano, inicio: new Date(ano, q * 3, 1), fim: new Date(ano, q * 3 + 3, 0, 23, 59, 59) });
+  }
+  const sel = document.getElementById('leads-trim-select');
+  const trim = trims[parseInt(sel?.value || 0)] || trims[0];
+
+  // Filtros de funil e consultor (mesma lógica da tabela)
+  const funisSel = localFunilState.leads, nomesConhecidos = FUNIS_LISTA.map(f => f.nome);
+  const passaFunil = f => !f || !nomesConhecidos.includes(f) || funisSel.has(f);
+  const consultorSel = localConsultorState.leads, consultoresConhecidos = obterConsultoresGlobais();
+  const passaConsultor = n => !consultoresConhecidos.includes(n) || consultorSel.has(n);
+
+  const leads = (baseDeals || []).filter(d => {
+    const ref = new Date(d.createdAt || 0);
+    if (!(ref >= trim.inicio && ref <= trim.fim)) return false;
+    if (!passaFunil(d.dealStage?.funnel?.name)) return false;
+    return passaConsultor(d.owner?.name || 'Sem responsável');
+  });
+  if (!leads.length) { alert('Nenhum lead no período e filtros selecionados.'); return; }
+
+  // Reuniões ligadas a cada negócio (pela atividade do tipo Reunião)
+  const reunioesPorDeal = {};
+  (atvTasksCache || []).forEach(t => {
+    if (t.type !== 'Reunião' || !t.deal || !t.deal.id) return;
+    const dt = new Date(t.dueDate || t.createdAt || 0);
+    if (isNaN(dt) || dt.getTime() === 0) return;
+    (reunioesPorDeal[String(t.deal.id)] = reunioesPorDeal[String(t.deal.id)] || []).push(dt);
+  });
+
+  const toDate = v => { if (!v) return ''; const d = new Date(v); return isNaN(d) ? '' : d; };
+  const statusLabel = { 1: 'Em andamento', 2: 'Ganho', 3: 'Perdido' };
+  const FRASE_RD = _normTxt('Criado automaticamente pela integração com RD Station');
+  const headers = ['Lead', 'E-mail', 'Consultor', 'Criado em', 'Criação do lead', 'Tem reunião?', 'Reunião agendada por', 'Data da reunião', 'Status'];
+  const aoa = [headers];
+  [...leads].sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt)).forEach(d => {
+    const reun = (reunioesPorDeal[String(d.id)] || []).sort((a, b) => a - b);
+    aoa.push([
+      d.title || d.person?.name || d.organization?.name || String(d.id),
+      getEmailNegocio(d),
+      d.owner?.name || 'Sem responsável',
+      toDate(d.createdAt),
+      _normTxt(d.description).includes(FRASE_RD) ? 'Automação RD' : 'Manual',
+      reun.length ? 'Sim' : 'Não',
+      getCampoPersonalizado(d, ['reuniao', 'agendad']),
+      reun.length ? reun[0] : '',
+      statusLabel[d.dealStatus?.id] || ''
+    ]);
+  });
+
+  const ws = XLSX.utils.aoa_to_sheet(aoa, { cellDates: true });
+  for (let r = 1; r < aoa.length; r++) {
+    [3, 7].forEach(c => { const cell = ws[XLSX.utils.encode_cell({ r, c })]; if (cell && cell.v instanceof Date) cell.z = 'dd/mm/yyyy'; });
+  }
+  ws['!cols'] = [{wch:42},{wch:30},{wch:22},{wch:12},{wch:16},{wch:13},{wch:24},{wch:15},{wch:14}];
+  ws['!autofilter'] = { ref: XLSX.utils.encode_range({ s: { r: 0, c: 0 }, e: { r: aoa.length - 1, c: headers.length - 1 } }) };
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'Leads do período');
+  XLSX.writeFile(wb, `leads-e-reunioes_${trim.label.replace('/', '-')}.xlsx`);
 }
 
 function renderLeadsReunioesConversao() {
